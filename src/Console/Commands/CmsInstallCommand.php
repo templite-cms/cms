@@ -42,13 +42,26 @@ class CmsInstallCommand extends Command
             return true;
         });
 
-        // 3. Создание директорий
+        // 3. Публикация ассетов (build + статика)
+        $this->task('Публикация ассетов админки', function () {
+            $this->callSilent('vendor:publish', [
+                '--tag' => 'cms-build',
+                '--force' => true,
+            ]);
+            $this->callSilent('vendor:publish', [
+                '--tag' => 'cms-assets',
+                '--force' => true,
+            ]);
+            return true;
+        });
+
+        // 4. Создание директорий
         $this->task('Создание директорий', function () use ($installer) {
             $installer->createDirectories();
             return true;
         });
 
-        // 4. Миграции
+        // 5. Миграции
         if (!$this->option('skip-migrate')) {
             $this->task('Запуск миграций', function () {
                 if ($this->option('fresh')) {
@@ -60,7 +73,7 @@ class CmsInstallCommand extends Command
             });
         }
 
-        // 5. Создание суперадмина (интерактивно)
+        // 6. Создание суперадмина (интерактивно)
         $this->info('');
         if ($this->confirm('Создать суперадмина?', true)) {
             $login = $this->ask('Логин', 'admin');
@@ -75,19 +88,19 @@ class CmsInstallCommand extends Command
             $this->info("  Суперадмин '{$login}' создан.");
         }
 
-        // 8. Символическая ссылка storage
+        // 7. Символическая ссылка storage
         $this->task('Символическая ссылка storage', function () {
             $this->callSilent('storage:link');
             return true;
         });
 
-        // 9. Установить флаг APP_INSTALLED=true в .env
+        // 8. Установить флаг APP_INSTALLED=true в .env
         $this->task('Установка флага APP_INSTALLED', function () {
             $this->setEnvInstalled();
             return true;
         });
 
-        // 10. Удаление install.php (безопасность — H-06)
+        // 9. Удаление install.php (безопасность — H-06)
         $this->task('Удаление install.php', function () {
             return $this->removeInstallScript();
         });
