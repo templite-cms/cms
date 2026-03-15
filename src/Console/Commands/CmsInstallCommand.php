@@ -52,11 +52,11 @@ class CmsInstallCommand extends Command
         if (!$this->option('skip-migrate')) {
             $this->task('Запуск миграций', function () {
                 if ($this->option('fresh')) {
-                    $this->callSilent('migrate:fresh');
+                    $code = $this->callSilent('migrate:fresh', ['--force' => true]);
                 } else {
-                    $this->callSilent('migrate');
+                    $code = $this->callSilent('migrate', ['--force' => true]);
                 }
-                return true;
+                return $code === 0;
             });
         }
 

@@ -192,6 +192,17 @@ class CmsServiceProvider extends ServiceProvider
 
         // Sanctum должен проверять guard 'manager' для SPA-аутентификации
         $config->set('sanctum.guard', ['manager']);
+
+        // Гарантируем, что текущий домен приложения есть в stateful-списке Sanctum,
+        // иначе EnsureFrontendRequestsAreStateful не инициализирует сессию
+        $appHost = parse_url(config('app.url', ''), PHP_URL_HOST);
+        if ($appHost) {
+            $stateful = $config->get('sanctum.stateful', []);
+            if (!in_array($appHost, $stateful)) {
+                $stateful[] = $appHost;
+                $config->set('sanctum.stateful', $stateful);
+            }
+        }
     }
 
     /**
