@@ -1,0 +1,51 @@
+{
+    "name": "templite/cms",
+    "description": "Templite CMS Core - Block-based CMS for Laravel",
+    "type": "library",
+    "keywords": ["cms", "laravel", "blocks", "inertia", "vue", "templates"],
+    "license": "MIT",
+    "homepage": "https://templite.ru",
+    "authors": [
+        {
+            "name": "Templite Team",
+            "email": "dev@templite.ru"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/templite/cms/issues",
+        "source": "https://github.com/templite/cms"
+    },
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^11.0|^12.0",
+        "inertiajs/inertia-laravel": "^1.0",
+        "laravel/sanctum": "^4.0",
+        "intervention/image": "^3.0",
+        "spatie/laravel-image-optimizer": "^1.8",
+        "scssphp/scssphp": "^1.12",
+        "enshrined/svg-sanitize": "^0.22",
+        "pragmarx/google2fa-laravel": "^2.0",
+        "bacon/bacon-qr-code": "^3.0"
+    },
+    "require-dev": {
+        "darkaonline/l5-swagger": "^8.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Templite\\Cms\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Templite\\Cms\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Templite\\Cms\\CmsServiceProvider"
+            ]
+        }
+    },
+    "prefer-stable": true
+}

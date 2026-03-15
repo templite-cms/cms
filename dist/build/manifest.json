@@ -1,0 +1,274 @@
+{
+  "_index-BpR6b6a5.js": {
+    "file": "assets/index-BpR6b6a5.js",
+    "name": "index",
+    "isDynamicEntry": true,
+    "imports": [
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js"
+    ]
+  },
+  "_index-C171qQbt.js": {
+    "file": "assets/index-C171qQbt.js",
+    "name": "index",
+    "isDynamicEntry": true,
+    "imports": [
+      "node_modules/@codemirror/state/dist/index.js"
+    ]
+  },
+  "_index-DALdyERb.js": {
+    "file": "assets/index-DALdyERb.js",
+    "name": "index",
+    "imports": [
+      "_index-BpR6b6a5.js"
+    ]
+  },
+  "node_modules/@codemirror/autocomplete/dist/index.js": {
+    "file": "assets/index-CI9EvZ06.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/autocomplete/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js",
+      "_index-BpR6b6a5.js"
+    ]
+  },
+  "node_modules/@codemirror/commands/dist/index.js": {
+    "file": "assets/index-D9U2f_Nf.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/commands/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js",
+      "_index-BpR6b6a5.js"
+    ]
+  },
+  "node_modules/@codemirror/lang-css/dist/index.js": {
+    "file": "assets/index-EP8MyN1y.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/lang-css/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-DALdyERb.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js"
+    ]
+  },
+  "node_modules/@codemirror/lang-html/dist/index.js": {
+    "file": "assets/index-KDYQ5amo.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/lang-html/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-DALdyERb.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/lang-css/dist/index.js",
+      "node_modules/@codemirror/lang-javascript/dist/index.js",
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "node_modules/@codemirror/autocomplete/dist/index.js"
+    ]
+  },
+  "node_modules/@codemirror/lang-javascript/dist/index.js": {
+    "file": "assets/index-DwBH2r-b.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/lang-javascript/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-DALdyERb.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/autocomplete/dist/index.js"
+    ]
+  },
+  "node_modules/@codemirror/lang-json/dist/index.js": {
+    "file": "assets/index-C2tJkR7M.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/lang-json/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-DALdyERb.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js"
+    ]
+  },
+  "node_modules/@codemirror/lang-php/dist/index.js": {
+    "file": "assets/index-D1r6eMwr.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/lang-php/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-DALdyERb.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/lang-html/dist/index.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/lang-css/dist/index.js",
+      "node_modules/@codemirror/lang-javascript/dist/index.js",
+      "node_modules/@codemirror/autocomplete/dist/index.js"
+    ]
+  },
+  "node_modules/@codemirror/lang-sass/dist/index.js": {
+    "file": "assets/index-pN-ANffR.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/lang-sass/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-DALdyERb.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/lang-css/dist/index.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "_index-C171qQbt.js"
+    ]
+  },
+  "node_modules/@codemirror/search/dist/index.js": {
+    "file": "assets/index-ZA9SRSG6.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/search/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/state/dist/index.js"
+    ]
+  },
+  "node_modules/@codemirror/state/dist/index.js": {
+    "file": "assets/index-tqIctuLa.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/state/dist/index.js",
+    "isDynamicEntry": true
+  },
+  "node_modules/@codemirror/theme-one-dark/dist/index.js": {
+    "file": "assets/index-D9eMoyZg.js",
+    "name": "index",
+    "src": "node_modules/@codemirror/theme-one-dark/dist/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-C171qQbt.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/state/dist/index.js"
+    ]
+  },
+  "node_modules/ckeditor5/dist/ckeditor5.css": {
+    "file": "assets/ckeditor5-DZn45ipa.css",
+    "src": "node_modules/ckeditor5/dist/ckeditor5.css"
+  },
+  "node_modules/ckeditor5/dist/ckeditor5.js": {
+    "file": "assets/ckeditor5-7LwWVRV0.js",
+    "name": "ckeditor5",
+    "src": "node_modules/ckeditor5/dist/ckeditor5.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "packages/templite/cms/resources/js/app.js"
+    ]
+  },
+  "node_modules/prettier/plugins/babel.mjs": {
+    "file": "assets/babel-BDuGyvJ-.js",
+    "name": "babel",
+    "src": "node_modules/prettier/plugins/babel.mjs",
+    "isDynamicEntry": true
+  },
+  "node_modules/prettier/plugins/estree.mjs": {
+    "file": "assets/estree-2L1L2_ge.js",
+    "name": "estree",
+    "src": "node_modules/prettier/plugins/estree.mjs",
+    "isDynamicEntry": true
+  },
+  "node_modules/prettier/plugins/html.mjs": {
+    "file": "assets/html-C_f0Oj99.js",
+    "name": "html",
+    "src": "node_modules/prettier/plugins/html.mjs",
+    "isDynamicEntry": true
+  },
+  "node_modules/prettier/plugins/postcss.mjs": {
+    "file": "assets/postcss-B5t10IF2.js",
+    "name": "postcss",
+    "src": "node_modules/prettier/plugins/postcss.mjs",
+    "isDynamicEntry": true
+  },
+  "node_modules/prettier/standalone.mjs": {
+    "file": "assets/standalone-DzHiJPGy.js",
+    "name": "standalone",
+    "src": "node_modules/prettier/standalone.mjs",
+    "isDynamicEntry": true
+  },
+  "packages/templite/cms/resources/css/app.css": {
+    "file": "assets/app-CnXqGKVQ.css",
+    "src": "packages/templite/cms/resources/css/app.css",
+    "isEntry": true
+  },
+  "packages/templite/cms/resources/img/logo.svg": {
+    "file": "assets/logo-CshUbylz.svg",
+    "src": "packages/templite/cms/resources/img/logo.svg"
+  },
+  "packages/templite/cms/resources/js/app.js": {
+    "file": "assets/app-Diw0Cut3.js",
+    "name": "app",
+    "src": "packages/templite/cms/resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/@codemirror/lang-javascript/dist/index.js",
+      "node_modules/@codemirror/lang-css/dist/index.js",
+      "node_modules/@codemirror/lang-sass/dist/index.js",
+      "node_modules/@codemirror/lang-json/dist/index.js",
+      "node_modules/@codemirror/lang-php/dist/index.js",
+      "node_modules/@codemirror/lang-html/dist/index.js",
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "node_modules/@codemirror/commands/dist/index.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/autocomplete/dist/index.js",
+      "node_modules/@codemirror/search/dist/index.js",
+      "node_modules/@codemirror/theme-one-dark/dist/index.js",
+      "node_modules/prettier/standalone.mjs",
+      "node_modules/prettier/plugins/html.mjs",
+      "node_modules/prettier/plugins/postcss.mjs",
+      "node_modules/prettier/plugins/babel.mjs",
+      "node_modules/prettier/plugins/estree.mjs",
+      "node_modules/@codemirror/lang-javascript/dist/index.js",
+      "node_modules/@codemirror/lang-css/dist/index.js",
+      "node_modules/@codemirror/lang-sass/dist/index.js",
+      "node_modules/@codemirror/lang-html/dist/index.js",
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "node_modules/@codemirror/commands/dist/index.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/autocomplete/dist/index.js",
+      "node_modules/@codemirror/search/dist/index.js",
+      "node_modules/@codemirror/theme-one-dark/dist/index.js",
+      "node_modules/@codemirror/lang-javascript/dist/index.js",
+      "node_modules/@codemirror/lang-css/dist/index.js",
+      "node_modules/@codemirror/lang-sass/dist/index.js",
+      "node_modules/@codemirror/lang-html/dist/index.js",
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "node_modules/@codemirror/commands/dist/index.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/autocomplete/dist/index.js",
+      "node_modules/@codemirror/search/dist/index.js",
+      "node_modules/@codemirror/theme-one-dark/dist/index.js",
+      "node_modules/ckeditor5/dist/ckeditor5.js",
+      "node_modules/@codemirror/lang-javascript/dist/index.js",
+      "node_modules/@codemirror/lang-css/dist/index.js",
+      "node_modules/@codemirror/lang-sass/dist/index.js",
+      "node_modules/@codemirror/lang-html/dist/index.js",
+      "_index-C171qQbt.js",
+      "node_modules/@codemirror/state/dist/index.js",
+      "node_modules/@codemirror/commands/dist/index.js",
+      "_index-BpR6b6a5.js",
+      "node_modules/@codemirror/autocomplete/dist/index.js",
+      "node_modules/@codemirror/search/dist/index.js",
+      "node_modules/@codemirror/theme-one-dark/dist/index.js"
+    ],
+    "css": [
+      "assets/app-Cpsn_Dhp.css"
+    ],
+    "assets": [
+      "assets/logo-CshUbylz.svg"
+    ]
+  }
+}

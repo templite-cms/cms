@@ -1,0 +1,96 @@
+<?php
+
+namespace Templite\Cms\Http\Requests\BlockField;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Templite\Cms\Models\BlockField;
+
+class UpdateBlockFieldRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        $fieldId = (int) $this->route('id');
+        $field = BlockField::findOrFail($fieldId);
+        $parentId = $this->has('parent_id') ? $this->input('parent_id') : $field->parent_id;
+        $type = $this->input('type', $field->type);
+
+        $rules = [
+            'name' => ['sometimes', 'string', 'max:255'],
+            'key' => [
+                'sometimes',
+                'string',
+                'max:64',
+                'regex:/^[a-z][a-z0-9_]*$/',
+                Rule::unique('block_fields')
+                    ->where('fieldable_type', $field->fieldable_type)
+                    ->where('fieldable_id', $field->fieldable_id)
+                    ->where('parent_id', $parentId)
+                    ->ignore($fieldId),
+                Rule::notIn([
+                    'id', 'type', 'block', 'page', 'data', 'fields', 'global',
+                    'actionData', 'request', 'slot', 'attributes', 'errors',
+                ]),
+            ],
+            'type' => [
+                'sometimes',
+                'string',
+                'in:text,textfield,number,img,file,editor,html,select,checkbox,radio,link,date,datetime,array,category,product,product_option,color',
+            ],
+            'parent_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('block_fields', 'id')
+                    ->where('fieldable_type', $field->fieldable_type)
+                    ->where('fieldable_id', $field->fieldable_id)
+                    ->where('type', 'array'),
+            ],
+            'default_value' => ['nullable', 'string'],
+            'data' => ['nullable', 'array'],
+            'hint' => ['nullable', 'string', 'max:500'],
+            'block_tab_id' => ['nullable', 'integer', 'exists:block_tabs,id'],
+            'block_section_id' => ['nullable', 'integer', 'exists:block_sections,id'],
+            'order' => ['integer'],
+        ];
+
+        // Дополнительная валидация data для img
+        if ($type === 'img') {
+            $rules = array_merge($rules, [
+                'data.sizes' => ['nullable', 'array'],
+                'data.sizes.*' => ['array'],
+                'data.sizes.*.width' => ['required', 'integer', 'min:1', 'max:10000'],
+                'data.sizes.*.height' => ['nullable', 'integer', 'min:1', 'max:10000'],
+                'data.sizes.*.fit' => ['required', 'string', 'in:cover,contain,crop,inside'],
+                'data.formats' => ['nullable', 'array'],
+                'data.formats.*' => ['string', 'in:original,webp,avif'],
+                'data.quality' => ['nullable', 'integer', 'min:1', 'max:100'],
+            ]);
+        }
+
+        // Дополнительная валидация data для select/radio
+        if (in_array($type, ['select', 'radio'])) {
+            $rules = array_merge($rules, [
+                'data.options' => ['nullable', 'array', 'min:1'],
+                'data.options.*.value' => ['required', 'string'],
+                'data.options.*.label' => ['required', 'string'],
+            ]);
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'key.regex' => 'Ключ должен начинаться с латинской буквы и содержать только строчные буквы, цифры и подчеркивания.',
+            'key.unique' => 'Такой ключ уже существует в этом блоке (на данном уровне вложенности).',
+            'key.not_in' => 'Этот ключ зарезервирован системой.',
+            'parent_id.exists' => 'Родительское поле должно быть типа array и принадлежать тому же блоку.',
+        ];
+    }
+}
