@@ -92,6 +92,9 @@ class BlockCodeController extends Controller
             $block->update(['source' => 'database', 'path' => 'storage/cms/blocks/' . basename($block->slug)]);
         }
 
+        // Invalidate block cache for all page instances of this block
+        app(\Templite\Cms\Services\CacheManager::class)->invalidateBlockType($block->id);
+
         // Recompile assets for all pages using this block
         app(\Templite\Cms\Services\PageAssetCompiler::class)->recompileForBlock($block->id);
 

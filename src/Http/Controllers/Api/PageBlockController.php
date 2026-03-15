@@ -189,6 +189,17 @@ class PageBlockController extends Controller
         return $this->success(new PageBlockResource($pb->fresh(['preset'])));
     }
 
+    /** @OA\Post(path="/page-blocks/{id}/invalidate-cache", summary="Сбросить кэш блока", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Кэш сброшен")) */
+    public function invalidateCache(int $id): JsonResponse
+    {
+        $pb = PageBlock::findOrFail($id);
+        $this->cacheManager->invalidateBlock($pb);
+
+        $this->logAction('invalidate_cache', 'page_block', $pb->id, ['page_id' => $pb->page_id]);
+
+        return $this->success(null, 'Кэш блока сброшен.');
+    }
+
     /** @OA\Post(path="/page-blocks/{id}/preview", summary="Превью блока (HTML)", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\RequestBody(@OA\JsonContent(@OA\Property(property="data", type="object"), @OA\Property(property="action_params", type="object"))), @OA\Response(response=200, description="HTML-превью блока")) */
     public function preview(Request $request, int $id): JsonResponse
     {

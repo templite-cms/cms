@@ -15,6 +15,7 @@ use Templite\Cms\Services\BlockRenderer;
 use Templite\Cms\Services\FileService;
 use Templite\Cms\Services\ImageProcessor;
 use Templite\Cms\Helpers\StringHelper;
+use Templite\Cms\Services\CacheManager;
 use Templite\Cms\Services\UrlGenerator;
 
 class PageController extends Controller
@@ -25,6 +26,7 @@ class PageController extends Controller
         protected BlockDataResolver $blockDataResolver,
         protected FileService $fileService,
         protected ImageProcessor $imageProcessor,
+        protected CacheManager $cacheManager,
     ) {}
 
     /**
@@ -219,6 +221,7 @@ class PageController extends Controller
             $this->urlGenerator->updateUrlTree($page->fresh());
         }
 
+        $this->cacheManager->invalidatePage($page);
         app(\Templite\Cms\Services\PageAssetCompiler::class)->compile($page);
 
         $this->logAction('update', 'page', $page->id, ['title' => $page->title]);
