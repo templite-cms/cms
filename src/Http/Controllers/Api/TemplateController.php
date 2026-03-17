@@ -25,6 +25,16 @@ class TemplateController extends Controller
         ]);
         $template = TemplatePage::create($data);
 
+        // Создаём директорию и копируем stub шаблона
+        $templatePath = storage_path('cms/templates/' . basename($template->slug));
+        if (!is_dir($templatePath)) {
+            mkdir($templatePath, 0755, true);
+        }
+        $stubPath = __DIR__ . '/../../../../stubs/template.blade.php';
+        if (file_exists($stubPath) && !file_exists($templatePath . '/template.blade.php')) {
+            copy($stubPath, $templatePath . '/template.blade.php');
+        }
+
         $this->logAction('create', 'template', $template->id, ['name' => $template->name, 'slug' => $template->slug]);
 
         return $this->success(new TemplatePageResource($template), 'Шаблон создан.', 201);

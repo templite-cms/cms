@@ -27,13 +27,14 @@ class CacheClearCommand extends Command
 
         if (!$specific) {
             $stats = $cacheManager->clearAll();
-            $this->info("Весь кэш CMS очищен. Блоков: {$stats['blocks']['cleared']}, глобальных: {$stats['global']['cleared']}, SCSS: {$stats['scss']['files']} файлов.");
+            $viewsCount = $stats['views']['files'] ?? 0;
+            $this->info("Весь кэш CMS очищен. Блоков: {$stats['blocks']['cleared']}, глобальных: {$stats['global']['cleared']}, SCSS: {$stats['scss']['files']} файлов, compiled views: {$viewsCount}.");
             return self::SUCCESS;
         }
 
         if ($this->option('blocks')) {
             $stats = $cacheManager->clearBlocks();
-            $this->info("Кэш блоков очищен. Записей: {$stats['cleared']}.");
+            $this->info("Кэш блоков очищен. Записей: {$stats['cleared']}. Compiled views и OPcache сброшены.");
         }
 
         if ($this->option('global')) {

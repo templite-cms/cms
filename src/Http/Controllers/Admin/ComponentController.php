@@ -24,6 +24,7 @@ class ComponentController extends Controller
         return Inertia::render('Components/Index', [
             'components' => Component::orderBy('name')->get(),
             'registryComponents' => $this->componentRegistry->all(),
+            'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ]);
     }
 
@@ -69,6 +70,7 @@ class ComponentController extends Controller
                     'type' => $attr->type,
                     'page_type_name' => $attr->pageType->name ?? 'Без типа',
                 ]),
+            'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ]);
     }
 
@@ -92,6 +94,7 @@ class ComponentController extends Controller
                     'type' => $attr->type,
                     'page_type_name' => $attr->pageType->name ?? 'Без типа',
                 ]),
+            'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ]);
     }
 }

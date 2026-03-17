@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Templite\Cms\Concerns\HasExportable;
 use Templite\Cms\Contracts\Exportable;
 use Templite\Cms\Services\ImportExport\ImportContext;
+use Templite\Cms\Traits\HasFiles;
 
 class Action extends Model implements Exportable
 {
-    use HasExportable;
+    use HasExportable, HasFiles;
+
     protected $fillable = [
         'name',
         'slug',
@@ -20,11 +22,14 @@ class Action extends Model implements Exportable
         'returns',
         'description',
         'code_hash',
+        'screen',
+        'allow_http',
     ];
 
     protected $casts = [
         'params' => 'json',
         'returns' => 'json',
+        'allow_http' => 'boolean',
     ];
 
     public function blockActions(): HasMany
@@ -53,6 +58,7 @@ class Action extends Model implements Exportable
             'params' => $this->params,
             'returns' => $this->returns,
             'description' => $this->description,
+            'allow_http' => $this->allow_http,
         ];
     }
 

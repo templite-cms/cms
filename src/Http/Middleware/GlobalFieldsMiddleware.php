@@ -64,8 +64,7 @@ class GlobalFieldsMiddleware
                 // Повторитель: массив объектов
                 $result[$key] = $this->resolveRepeaterValues($field);
             } else {
-                // Обычное поле: скалярное значение
-                $result[$key] = $field->getValue();
+                $result[$key] = \Templite\Cms\Support\FieldValueCaster::cast($field->getValue(), $field->type);
             }
         }
 
@@ -101,7 +100,7 @@ class GlobalFieldsMiddleware
             foreach ($childValues as $childValue) {
                 $childField = $field->children->firstWhere('id', $childValue->global_field_id);
                 if ($childField) {
-                    $item[$childField->key] = $childValue->value;
+                    $item[$childField->key] = \Templite\Cms\Support\FieldValueCaster::cast($childValue->value, $childField->type);
                 }
             }
 
@@ -169,7 +168,7 @@ class GlobalFieldsMiddleware
                             $t = $translations->get($childValue->id);
                             if ($t && $t->value !== null) {
                                 if (isset($result[$key][$itemIdx])) {
-                                    $result[$key][$itemIdx][$childField->key] = $t->value;
+                                    $result[$key][$itemIdx][$childField->key] = \Templite\Cms\Support\FieldValueCaster::cast($t->value, $childField->type);
                                 }
                             }
                         }
@@ -181,7 +180,7 @@ class GlobalFieldsMiddleware
                 if ($value) {
                     $t = $translations->get($value->id);
                     if ($t && $t->value !== null) {
-                        $result[$key] = $t->value;
+                        $result[$key] = \Templite\Cms\Support\FieldValueCaster::cast($t->value, $field->type);
                     }
                 }
             }

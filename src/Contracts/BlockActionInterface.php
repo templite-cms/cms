@@ -68,4 +68,13 @@ interface BlockActionInterface
      * @return array Данные, доступные в Blade-шаблоне блока как переменные
      */
     public function handle(array $params, ActionContext $context): array;
+
+    /**
+     * Включена ли CSRF-проверка при HTTP-вызове (/action/{slug}).
+     *
+     * По умолчанию true — POST-запросы требуют валидный CSRF-токен.
+     * Отключите для внешних вызовов (webhook, cross-domain fetch).
+     * При отключении действует throttle + honeypot.
+     */
+    public function csrfEnabled(): bool;
 }

@@ -43,7 +43,7 @@ class ActionController extends Controller
     /** @OA\Get(path="/actions", summary="Список actions", tags={"Actions"}, security={{"bearerAuth":{}}}, @OA\Response(response=200, description="Список")) */
     public function index(): JsonResponse
     {
-        return $this->success(ActionResource::collection(Action::all()));
+        return $this->success(ActionResource::collection(Action::with('screenshot')->get()));
     }
 
     /** @OA\Post(path="/actions", summary="Создать action", tags={"Actions"}, security={{"bearerAuth":{}}}, @OA\RequestBody(required=true, @OA\JsonContent(required={"name","slug"}, @OA\Property(property="name", type="string"), @OA\Property(property="slug", type="string"))), @OA\Response(response=201, description="Создано")) */
@@ -53,7 +53,12 @@ class ActionController extends Controller
             'name' => 'required|string|max:255', 'slug' => 'required|string|max:255|unique:actions',
             'class_name' => 'nullable|string', 'source' => 'string|in:vendor,app,storage',
             'params' => 'nullable|array', 'returns' => 'nullable|array', 'description' => 'nullable|string',
+            'allow_http' => 'boolean',
         ]);
+        // Действия, созданные через админку, всегда storage
+        if (!isset($data['source'])) {
+            $data['source'] = 'storage';
+        }
         $action = Action::create($data);
 
         $this->logAction('create', 'action', $action->id, ['name' => $action->name, 'slug' => $action->slug]);
@@ -64,7 +69,7 @@ class ActionController extends Controller
     /** @OA\Get(path="/actions/{id}", summary="Получить action", tags={"Actions"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Данные")) */
     public function show(int $id): JsonResponse
     {
-        $action = Action::findOrFail($id);
+        $action = Action::with('screenshot')->findOrFail($id);
         $data = (new ActionResource($action))->toArray(request());
         $data['code'] = $this->resolveActionCode($action);
         return $this->success($data);
@@ -99,6 +104,8 @@ class ActionController extends Controller
             'name' => 'sometimes|string|max:255', 'slug' => 'sometimes|string|max:255|unique:actions,slug,' . $id,
             'class_name' => 'nullable|string',
             'description' => 'nullable|string', 'code' => 'nullable|string',
+            'screen' => 'nullable|integer|exists:files,id',
+            'allow_http' => 'sometimes|boolean',
         ]);
 
         if (isset($data['code'])) {
@@ -145,7 +152,7 @@ class ActionController extends Controller
 
         $this->logAction('update', 'action', $action->id, ['name' => $action->name]);
 
-        return $this->success(new ActionResource($action->fresh()));
+        return $this->success(new ActionResource($action->fresh()->load('screenshot')));
     }
 
     protected function parseActionMethods(string $code, string $filePath): array

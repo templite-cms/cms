@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Templite\Cms\Http\Controllers\Web\RenderController;
 use Templite\Cms\Http\Controllers\Web\SitemapController;
 use Templite\Cms\Http\Controllers\Web\BlockActionController;
+use Templite\Cms\Http\Controllers\Web\DirectActionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +18,14 @@ use Templite\Cms\Http\Controllers\Web\BlockActionController;
 */
 
 Route::middleware(['web', 'cms.security_headers', 'cms.locale', 'cms.city_resolver', 'cms.global_fields', 'cms.timezone'])->group(function () {
+
+    // Direct Action (CSRF проверяется per-action через csrfEnabled() в классе действия)
+    // Защита: throttle + honeypot + allow_http флаг + опциональный CSRF
+    Route::match(['get', 'post'], '/action/{actionSlug}', [DirectActionController::class, 'handle'])
+        ->where('actionSlug', '[a-z0-9_-]+')
+        ->middleware(['throttle:10,1', 'cms.honeypot'])
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+        ->name('cms.direct-action');
 
     // XML Sitemap
     Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('cms.sitemap');
@@ -42,6 +51,6 @@ Route::middleware(['web', 'cms.security_headers', 'cms.locale', 'cms.city_resolv
     // Исключаем префикс админки и API из catch-all
     $adminUrl = config('cms.admin_url', 'cms');
     Route::get('/{url}', [RenderController::class, 'page'])
-        ->where('url', '^(?!' . preg_quote($adminUrl, '/') . '(/|$)|api/|\.well-known/|oauth/).*')
+        ->where('url', '^(?!' . preg_quote($adminUrl, '/') . '(/|$)|api/|action/|\.well-known/|oauth/).*')
         ->name('cms.page');
 });

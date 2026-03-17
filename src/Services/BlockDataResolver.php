@@ -243,9 +243,12 @@ class BlockDataResolver
      */
     protected function getDefaultForType(BlockField $field): mixed
     {
-        // Если у поля задан default_value в БД — используем его
+        // Если у поля задан default_value в БД — используем его (с приведением типа)
         if ($field->default_value !== null && $field->default_value !== '') {
-            return $field->default_value;
+            return \Templite\Cms\Support\FieldValueCaster::cast(
+                $field->default_value,
+                $field->type
+            );
         }
 
         return match ($field->type) {

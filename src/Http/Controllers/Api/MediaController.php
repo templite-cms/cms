@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Templite\Cms\Http\Resources\FileFolderResource;
 use Templite\Cms\Http\Resources\FileResource;
 use Templite\Cms\Jobs\ProcessImage;
+use Templite\Cms\Models\CmsConfig;
 use Templite\Cms\Models\File;
 use Templite\Cms\Models\FileFolder;
 use Templite\Cms\Services\FileService;
@@ -39,9 +40,17 @@ class MediaController extends Controller
     /** @OA\Post(path="/media/upload", summary="Загрузить файл", tags={"Media"}, security={{"bearerAuth":{}}}, @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data", @OA\Schema(@OA\Property(property="file", type="string", format="binary"), @OA\Property(property="folder_id", type="integer")))), @OA\Response(response=201, description="Файл загружен")) */
     public function upload(Request $request): JsonResponse
     {
-        // TASK-S14 (M-07): Собираем список разрешённых расширений из конфига
-        $allowedTypes = config('cms.allowed_file_types', []);
-        $allowedExtensions = collect($allowedTypes)->flatten()->unique()->values()->all();
+        // Разрешённые расширения: сначала из CmsConfig (настройки ядра), fallback на конфиг
+        $configValue = CmsConfig::getValue('allowed_file_extensions');
+        if ($configValue !== null && $configValue !== '') {
+            $allowedExtensions = array_values(array_filter(array_map(
+                'trim',
+                explode(',', strtolower($configValue))
+            )));
+        } else {
+            $allowedTypes = config('cms.allowed_file_types', []);
+            $allowedExtensions = collect($allowedTypes)->flatten()->unique()->values()->all();
+        }
         $mimesRule = !empty($allowedExtensions) ? 'mimes:' . implode(',', $allowedExtensions) : '';
 
         $rules = [

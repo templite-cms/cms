@@ -130,12 +130,131 @@ class ComponentRegistry implements RegistryInterface
     }
 
     /**
+     * Сканировать vendor blade-компоненты из пакета CMS.
+     * Путь: packages/templite/cms/resources/views/components/*.blade.php
+     */
+    public function scanVendorComponents(): void
+    {
+        $path = dirname(__DIR__, 2) . '/resources/views/components';
+
+        if (!is_dir($path)) {
+            return;
+        }
+
+        $files = glob($path . '/*.blade.php');
+
+        foreach ($files as $file) {
+            $slug = basename($file, '.blade.php');
+            $this->register($slug, [
+                'slug' => $slug,
+                'path' => $file,
+                'source' => 'vendor',
+            ], 'vendor');
+        }
+    }
+
+    /**
      * Полное сканирование.
      */
     public function scan(): void
     {
         $this->scanAppComponents();
         $this->scanStorageComponents();
+        $this->scanVendorComponents();
+    }
+
+    /**
+     * Получить справочник Blade-компонентов для фронтенда.
+     *
+     * Возвращает массив с тегом, описанием и props каждого компонента,
+     * отсортированный по source (vendor -> storage -> app), затем по slug.
+     */
+    public function getBladeComponentReference(): array
+    {
+        $this->scan();
+        $reference = [];
+        $allComponents = $this->all();
+
+        foreach ($allComponents as $slug => $entry) {
+            $filePath = $entry['path'] ?? null;
+            // Storage components store directory path, resolve to index.blade.php
+            if ($filePath && is_dir($filePath)) {
+                $filePath = $filePath . '/index.blade.php';
+            }
+
+            if (!$filePath || !file_exists($filePath)) {
+                $reference[] = [
+                    'slug' => $slug,
+                    'tag' => '<x-cms::' . $slug . ' />',
+                    'description' => '',
+                    'props' => [],
+                    'source' => $entry['source'] ?? 'unknown',
+                ];
+                continue;
+            }
+
+            $content = file_get_contents($filePath);
+            $parsed = $this->parseBladeDocblock($content);
+
+            $reference[] = [
+                'slug' => $slug,
+                'tag' => '<x-cms::' . $slug . ' />',
+                'description' => $parsed['description'],
+                'props' => $parsed['props'],
+                'source' => $entry['source'] ?? 'unknown',
+                'code' => $content,
+            ];
+        }
+
+        usort($reference, fn ($a, $b) =>
+            ($a['source'] === $b['source'])
+                ? strcmp($a['slug'], $b['slug'])
+                : array_search($a['source'], ['vendor', 'storage', 'app']) <=> array_search($b['source'], ['vendor', 'storage', 'app'])
+        );
+
+        return $reference;
+    }
+
+    /**
+     * Парсинг Blade docblock-комментария и @props директивы.
+     */
+    protected function parseBladeDocblock(string $content): array
+    {
+        $description = '';
+        $props = [];
+
+        // Parse docblock: {{-- ... --}}
+        if (preg_match('/\{\{--\s*(.*?)--\}\}/s', $content, $match)) {
+            $docblock = trim($match[1]);
+            $lines = array_map('trim', explode("\n", $docblock));
+
+            foreach ($lines as $line) {
+                if (!empty($line)
+                    && !str_starts_with($line, 'Компонент:')
+                    && !str_starts_with($line, 'TASK-')
+                    && !str_starts_with($line, 'Использование')
+                    && !str_starts_with($line, 'Параметры:')
+                ) {
+                    $description = $line;
+                    break;
+                }
+            }
+        }
+
+        // Parse @props(['key' => 'default', ...])
+        if (preg_match("/@props\(\[(.*?)\]\)/s", $content, $match)) {
+            $propsStr = $match[1];
+            preg_match_all("/['\"](\w+)['\"]\s*(?:=>\s*(.+?))?(?:,|$)/", $propsStr, $propMatches, PREG_SET_ORDER);
+
+            foreach ($propMatches as $pm) {
+                $props[] = [
+                    'name' => $pm[1],
+                    'default' => isset($pm[2]) ? trim($pm[2], " \t\n\r\0\x0B'\"") : null,
+                ];
+            }
+        }
+
+        return ['description' => $description, 'props' => $props];
     }
 
     /**

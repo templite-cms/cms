@@ -110,6 +110,9 @@ class CmsServiceProvider extends ServiceProvider
         // Resolves storage/cms/components/{slug}/index.blade.php
         Blade::anonymousComponentPath(storage_path('cms/components'), 'cms');
 
+        // 3.2. Scan component registry (app, storage, vendor)
+        app(ComponentRegistry::class)->scan();
+
         // 4. Middleware
         $this->registerMiddleware();
 

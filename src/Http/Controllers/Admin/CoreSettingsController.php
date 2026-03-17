@@ -53,6 +53,22 @@ class CoreSettingsController extends Controller
             ]
         );
 
+        // Медиа: допустимые расширения файлов
+        $defaultExtensions = collect(config('cms.allowed_file_types', []))
+            ->flatten()->unique()->sort()->values()->implode(', ');
+
+        CmsConfig::firstOrCreate(
+            ['key' => 'allowed_file_extensions'],
+            [
+                'value' => $defaultExtensions,
+                'type' => 'string',
+                'group' => 'media',
+                'label' => 'Разрешённые расширения файлов',
+                'description' => 'Расширения через запятую (например: jpg, png, pdf, doc). Загрузка файлов с расширениями не из этого списка будет отклонена.',
+                'order' => 20,
+            ]
+        );
+
         $settings = CmsConfig::orderBy('order')->get();
 
         $grouped = $settings->groupBy('group')->map(function ($items) {

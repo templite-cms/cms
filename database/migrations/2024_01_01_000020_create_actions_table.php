@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('class_name')->nullable();
-            $table->string('source')->default('vendor'); // vendor, app, storage
+            $table->string('source')->default('storage'); // storage, app, vendor
             $table->json('params')->nullable();
             $table->json('returns')->nullable();
             $table->string('description')->nullable();

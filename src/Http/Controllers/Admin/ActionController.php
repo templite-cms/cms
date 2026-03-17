@@ -20,7 +20,9 @@ class ActionController extends Controller
     public function index(): Response
     {
         return Inertia::render('Actions/Index', [
-            'actions' => Action::withCount('blockActions')->orderBy('name')->get(),
+            'actions' => Action::with('screenshot')->withCount('blockActions')->orderBy('name')->get()->map(fn($a) => array_merge($a->toArray(), [
+                'screenshot_url' => $a->screenshot?->url(),
+            ])),
             'registryActions' => $this->actionRegistry->all(),
         ]);
     }
@@ -31,14 +33,22 @@ class ActionController extends Controller
      */
     public function edit(int $id): Response
     {
-        $action = Action::with('blockActions.block')->findOrFail($id);
+        $action = Action::with(['blockActions.block', 'screenshot'])->findOrFail($id);
 
-        $action->setAttribute('code', $this->resolveActionCode($action));
+        $code = $this->resolveActionCode($action);
+        $action->setAttribute('code', $code);
 
-        return Inertia::render('Actions/Edit', [
+        $props = [
             'action' => $action,
             'globalFieldDefinitions' => GlobalField::select('key', 'type', 'name')->whereNull('parent_id')->get(),
-        ]);
+        ];
+
+        // Для нового действия без кода — подставить шаблон
+        if ($code === '') {
+            $props['defaultCode'] = $this->getDefaultActionCode();
+        }
+
+        return Inertia::render('Actions/Edit', $props);
     }
 
     /**
@@ -73,13 +83,28 @@ class ActionController extends Controller
 
     /**
      * Создание нового action.
-     * Экран: Actions/Edit (пустая форма)
+     * Экран: Actions/Edit (пустая форма с дефолтным кодом-примером)
      */
     public function create(): Response
     {
         return Inertia::render('Actions/Edit', [
             'action' => null,
+            'defaultCode' => $this->getDefaultActionCode(),
             'globalFieldDefinitions' => GlobalField::select('key', 'type', 'name')->whereNull('parent_id')->get(),
         ]);
+    }
+
+    /**
+     * Получить дефолтный код-шаблон для нового action.
+     */
+    protected function getDefaultActionCode(): string
+    {
+        $stubPath = dirname(__DIR__, 4) . '/stubs/action.stub';
+
+        if (file_exists($stubPath)) {
+            return file_get_contents($stubPath);
+        }
+
+        return '';
     }
 }

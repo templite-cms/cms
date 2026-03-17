@@ -10,9 +10,11 @@ use Templite\Cms\Models\GlobalField;
 use Templite\Cms\Models\Library;
 use Templite\Cms\Models\PageTypeAttribute;
 use Templite\Cms\Models\TemplatePage;
+use Templite\Cms\Services\ComponentRegistry;
 
 class TemplatePageController extends Controller
 {
+    public function __construct(protected ComponentRegistry $componentRegistry) {}
     /**
      * Список шаблонов.
      * Экран: Templates/Index
@@ -78,6 +80,7 @@ class TemplatePageController extends Controller
                 ]),
             'componentDefinitions' => Component::orderBy('name')
                 ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
+            'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ]);
     }
 

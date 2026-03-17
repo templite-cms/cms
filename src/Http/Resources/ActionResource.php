@@ -18,6 +18,8 @@ class ActionResource extends JsonResource
             'params' => $this->params,
             'returns' => $this->returns,
             'description' => $this->description,
+            'allow_http' => (bool) $this->allow_http,
+            'screen' => $this->when($this->relationLoaded('screenshot'), fn() => new FileResource($this->screenshot)),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

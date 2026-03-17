@@ -14,10 +14,14 @@ use Templite\Cms\Models\Library;
 use Templite\Cms\Models\PageTypeAttribute;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BlockRenderer;
+use Templite\Cms\Services\ComponentRegistry;
 
 class BlockController extends Controller
 {
-    public function __construct(protected BlockRenderer $blockRenderer) {}
+    public function __construct(
+        protected BlockRenderer $blockRenderer,
+        protected ComponentRegistry $componentRegistry,
+    ) {}
 
     /**
      * Список блоков.
@@ -101,6 +105,7 @@ class BlockController extends Controller
             'allLibraries' => Library::where('active', true)->orderBy('name')->get(['id', 'name', 'slug', 'version']),
             'componentDefinitions' => Component::orderBy('name')
                 ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
+            'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ]);
     }
 
@@ -126,6 +131,7 @@ class BlockController extends Controller
                 ]),
             'componentDefinitions' => Component::orderBy('name')
                 ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
+            'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ]);
     }
 }

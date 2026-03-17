@@ -70,6 +70,9 @@ class CacheManager
 
     /**
      * Инвалидировать кэш всех блоков определённого типа.
+     *
+     * Вызывается при обновлении кода блока (template/style/script).
+     * Сбрасывает OPcache чтобы новый шаблон подхватился при validate_timestamps=0.
      */
     public function invalidateBlockType(int $blockId): void
     {
@@ -80,12 +83,36 @@ class CacheManager
         foreach ($pageBlocks as $pb) {
             $this->invalidateBlock($pb);
         }
+
+        // Сбросить compiled view и OPcache для изменённого шаблона блока
+        $this->clearCompiledViews();
+        $this->resetOpcache();
     }
 
     /**
      * Очистить кэш всех блоков и вернуть статистику.
+     *
+     * Помимо HTML-кэша, очищает compiled Blade views и сбрасывает OPcache,
+     * чтобы изменения в template.blade.php блоков применились
+     * (особенно при opcache.validate_timestamps=0 в production).
      */
     public function clearBlocks(): array
+    {
+        $count = $this->forgetAllBlockEntries();
+
+        // Очистить compiled Blade views — без этого OPcache может отдавать старые шаблоны
+        $this->clearCompiledViews();
+
+        // Сбросить OPcache чтобы новые compiled views подхватились
+        $this->resetOpcache();
+
+        return ['cleared' => $count];
+    }
+
+    /**
+     * Удалить cache-записи всех блоков (только HTML-кэш, без views/opcache).
+     */
+    protected function forgetAllBlockEntries(): int
     {
         $pageBlocks = PageBlock::where('cache_enabled', true)->get();
         $count = 0;
@@ -95,7 +122,7 @@ class CacheManager
             $count++;
         }
 
-        return ['cleared' => $count];
+        return $count;
     }
 
     /**
@@ -124,14 +151,17 @@ class CacheManager
      */
     public function clearAll(): array
     {
-        $blocks = $this->clearBlocks();
+        $blockCount = $this->forgetAllBlockEntries();
         $global = $this->invalidateGlobalFields();
         $scss = $this->clearScss();
+        $views = $this->clearCompiledViews();
+        $this->resetOpcache();
 
         return [
-            'blocks' => $blocks,
+            'blocks' => ['cleared' => $blockCount],
             'global' => $global,
             'scss' => $scss,
+            'views' => $views,
         ];
     }
 
@@ -194,6 +224,44 @@ class CacheManager
         }
 
         return ['cleared' => $count];
+    }
+
+    /**
+     * Очистить compiled Blade views из storage/framework/views.
+     *
+     * При opcache.validate_timestamps=0 (production) OPcache кэширует
+     * скомпилированные Blade-шаблоны навсегда. Удаление файлов заставляет
+     * Blade создать новые файлы с новыми путями в OPcache.
+     */
+    public function clearCompiledViews(): array
+    {
+        $dir = config('view.compiled', storage_path('framework/views'));
+        $count = 0;
+
+        if (is_dir($dir)) {
+            $files = glob($dir . '/*.php');
+            foreach ($files as $file) {
+                @unlink($file);
+                $count++;
+            }
+        }
+
+        return ['files' => $count];
+    }
+
+    /**
+     * Сбросить OPcache (если доступен).
+     *
+     * Необходимо при opcache.validate_timestamps=0 (production),
+     * иначе OPcache продолжит отдавать старые скомпилированные файлы.
+     */
+    public function resetOpcache(): bool
+    {
+        if (function_exists('opcache_reset')) {
+            return opcache_reset();
+        }
+
+        return false;
     }
 
     /**

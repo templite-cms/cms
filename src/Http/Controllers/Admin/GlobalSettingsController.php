@@ -68,7 +68,9 @@ class GlobalSettingsController extends Controller
     {
         if ($field->type !== 'array') {
             $value = $field->values->first();
-            return $value ? $value->value : ($field->default_value ?? '');
+            $raw = $value ? $value->value : ($field->default_value ?? '');
+
+            return \Templite\Cms\Support\FieldValueCaster::cast($raw, $field->type);
         }
 
         $childFields = $field->allChildren;
@@ -96,7 +98,9 @@ class GlobalSettingsController extends Controller
                     $row[$childField->key] = $this->buildRepeaterRows($childVals, $childField->allChildren);
                 } else {
                     $val = $childVals->first();
-                    $row[$childField->key] = $val ? $val->value : null;
+                    $row[$childField->key] = $val
+                        ? \Templite\Cms\Support\FieldValueCaster::cast($val->value, $childField->type)
+                        : null;
                 }
             }
 

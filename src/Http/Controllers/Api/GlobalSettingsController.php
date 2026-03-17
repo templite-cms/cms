@@ -238,28 +238,42 @@ class GlobalSettingsController extends Controller
         // Build key->id map for resolving field keys to IDs
         $fieldMap = GlobalField::pluck('id', 'key')->toArray();
 
+        // Типы полей, для которых массив — это значение, а не repeater
+        $fieldTypeMap = GlobalField::pluck('type', 'id')->toArray();
+        $scalarArrayTypes = ['select', 'link'];
+
         foreach ($data['values'] as $fieldKey => $value) {
             // Resolve: if numeric use directly, otherwise look up by key
             $fieldId = is_numeric($fieldKey) ? (int) $fieldKey : ($fieldMap[$fieldKey] ?? null);
             if (!$fieldId) continue;
 
+            $fieldType = $fieldTypeMap[$fieldId] ?? null;
+
             if (is_array($value)) {
-                // Повторитель: удаляем старые и создаём новые
-                GlobalFieldValue::where('global_field_id', $fieldId)->whereNull('parent_id')->delete();
-                foreach ($value as $index => $item) {
-                    if (is_array($item)) {
-                        $parentValue = GlobalFieldValue::create([
-                            'global_field_id' => $fieldId, 'value' => null, 'order' => $index,
-                        ]);
-                        foreach ($item as $childKey => $childValue) {
-                            $childFieldId = is_numeric($childKey) ? (int) $childKey : ($fieldMap[$childKey] ?? null);
-                            if (!$childFieldId) continue;
-                            GlobalFieldValue::create([
-                                'global_field_id' => $childFieldId,
-                                'parent_id' => $parentValue->id,
-                                'value' => is_string($childValue) ? $childValue : json_encode($childValue),
-                                'order' => 0,
+                // Не-repeater типы (link {url,target}, select multiple [val1,val2]) — JSON-строка
+                if (!array_is_list($value) || in_array($fieldType, $scalarArrayTypes)) {
+                    GlobalFieldValue::updateOrCreate(
+                        ['global_field_id' => $fieldId, 'parent_id' => null],
+                        ['value' => json_encode($value)]
+                    );
+                } else {
+                    // Последовательный массив — повторитель: удаляем старые и создаём новые
+                    GlobalFieldValue::where('global_field_id', $fieldId)->whereNull('parent_id')->delete();
+                    foreach ($value as $index => $item) {
+                        if (is_array($item)) {
+                            $parentValue = GlobalFieldValue::create([
+                                'global_field_id' => $fieldId, 'value' => null, 'order' => $index,
                             ]);
+                            foreach ($item as $childKey => $childValue) {
+                                $childFieldId = is_numeric($childKey) ? (int) $childKey : ($fieldMap[$childKey] ?? null);
+                                if (!$childFieldId) continue;
+                                GlobalFieldValue::create([
+                                    'global_field_id' => $childFieldId,
+                                    'parent_id' => $parentValue->id,
+                                    'value' => is_string($childValue) ? $childValue : json_encode($childValue),
+                                    'order' => 0,
+                                ]);
+                            }
                         }
                     }
                 }
