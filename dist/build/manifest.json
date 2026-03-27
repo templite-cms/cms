@@ -461,24 +461,6 @@
       "_chevron-down-pL4huxTV.js"
     ]
   },
-  "_Index-BQsrfm_U.js": {
-    "file": "assets/Index-BQsrfm_U.js",
-    "name": "Index",
-    "imports": [
-      "_x-CuOWXDIc.js",
-      "_DataTable-Cq4CcFtv.js",
-      "_Drawer-C1MZiAdN.js",
-      "_TextField-BlXlwWsx.js",
-      "_SlugField-BpBJsMXI.js",
-      "_useApi-C0u-srqq.js",
-      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_ruler-IYY3v2Di.js",
-      "_search-ITz7hQUi.js",
-      "_zap-Dlr53vCB.js",
-      "_upload-BBxFtU0s.js",
-      "_trash-2-z3Bhtg-8.js"
-    ]
-  },
   "_Index-BpMS5mG1.js": {
     "file": "assets/Index-BpMS5mG1.js",
     "name": "Index",
@@ -778,6 +760,24 @@
       "_ruler-IYY3v2Di.js",
       "_search-ITz7hQUi.js",
       "_zap-Dlr53vCB.js"
+    ]
+  },
+  "_Index-thLqRCot.js": {
+    "file": "assets/Index-thLqRCot.js",
+    "name": "Index",
+    "imports": [
+      "_x-CuOWXDIc.js",
+      "_DataTable-Cq4CcFtv.js",
+      "_Drawer-C1MZiAdN.js",
+      "_TextField-BlXlwWsx.js",
+      "_SlugField-BpBJsMXI.js",
+      "_useApi-C0u-srqq.js",
+      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
+      "_ruler-IYY3v2Di.js",
+      "_search-ITz7hQUi.js",
+      "_zap-Dlr53vCB.js",
+      "_upload-BBxFtU0s.js",
+      "_trash-2-z3Bhtg-8.js"
     ]
   },
   "_ItemCard-AiAfmmeY.js": {
@@ -1923,13 +1923,13 @@
     ]
   },
   "packages/templite/cms/resources/js/entries/libraries-index.js": {
-    "file": "assets/libraries-index-DW6eGsNP.js",
+    "file": "assets/libraries-index-DAiiOy6e.js",
     "name": "libraries-index",
     "src": "packages/templite/cms/resources/js/entries/libraries-index.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Index-BQsrfm_U.js",
+      "_Index-thLqRCot.js",
       "_x-CuOWXDIc.js",
       "_DataTable-Cq4CcFtv.js",
       "_inbox-BQlNvTYT.js",
@@ -3120,13 +3120,13 @@
     ]
   },
   "vendor/templite/cms/resources/js/entries/libraries-index.js": {
-    "file": "assets/libraries-index-CeyRMkna.js",
+    "file": "assets/libraries-index-Btz3TeyJ.js",
     "name": "libraries-index",
     "src": "vendor/templite/cms/resources/js/entries/libraries-index.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Index-BQsrfm_U.js",
+      "_Index-thLqRCot.js",
       "_x-CuOWXDIc.js",
       "_DataTable-Cq4CcFtv.js",
       "_inbox-BQlNvTYT.js",

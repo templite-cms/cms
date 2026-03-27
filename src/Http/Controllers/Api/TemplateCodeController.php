@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Blade;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BladeSecurityValidator;
 use Templite\Cms\Services\BlockRenderer;
+use Templite\Cms\Services\CacheManager;
 use Templite\Cms\Services\PageAssetCompiler;
 
 class TemplateCodeController extends Controller
@@ -87,6 +88,18 @@ class TemplateCodeController extends Controller
                 file_put_contents($path . '/script.js', $scriptContent);
             }
         }
+
+        $cacheManager = app(CacheManager::class);
+
+        // Инвалидировать HTML-кэш блоков на страницах с этим шаблоном
+        $pages = \Templite\Cms\Models\Page::where('template_page_id', $template->id)->get();
+        foreach ($pages as $page) {
+            $cacheManager->invalidatePage($page);
+        }
+
+        // Очистить compiled Blade views и OPcache
+        $cacheManager->clearCompiledViews();
+        $cacheManager->resetOpcache();
 
         app(PageAssetCompiler::class)->recompileForTemplate($template->id);
 
