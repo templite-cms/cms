@@ -3,8 +3,7 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Language;
 
 class LanguageController extends Controller
@@ -13,10 +12,10 @@ class LanguageController extends Controller
      * Единая страница языков.
      * Экран: Languages/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('Languages/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/languages-index.js', [
             'languages' => Language::ordered()->get(),
-        ]);
+        ], ['title' => 'Языки']);
     }
 }

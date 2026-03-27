@@ -1,0 +1,1201 @@
+// =============================================================================
+// Block Editor — IDE-like block editing page
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// =============================================================================
+// MegaMenu
+// =============================================================================
+
+.block-editor-megamenu__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-megamenu-overlay;
+  background-color: rgba($neutral-900, 0.2);
+  top: 104px;
+
+  .dark & {
+    background-color: rgba($neutral-900, 0.4);
+  }
+}
+
+.block-editor-megamenu__panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: $z-subheader;
+  background-color: #fff;
+  border-bottom: 1px solid $neutral-200;
+  box-shadow: $shadow-xl;
+  overflow-y: auto;
+  max-height: calc(100vh - 104px - 4rem);
+  top: 104px;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.block-editor-megamenu__inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+// =============================================================================
+// Block Main Fields
+// =============================================================================
+
+.block-main-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.block-main-fields__screenshot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+}
+
+.block-main-fields__screenshot-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.block-main-fields__screenshot-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.block-main-fields__screenshot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border-radius: $radius 0 0 $radius;
+  border: 1px solid $neutral-200;
+  border-right: none;
+  @include transition-fast(color, background-color);
+  background: none;
+  cursor: pointer;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.block-main-fields__screenshot-btn--generating {
+  color: $primary-600;
+  background-color: $primary-50;
+
+  .dark & {
+    color: $primary-400;
+    background-color: rgba($primary-900, 0.2);
+  }
+}
+
+.block-main-fields__screenshot-btn--idle {
+  color: $neutral-500;
+
+  &:hover {
+    color: $primary-600;
+    background-color: $primary-50;
+  }
+
+  .dark & {
+    color: $neutral-400;
+
+    &:hover {
+      color: $primary-400;
+      background-color: rgba($primary-900, 0.2);
+    }
+  }
+}
+
+.block-main-fields__screenshot-dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  padding: 0.25rem 0;
+  font-size: $font-size-xs;
+  border-radius: 0 $radius $radius 0;
+  border: 1px solid $neutral-200;
+  color: $neutral-400;
+  @include transition-fast(color, background-color);
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $primary-600;
+    background-color: $primary-50;
+  }
+
+  .dark & {
+    border-color: $neutral-700;
+    color: $neutral-500;
+
+    &:hover {
+      color: $primary-400;
+      background-color: rgba($primary-900, 0.2);
+    }
+  }
+}
+
+.block-main-fields__screenshot-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  width: 12rem;
+  border-radius: $radius-lg;
+  background-color: #fff;
+  box-shadow: $shadow-lg;
+  border: 1px solid $neutral-200;
+  padding: 0.75rem;
+  z-index: 20;
+
+  .dark & {
+    background-color: $neutral-900;
+    border-color: $neutral-700;
+  }
+}
+
+.block-main-fields__screenshot-menu-label {
+  display: block;
+  font-size: 11px;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  margin-bottom: 0.375rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.block-main-fields__screenshot-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.block-main-fields__screenshot-delay-input {
+  flex: 1;
+  height: 1.75rem;
+  padding: 0 0.5rem;
+  font-size: $font-size-xs;
+  border-radius: $radius;
+  border: 1px solid $neutral-200;
+  background-color: #fff;
+  color: $neutral-700;
+  outline: none;
+
+  &:focus {
+    box-shadow: 0 0 0 1px $primary-500;
+  }
+
+  .dark & {
+    border-color: $neutral-700;
+    background-color: $neutral-800;
+    color: $neutral-200;
+  }
+}
+
+.block-main-fields__screenshot-delay-unit {
+  font-size: 11px;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+.block-main-fields__screenshot-menu-hint {
+  margin-top: 0.375rem;
+  font-size: 10px;
+  color: $neutral-400;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+.block-main-fields__source {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.block-main-fields__source-label {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+.block-main-fields__source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: $radius;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  background-color: $neutral-100;
+  color: $neutral-600;
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-300;
+  }
+}
+
+.block-main-fields__chevron-rotate {
+  transform: rotate(180deg);
+}
+
+// =============================================================================
+// Block Actions Manager
+// =============================================================================
+
+.block-actions {
+  // intentionally empty root
+}
+
+.block-actions__subtitle {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  margin-top: 2px;
+}
+
+.block-actions__section-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.block-actions__attached-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1.5rem;
+}
+
+.block-actions__attached-item {
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  overflow: hidden;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+
+  > .list-item {
+    border: none;
+    border-radius: 0;
+  }
+}
+
+// Params panel
+.block-actions__params {
+  padding: 0.25rem 0.75rem 0.75rem;
+  border-top: 1px solid $neutral-100;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}
+
+.block-actions__params-hint {
+  font-size: 11px;
+  color: $neutral-400;
+  margin-bottom: 0.5rem;
+}
+
+.block-actions__params-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.block-actions__param-label {
+  display: block;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-600;
+  margin-bottom: 0.25rem;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.block-actions__param-type {
+  color: $neutral-400;
+  font-weight: $font-weight-normal;
+}
+
+.block-actions__param-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.block-actions__param-checkbox {
+  border-radius: $radius-sm;
+  border: 1px solid $neutral-300;
+  color: $primary-500;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.3);
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+}
+
+.block-actions__param-checkbox-text {
+  font-size: $font-size-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.block-actions__param-input {
+  width: 100%;
+  padding: 0.375rem 0.625rem;
+  font-size: $font-size-sm;
+  border: 1px solid $neutral-200;
+  border-radius: $radius;
+  background-color: $neutral-50;
+  color: $neutral-700;
+  outline: none;
+
+  &:focus {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 1px $primary-500;
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background-color: $neutral-900;
+    color: $neutral-200;
+  }
+}
+
+// Search
+.block-actions__search {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.block-actions__search-icon {
+  position: absolute;
+  left: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.875rem;
+  height: 0.875rem;
+  color: $neutral-400;
+  pointer-events: none;
+}
+
+.block-actions__search-input {
+  width: 100%;
+  padding: 0.375rem 0.75rem 0.375rem 2rem;
+  font-size: $font-size-sm;
+  border: 1px solid $neutral-200;
+  border-radius: $radius;
+  background-color: $neutral-50;
+  color: $neutral-700;
+  outline: none;
+
+  &::placeholder {
+    color: $neutral-400;
+  }
+
+  &:focus {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 1px $primary-500;
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background-color: $neutral-900;
+    color: $neutral-200;
+  }
+}
+
+// Unattached (available) list
+.block-actions__available-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.block-actions__search-empty {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+// Hint box
+.block-actions__hint-box {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: $neutral-50;
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+
+  .dark & {
+    background-color: $neutral-900;
+    border-color: $neutral-700;
+  }
+}
+
+.block-actions__hint-text {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.block-actions__hint-label {
+  font-weight: $font-weight-medium;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.block-actions__code-inline {
+  font-size: 11px;
+  padding: 0.125rem 0.25rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+// =============================================================================
+// Block Libraries Manager
+// =============================================================================
+
+.block-libraries__subtitle {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  margin-bottom: 0.75rem;
+}
+
+.block-libraries__section {
+  margin-bottom: 1rem;
+}
+
+.block-libraries__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+// =============================================================================
+// Block Presets Manager
+// =============================================================================
+
+.block-presets__subtitle {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  margin-bottom: 0.75rem;
+}
+
+.block-presets__skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.block-presets__skeleton {
+  height: 4rem;
+  background-color: $neutral-200;
+  border-radius: $radius-lg;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.block-presets__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// =============================================================================
+// Preset Card
+// =============================================================================
+
+.preset-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem;
+  border-radius: $radius-lg;
+  @include transition-fast(background-color, border-color);
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.preset-card--active {
+  background-color: $primary-50;
+  border-color: $primary-300;
+
+  .dark & {
+    background-color: rgba($primary-900, 0.3);
+    border-color: $primary-700;
+  }
+}
+
+.preset-card--inactive {
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-800;
+  }
+}
+
+.preset-card__thumb {
+  width: 4rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $neutral-100;
+  border-radius: $radius;
+  overflow: hidden;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+}
+
+.preset-card__thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preset-card__thumb-placeholder {
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-300;
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.preset-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.preset-card__name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.preset-card__type-badge {
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius;
+}
+
+.preset-card__type-badge--global {
+  background-color: #dbeafe;
+  color: #2563eb;
+
+  .dark & {
+    background-color: rgba(#1e3a8a, 0.4);
+    color: #60a5fa;
+  }
+}
+
+.preset-card__type-badge--local {
+  background-color: #dcfce7;
+  color: #16a34a;
+
+  .dark & {
+    background-color: rgba(#14532d, 0.4);
+    color: #4ade80;
+  }
+}
+
+// =============================================================================
+// Tab Section Manager
+// =============================================================================
+
+.tab-section-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tab-section-manager__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.tab-section-manager__section-title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.tab-section-manager__section-count {
+  color: $neutral-400;
+  font-weight: $font-weight-normal;
+}
+
+.tab-section-manager__add-link {
+  font-size: $font-size-sm;
+  color: $primary-500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $primary-700;
+  }
+
+  .dark &:hover {
+    color: $primary-300;
+  }
+}
+
+.tab-section-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tab-section-manager__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.tab-section-manager__drag-handle {
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.tab-section-manager__row-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  flex: 1;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.tab-section-manager__row-meta {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+}
+
+.tab-section-manager__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  @include transition-fast(opacity);
+
+  .tab-section-manager__row:hover & {
+    opacity: 1;
+  }
+}
+
+.tab-section-manager__action-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+}
+
+.tab-section-manager__action-btn--edit {
+  color: $neutral-400;
+
+  &:hover {
+    color: $primary-500;
+    background-color: $primary-50;
+  }
+
+  .dark &:hover {
+    background-color: rgba($primary-900, 0.2);
+  }
+}
+
+.tab-section-manager__action-btn--delete {
+  color: $neutral-400;
+
+  &:hover {
+    color: $error-500;
+    background-color: $error-50;
+  }
+
+  .dark &:hover {
+    background-color: rgba($error-900, 0.2);
+  }
+}
+
+.tab-section-manager__action-btn--confirm {
+  color: $success-500;
+
+  &:hover {
+    background-color: $success-50;
+  }
+
+  .dark &:hover {
+    background-color: rgba($success-900, 0.2);
+  }
+}
+
+.tab-section-manager__action-btn--cancel {
+  color: $neutral-400;
+
+  &:hover {
+    background-color: $neutral-100;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-700;
+  }
+}
+
+.tab-section-manager__inline-input {
+  flex: 1;
+  padding: 0.25rem 0.5rem;
+  font-size: $font-size-sm;
+  background-color: #fff;
+  border: 1px solid $primary-300;
+  border-radius: $radius;
+  outline: none;
+  color: $neutral-700;
+
+  &:focus {
+    box-shadow: 0 0 0 1px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-200;
+  }
+}
+
+.tab-section-manager__inline-select {
+  width: 9rem;
+  padding: 0.25rem 0.5rem;
+  font-size: $font-size-sm;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius;
+  outline: none;
+  color: $neutral-700;
+
+  .dark & {
+    background-color: $neutral-700;
+    border-color: $neutral-600;
+    color: $neutral-200;
+  }
+}
+
+.tab-section-manager__empty {
+  padding: 1rem 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+  border: 1px dashed $neutral-300;
+  border-radius: $radius-lg;
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+}
+
+.tab-section-manager__add-form {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab-section-manager__add-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  outline: none;
+  color: $neutral-700;
+
+  &:focus {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 1px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-200;
+  }
+}
+
+.tab-section-manager__add-select {
+  width: 9rem;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  outline: none;
+  color: $neutral-700;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-200;
+  }
+}
+
+.tab-section-manager__separator {
+  border: none;
+  border-top: 1px solid $neutral-200;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}
+
+.tab-section-manager__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+// =============================================================================
+// Field Editor Modal
+// =============================================================================
+
+.field-editor-modal__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid $neutral-200;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.field-editor-modal__nav-btn {
+  position: relative;
+  padding: 0.625rem 0.75rem;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  @include transition-fast(color);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.field-editor-modal__nav-btn--active {
+  color: $primary-600;
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+.field-editor-modal__nav-btn--inactive {
+  color: $neutral-500;
+
+  &:hover {
+    color: $neutral-700;
+  }
+
+  .dark & {
+    color: $neutral-400;
+
+    &:hover {
+      color: $neutral-200;
+    }
+  }
+}
+
+.field-editor-modal__nav-error {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.25rem;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: $radius-full;
+  background-color: $error-500;
+}
+
+.field-editor-modal__nav-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: $primary-500;
+  border-radius: $radius 0 0 0;
+}
+
+.field-editor-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field-editor-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field-editor-modal__grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.field-editor-modal__type-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  margin-bottom: 0.5rem;
+  display: block;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.field-editor-modal__type-required {
+  color: $error-500;
+}
+
+.field-editor-modal__options-error {
+  font-size: $font-size-sm;
+  color: $error-500;
+}
+
+.field-editor-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+// =============================================================================
+// Conditional Logic Builder (stub)
+// =============================================================================
+
+.conditional-logic {
+  border: 1px dashed $neutral-300;
+  border-radius: $radius-lg;
+  padding: 1rem;
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+}
+
+.conditional-logic__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.conditional-logic__title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.conditional-logic__hint {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  margin-top: 0.25rem;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+// Block Documentation — now uses shared docs-panel classes from components/_docs-panel.scss
+
+// =============================================================================
+// Empty state (reused in actions/libraries)
+// =============================================================================
+
+.block-editor-empty {
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.block-editor-empty__icon {
+  width: 3rem;
+  height: 3rem;
+  color: $neutral-300;
+  margin: 0 auto 0.75rem;
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.block-editor-empty__title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-600;
+  margin-bottom: 0.25rem;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.block-editor-empty__hint {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+}
+
+.block-editor-empty__link {
+  color: $primary-500;
+
+  &:hover {
+    color: $primary-600;
+  }
+}
+
+// =============================================================================
+// Shared utilities
+// =============================================================================
+
+// Spinner animation
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// Draggable ghost
+.opacity-30 {
+  opacity: 0.3;
+}
+
+// Chevron rotation
+.block-editor-chevron--open {
+  transform: rotate(180deg);
+}
+
+// Accent color classes for workspace panel icons
+.accent-error { color: $error-400; }
+.accent-info { color: $info-400; }
+.accent-warning { color: $warning-400; }
+.accent-success { color: $success-400; }
+.accent-neutral { color: $neutral-500; }
+
+// Icon sizes (block editor specific)
+.icon-3 { width: 0.75rem; height: 0.75rem; }
+.icon-3h { width: 0.875rem; height: 0.875rem; }
+.icon-4 { width: 1rem; height: 1rem; }
+.icon-8 { width: 2rem; height: 2rem; }
+.icon-12 { width: 3rem; height: 3rem; }
+
+.icon-check-green { color: #4ade80; }
+.icon-primary { color: $primary-500; }

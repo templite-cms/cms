@@ -1,0 +1,236 @@
+// =============================================================================
+// Settings Index — Global settings page
+// =============================================================================
+
+@use '../variables' as *;
+
+.settings-index {
+  padding: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.settings-index__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.settings-index__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.settings-index__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Language selector
+// -----------------------------------------------------------------------------
+
+.settings-index__lang {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-index__lang-label {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.settings-index__lang-select {
+  width: 11rem;
+}
+
+.settings-index__lang-badge {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: rgba($primary-500, 0.1);
+  color: $primary-700;
+
+  .dark & {
+    background-color: rgba($primary-400, 0.15);
+    color: $primary-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Tabs
+// -----------------------------------------------------------------------------
+
+.settings-index__tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid $neutral-200;
+  margin-bottom: 1.5rem;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.settings-index__tab {
+  padding: 0.625rem 1rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+  color: $neutral-500;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $neutral-700;
+    border-bottom-color: $neutral-300;
+  }
+
+  .dark &:hover {
+    color: $neutral-300;
+    border-bottom-color: $neutral-600;
+  }
+
+  &--active {
+    color: $primary-600;
+    border-bottom-color: $primary-500;
+
+    .dark & {
+      color: $primary-400;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Loading
+// -----------------------------------------------------------------------------
+
+.settings-index__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.settings-index__loading-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: $primary-500;
+  animation: spin 1s linear infinite;
+}
+
+.settings-index__loading-text {
+  margin-left: 0.5rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Columns grid
+// -----------------------------------------------------------------------------
+
+.settings-index__columns {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.settings-index__column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Section card
+// -----------------------------------------------------------------------------
+
+.settings-index__section {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.settings-index__section-header {
+  padding: 0.75rem 1rem;
+  background-color: $neutral-50;
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    background-color: rgba($neutral-900, 0.3);
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.settings-index__section-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.settings-index__section-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Old flat structure (fallback)
+// -----------------------------------------------------------------------------
+
+.settings-index__flat-content {
+  max-width: 42rem;
+}
+
+.settings-index__flat-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-index__empty {
+  padding: 3rem 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}

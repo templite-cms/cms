@@ -101,32 +101,36 @@ class ComponentController extends Controller
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
 
+        // Inline-код из запроса (для live preview без сохранения)
+        $inlineTemplate = $request->input('template_code');
+        $inlineStyle = $request->input('style_code');
+        $inlineScript = $request->input('script_code');
+
         $templateHtml = '';
         $css = '';
         $js = '';
 
-        $templateFile = $path . '/index.blade.php';
-        if (file_exists($templateFile)) {
+        // Собираем default-значения параметров
+        $params = [];
+        foreach (($component->params ?? []) as $param) {
+            $key = $param['key'] ?? '';
+            if ($key !== '') {
+                $params[$key] = $param['default'] ?? '';
+            }
+        }
+
+        $renderVars = array_merge($params, [
+            'params' => $params,
+            'component' => $component,
+            'attributes' => new \Illuminate\View\ComponentAttributeBag(),
+            'slot' => '',
+        ]);
+
+        // Template: inline или с диска
+        if ($inlineTemplate !== null) {
             try {
-                $params = [];
-                foreach (($component->params ?? []) as $param) {
-                    $key = $param['key'] ?? '';
-                    if ($key !== '') {
-                        $params[$key] = $param['default'] ?? '';
-                    }
-                }
-
-                $templateContent = file_get_contents($templateFile);
-
-                // Валидация шаблона компонента при рендере (защита от подмены файлов)
-                \Templite\Cms\Services\BladeSecurityValidator::assertSafe($templateContent);
-
-                $templateHtml = Blade::render($templateContent, array_merge($params, [
-                    'params' => $params,
-                    'component' => $component,
-                    'attributes' => new \Illuminate\View\ComponentAttributeBag(),
-                    'slot' => '',
-                ]));
+                \Templite\Cms\Services\BladeSecurityValidator::assertSafe($inlineTemplate);
+                $templateHtml = Blade::render($inlineTemplate, $renderVars);
             } catch (\Throwable $e) {
                 $templateHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
                     . '<strong>Template Error:</strong><br>'
@@ -134,24 +138,53 @@ class ComponentController extends Controller
                     . '</div>';
             }
         } else {
-            $templateHtml = '<div style="color:#94a3b8;padding:32px;text-align:center;font-family:sans-serif;font-size:14px">'
-                . 'Код компонента не найден. Сохраните код через редактор.'
-                . '</div>';
-        }
-
-        $styleFile = $path . '/style.scss';
-        if (file_exists($styleFile)) {
-            try {
-                $compiler = new \ScssPhp\ScssPhp\Compiler();
-                $css = $compiler->compileString(file_get_contents($styleFile))->getCss();
-            } catch (\Throwable $e) {
-                $css = "/* SCSS Error: " . addslashes($e->getMessage()) . " */";
+            $templateFile = $path . '/index.blade.php';
+            if (file_exists($templateFile)) {
+                try {
+                    $templateContent = file_get_contents($templateFile);
+                    \Templite\Cms\Services\BladeSecurityValidator::assertSafe($templateContent);
+                    $templateHtml = Blade::render($templateContent, $renderVars);
+                } catch (\Throwable $e) {
+                    $templateHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
+                        . '<strong>Template Error:</strong><br>'
+                        . htmlspecialchars($e->getMessage())
+                        . '</div>';
+                }
+            } else {
+                $templateHtml = '<div style="color:#94a3b8;padding:32px;text-align:center;font-family:sans-serif;font-size:14px">'
+                    . 'Код компонента не найден. Сохраните код через редактор.'
+                    . '</div>';
             }
         }
 
-        $scriptFile = $path . '/script.js';
-        if (file_exists($scriptFile)) {
-            $js = file_get_contents($scriptFile);
+        // Style: inline или с диска
+        if ($inlineStyle !== null) {
+            try {
+                $compiler = new \ScssPhp\ScssPhp\Compiler();
+                $css = $compiler->compileString($inlineStyle)->getCss();
+            } catch (\Throwable $e) {
+                $css = "/* SCSS Error: " . addslashes($e->getMessage()) . " */";
+            }
+        } else {
+            $styleFile = $path . '/style.scss';
+            if (file_exists($styleFile)) {
+                try {
+                    $compiler = new \ScssPhp\ScssPhp\Compiler();
+                    $css = $compiler->compileString(file_get_contents($styleFile))->getCss();
+                } catch (\Throwable $e) {
+                    $css = "/* SCSS Error: " . addslashes($e->getMessage()) . " */";
+                }
+            }
+        }
+
+        // Script: inline или с диска
+        if ($inlineScript !== null) {
+            $js = $inlineScript;
+        } else {
+            $scriptFile = $path . '/script.js';
+            if (file_exists($scriptFile)) {
+                $js = file_get_contents($scriptFile);
+            }
         }
 
         // Template CSS/JS (global styles from page template)
@@ -161,7 +194,7 @@ class ComponentController extends Controller
         $cdnJsLinks = '';
         $localLibCss = '';
         $localLibJs = '';
-        $templateId = $request->query('template_id');
+        $templateId = $request->input('template_id');
         if ($templateId) {
             $template = TemplatePage::with('libraries')->find($templateId);
             if ($template) {
@@ -196,8 +229,15 @@ class ComponentController extends Controller
             }
         }
 
-        $allCss = $localLibCss . ($templateCss ? "{$templateCss}\n" : '') . $css;
-        $allJs = $localLibJs . ($templateJs ? "{$templateJs}\n" : '') . $js;
+        // Component styles/scripts from nested component references
+        $rawTemplate = $inlineTemplate ?? '';
+        if (!$rawTemplate && is_dir($path) && file_exists($path . '/index.blade.php')) {
+            $rawTemplate = file_get_contents($path . '/index.blade.php');
+        }
+        $componentAssets = app(BlockRenderer::class)->collectComponentAssets($rawTemplate);
+
+        $allCss = $localLibCss . ($templateCss ? "{$templateCss}\n" : '') . $componentAssets['css'] . $css;
+        $allJs = $localLibJs . ($templateJs ? "{$templateJs}\n" : '') . $componentAssets['js'] . $js;
 
         $componentSlug = e($component->slug);
         $wrappedContent = '<div class="cms-component cms-component--' . $componentSlug . '">' . $templateHtml . '</div>';

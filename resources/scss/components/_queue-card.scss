@@ -1,0 +1,727 @@
+// =============================================================================
+// QueueCard — Queue management card for Core Settings
+// =============================================================================
+
+@use '../variables' as *;
+
+.queue-card {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-xl;
+  padding: 1.5rem;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.queue-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.queue-card__title {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.queue-card__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Icon buttons
+// -----------------------------------------------------------------------------
+
+.queue-card__icon-btn {
+  padding: 0.375rem;
+  border-radius: $radius-lg;
+  transition: background-color $transition-fast, color $transition-fast;
+  color: $neutral-500;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $neutral-100;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-700;
+  }
+
+  &--pause {
+    color: $warning-600;
+
+    &:hover {
+      background-color: $warning-50;
+    }
+
+    .dark &:hover {
+      background-color: rgba($warning-900, 0.2);
+    }
+  }
+
+  &--resume {
+    color: $success-600;
+
+    &:hover {
+      background-color: $success-50;
+    }
+
+    .dark &:hover {
+      background-color: rgba($success-900, 0.2);
+    }
+  }
+}
+
+.queue-card__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Auto-refresh label
+// -----------------------------------------------------------------------------
+
+.queue-card__auto-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+  cursor: pointer;
+}
+
+.queue-card__auto-refresh-checkbox {
+  border-radius: $radius-sm;
+  border: 1px solid $neutral-300;
+  color: $primary-600;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.3);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Paused banner
+// -----------------------------------------------------------------------------
+
+.queue-card__paused-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background-color: $warning-50;
+  border: 1px solid $warning-200;
+  border-radius: $radius-lg;
+
+  .dark & {
+    background-color: rgba($warning-900, 0.2);
+    border-color: $warning-700;
+  }
+}
+
+.queue-card__paused-icon {
+  width: 1rem;
+  height: 1rem;
+  color: $warning-500;
+  flex-shrink: 0;
+}
+
+.queue-card__paused-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $warning-700;
+
+  .dark & {
+    color: $warning-300;
+  }
+}
+
+.queue-card__paused-action {
+  margin-left: auto;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  color: $warning-700;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  .dark & {
+    color: $warning-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Queue tiles
+// -----------------------------------------------------------------------------
+
+.queue-card__queues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.queue-card__queue-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background-color: $neutral-50;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $neutral-100;
+  }
+
+  .dark & {
+    background-color: rgba($neutral-700, 0.5);
+
+    &:hover {
+      background-color: rgba($neutral-600, 0.5);
+    }
+  }
+
+  &--inactive {
+    opacity: 0.5;
+  }
+}
+
+.queue-card__queue-name {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  text-transform: uppercase;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.queue-card__queue-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.queue-card__queue-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.queue-card__queue-stat-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: $neutral-400;
+
+  &--error {
+    color: $error-500;
+  }
+}
+
+.queue-card__queue-stat-value {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+
+  &--error {
+    color: $error-500;
+
+    .dark & {
+      color: $error-500;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Processed stats
+// -----------------------------------------------------------------------------
+
+.queue-card__processed {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+  margin-bottom: 1.25rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.queue-card__processed-value {
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Failed jobs section
+// -----------------------------------------------------------------------------
+
+.queue-card__failed {
+  // container
+}
+
+.queue-card__failed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.queue-card__failed-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.queue-card__failed-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.queue-card__filter-select {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-lg;
+  padding: 0.25rem 0.5rem;
+  background-color: #fff;
+  color: $neutral-900;
+
+  .dark & {
+    border-color: $neutral-600;
+    background-color: $neutral-700;
+    color: $neutral-100;
+  }
+}
+
+.queue-card__bulk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-lg;
+  border: 1px solid;
+  background: none;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &--retry {
+    border-color: $primary-300;
+    color: $primary-600;
+
+    &:hover {
+      background-color: $primary-50;
+    }
+
+    .dark & {
+      border-color: $primary-600;
+      color: $primary-400;
+
+      &:hover {
+        background-color: rgba($primary-900, 0.2);
+      }
+    }
+  }
+
+  &--flush {
+    border-color: $error-300;
+    color: $error-600;
+
+    &:hover {
+      background-color: $error-50;
+    }
+
+    .dark & {
+      border-color: $error-600;
+      color: $error-400;
+
+      &:hover {
+        background-color: rgba($error-900, 0.2);
+      }
+    }
+  }
+}
+
+.queue-card__bulk-btn-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+// -----------------------------------------------------------------------------
+// Empty state
+// -----------------------------------------------------------------------------
+
+.queue-card__empty {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.queue-card__empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: $success-400;
+  margin: 0 auto 0.5rem;
+}
+
+.queue-card__empty-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Table
+// -----------------------------------------------------------------------------
+
+.queue-card__table-wrap {
+  overflow-x: auto;
+}
+
+.queue-card__table {
+  width: 100%;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.queue-card__thead-row {
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.queue-card__th {
+  text-align: left;
+  padding: 0.5rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  text-transform: uppercase;
+
+  &--actions {
+    // empty header for action column
+  }
+}
+
+.queue-card__row {
+  border-bottom: 1px solid $neutral-100;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark & {
+    border-bottom-color: rgba($neutral-700, 0.5);
+
+    &:hover {
+      background-color: rgba($neutral-700, 0.3);
+    }
+  }
+}
+
+.queue-card__td {
+  padding: 0.5rem;
+
+  &--id {
+    font-family: $font-mono;
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    color: $neutral-400;
+  }
+
+  &--queue {
+    // contains code element
+  }
+
+  &--class {
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+
+    .dark & {
+      color: $neutral-300;
+    }
+  }
+
+  &--error {
+    color: $neutral-500;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    .dark & {
+      color: $neutral-400;
+    }
+  }
+
+  &--date {
+    color: $neutral-400;
+    white-space: nowrap;
+  }
+}
+
+.queue-card__queue-code {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background-color: $neutral-100;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius-sm;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.queue-card__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.queue-card__row-action-btn {
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  transition: color $transition-fast;
+
+  &--retry:hover {
+    color: $primary-600;
+  }
+
+  &--delete:hover {
+    color: $error-600;
+  }
+}
+
+.queue-card__row-action-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+// -----------------------------------------------------------------------------
+// Expanded row
+// -----------------------------------------------------------------------------
+
+.queue-card__expanded-cell {
+  padding: 1rem;
+  background-color: $neutral-50;
+
+  .dark & {
+    background-color: rgba($neutral-900, 0.5);
+  }
+}
+
+.queue-card__expanded-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.queue-card__expanded-label {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  margin-bottom: 0.25rem;
+}
+
+.queue-card__expanded-pre {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background-color: $neutral-100;
+  padding: 0.75rem;
+  border-radius: $radius-lg;
+  overflow-x: auto;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+
+  &--payload {
+    max-height: 12rem;
+  }
+
+  &--stacktrace {
+    max-height: 16rem;
+    white-space: pre-wrap;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Pagination
+// -----------------------------------------------------------------------------
+
+.queue-card__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.queue-card__pagination-total {
+  color: $neutral-400;
+}
+
+.queue-card__pagination-pages {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.queue-card__pagination-btn {
+  padding: 0.25rem 0.5rem;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $neutral-500;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $neutral-100;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-700;
+  }
+
+  &--active {
+    background-color: $primary-600;
+    color: #fff;
+
+    &:hover {
+      background-color: $primary-600;
+    }
+
+    .dark &:hover {
+      background-color: $primary-600;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Drawer form
+// -----------------------------------------------------------------------------
+
+.queue-card__drawer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.queue-card__drawer-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.queue-card__drawer-checkbox {
+  border-radius: $radius-sm;
+  border: 1px solid $neutral-300;
+  color: $primary-600;
+}
+
+.queue-card__drawer-checkbox-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.queue-card__drawer-hint {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $warning-600;
+  margin-top: -0.5rem;
+
+  .dark & {
+    color: $warning-400;
+  }
+}
+
+.queue-card__drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-top: 1px solid $neutral-200;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}
+
+.queue-card__drawer-delete-btn {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $error-600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $error-700;
+  }
+}

@@ -1,0 +1,575 @@
+// =============================================================================
+// Schedule Card — Cron tasks & history
+// =============================================================================
+
+@use '../variables' as *;
+
+.schedule-card {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-xl;
+  padding: 1.5rem;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.schedule-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.schedule-card__title {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.schedule-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+// -----------------------------------------------------------------------------
+// Auto-refresh checkbox
+// -----------------------------------------------------------------------------
+
+.schedule-card__auto-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+  cursor: pointer;
+}
+
+.schedule-card__auto-refresh-checkbox {
+  border-radius: $radius-sm;
+  border: 1px solid $neutral-300;
+  color: $primary-600;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.3);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Icon sizing
+// -----------------------------------------------------------------------------
+
+.schedule-card__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.schedule-card__icon--sm {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+// -----------------------------------------------------------------------------
+// Section
+// -----------------------------------------------------------------------------
+
+.schedule-card__section {
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.schedule-card__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.schedule-card__section-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Empty state
+// -----------------------------------------------------------------------------
+
+.schedule-card__empty {
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Table
+// -----------------------------------------------------------------------------
+
+.schedule-card__table-wrap {
+  overflow-x: auto;
+}
+
+.schedule-card__table {
+  width: 100%;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.schedule-card__thead-row {
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.schedule-card__th {
+  text-align: left;
+  padding: 0.5rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  text-transform: uppercase;
+
+  &--empty {
+    padding: 0.5rem;
+  }
+}
+
+.schedule-card__row {
+  border-bottom: 1px solid $neutral-100;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark & {
+    border-bottom-color: rgba($neutral-700, 0.5);
+
+    &:hover {
+      background-color: rgba($neutral-700, 0.3);
+    }
+  }
+
+  &--inactive {
+    opacity: 0.5;
+  }
+}
+
+.schedule-card__cell {
+  padding: 0.5rem;
+
+  &--muted {
+    color: $neutral-600;
+
+    .dark & {
+      color: $neutral-400;
+    }
+  }
+
+  &--dimmed {
+    color: $neutral-500;
+    white-space: nowrap;
+  }
+
+  &--faded {
+    color: $neutral-400;
+    white-space: nowrap;
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+  }
+
+  &--truncate {
+    color: $neutral-500;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Command code tag
+// -----------------------------------------------------------------------------
+
+.schedule-card__command {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background-color: $neutral-100;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius-sm;
+  font-family: $font-mono;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.schedule-card__command--plain {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-family: $font-mono;
+}
+
+// -----------------------------------------------------------------------------
+// System badge
+// -----------------------------------------------------------------------------
+
+.schedule-card__system-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-left: 0.375rem;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  color: $primary-600;
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Duration hint
+// -----------------------------------------------------------------------------
+
+.schedule-card__duration {
+  color: $neutral-300;
+  margin-left: 0.25rem;
+}
+
+// -----------------------------------------------------------------------------
+// Status badge
+// -----------------------------------------------------------------------------
+
+.schedule-card__status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  padding: 0.125rem 0.5rem;
+  border-radius: $radius-full;
+  font-weight: $font-weight-medium;
+
+  &--success {
+    background-color: $success-100;
+    color: $success-700;
+
+    .dark & {
+      background-color: rgba($success-900, 0.3);
+      color: $success-400;
+    }
+  }
+
+  &--fail {
+    background-color: $error-100;
+    color: $error-700;
+
+    .dark & {
+      background-color: rgba($error-900, 0.3);
+      color: $error-400;
+    }
+  }
+
+  &--running {
+    background-color: $warning-100;
+    color: $warning-700;
+
+    .dark & {
+      background-color: rgba($warning-900, 0.3);
+      color: $warning-400;
+    }
+  }
+
+  &--none {
+    color: $neutral-400;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Run button
+// -----------------------------------------------------------------------------
+
+.schedule-card__run-btn {
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $primary-600;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Filter select
+// -----------------------------------------------------------------------------
+
+.schedule-card__filter-select {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-lg;
+  padding: 0.25rem 0.5rem;
+  background-color: #fff;
+  color: $neutral-900;
+
+  .dark & {
+    border-color: $neutral-600;
+    background-color: $neutral-700;
+    color: $neutral-100;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Expanded row
+// -----------------------------------------------------------------------------
+
+.schedule-card__expanded-cell {
+  padding: 1rem;
+  background-color: $neutral-50;
+
+  .dark & {
+    background-color: rgba($neutral-900, 0.5);
+  }
+}
+
+.schedule-card__expanded-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.schedule-card__expanded-label {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  margin-bottom: 0.25rem;
+}
+
+.schedule-card__expanded-output {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background-color: $neutral-100;
+  padding: 0.75rem;
+  border-radius: $radius-lg;
+  overflow-x: auto;
+  max-height: 12rem;
+  white-space: pre-wrap;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+}
+
+.schedule-card__expanded-error {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background-color: $error-50;
+  color: $error-700;
+  padding: 0.75rem;
+  border-radius: $radius-lg;
+  overflow-x: auto;
+  max-height: 12rem;
+  white-space: pre-wrap;
+
+  .dark & {
+    background-color: rgba($error-900, 0.2);
+    color: $error-400;
+  }
+}
+
+.schedule-card__expanded-empty {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-400;
+}
+
+// -----------------------------------------------------------------------------
+// Pagination
+// -----------------------------------------------------------------------------
+
+.schedule-card__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.schedule-card__pagination-total {
+  color: $neutral-400;
+}
+
+.schedule-card__pagination-pages {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.schedule-card__pagination-btn {
+  padding: 0.25rem 0.5rem;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: $neutral-500;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $neutral-100;
+
+    .dark & {
+      background-color: $neutral-700;
+    }
+  }
+
+  &--active {
+    background-color: $primary-600;
+    color: #fff;
+
+    &:hover {
+      background-color: $primary-600;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Cron hint box
+// -----------------------------------------------------------------------------
+
+.schedule-card__hint {
+  margin-top: 1.25rem;
+  padding: 0.75rem;
+  background-color: $neutral-50;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+
+  .dark & {
+    background-color: rgba($neutral-900, 0.5);
+    border-color: $neutral-700;
+  }
+}
+
+.schedule-card__hint-text {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.schedule-card__hint-code {
+  display: block;
+  margin-top: 0.375rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background-color: $neutral-100;
+  color: $neutral-700;
+  padding: 0.5rem 0.75rem;
+  border-radius: $radius;
+  font-family: $font-mono;
+  user-select: all;
+
+  .dark & {
+    background-color: $neutral-800;
+    color: $neutral-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Drawer form
+// -----------------------------------------------------------------------------
+
+.schedule-card__drawer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.schedule-card__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.schedule-card__checkbox {
+  border-radius: $radius-sm;
+  border: 1px solid $neutral-300;
+  color: $primary-600;
+}
+
+.schedule-card__checkbox-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Drawer footer
+// -----------------------------------------------------------------------------
+
+.schedule-card__drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-top: 1px solid $neutral-200;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Spin animation (for loading icons)
+// -----------------------------------------------------------------------------
+
+.schedule-card__spin {
+  animation: spin 1s linear infinite;
+}

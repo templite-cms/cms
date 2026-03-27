@@ -1,0 +1,1 @@
+import{_ as e}from"./MediaManager-By9ucxW1.js";import{v as s,x as a,l as c,p as o}from"./x-CuOWXDIc.js";const r={class:"h-[calc(100vh-56px)]"},m={__name:"Index",props:{},setup(t){return(_,n)=>(s(),a("div",null,[c("div",r,[o(e)])]))}};export{m as _};

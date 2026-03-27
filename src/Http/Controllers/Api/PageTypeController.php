@@ -14,10 +14,27 @@ class PageTypeController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(response=200, description="Список"))
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $types = PageType::withCount('pages')->with('attributes')->get();
-        return $this->success(PageTypeResource::collection($types));
+        $query = PageType::withCount('pages')->with(['attributes', 'templatePage']);
+
+        if ($request->filled('search')) {
+            $escaped = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $request->input('search')) . '%';
+            $query->where(function ($q) use ($escaped) {
+                $q->where('name', 'like', $escaped)
+                  ->orWhere('slug', 'like', $escaped);
+            });
+        }
+
+        $allowedSortFields = ['name', 'slug'];
+        $sortField = in_array($request->input('sort_field'), $allowedSortFields, true)
+            ? $request->input('sort_field')
+            : 'name';
+        $sortOrder = $request->input('sort_order') === 'desc' ? 'desc' : 'asc';
+
+        $query->orderBy($sortField, $sortOrder);
+
+        return $this->success(PageTypeResource::collection($query->get()));
     }
 
     /**
@@ -37,6 +54,7 @@ class PageTypeController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:page_types',
+            'icon' => 'nullable|string|max:50',
             'template_page_id' => 'nullable|integer|exists:template_pages,id',
             'settings' => 'nullable|array',
         ]);
@@ -75,6 +93,7 @@ class PageTypeController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'slug' => 'sometimes|string|max:255|unique:page_types,slug,' . $id,
+            'icon' => 'nullable|string|max:50',
             'template_page_id' => 'nullable|integer|exists:template_pages,id',
             'settings' => 'nullable|array',
         ]);

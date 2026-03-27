@@ -1,0 +1,62 @@
+// =============================================================================
+// Widget — Reusable wrapper for dashboard widgets
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.widget {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-xl;
+  overflow: hidden;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid $neutral-100;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.widget__header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.widget__drag-handle {
+  color: $neutral-400;
+  cursor: grab;
+}
+
+.widget__title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.widget__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+
+.widget__body {
+  padding: 1rem;
+}

@@ -33,9 +33,10 @@ class BlockField extends Model
      * Допустимые типы полей.
      */
     public const FIELD_TYPES = [
-        'text', 'textfield', 'number', 'img', 'file', 'editor', 'html',
+        'text', 'textfield', 'number', 'img', 'file', 'editor', 'tiptap', 'html',
         'select', 'checkbox', 'radio', 'link', 'date', 'datetime',
-        'array', 'category', 'product', 'product_option', 'color',
+        'array', 'color', 'page', 'user',
+        'category', 'product', 'product_option', // Shop module types
     ];
 
     /**
@@ -43,7 +44,7 @@ class BlockField extends Model
      */
     public const RESERVED_KEYS = [
         'id', 'type', 'block', 'page', 'data', 'fields', 'global',
-        'actionData', 'request', 'slot', 'attributes', 'errors',
+        'actions', 'request', 'slot', 'attributes', 'errors',
     ];
 
     // --- Relationships ---

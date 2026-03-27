@@ -2,9 +2,9 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\ManagerSession;
 
 class ProfileController extends Controller
@@ -31,9 +31,9 @@ class ProfileController extends Controller
                 'is_current' => $session->token === hash('sha256', request()->session()->getId()),
             ]);
 
-        return Inertia::render('Profile/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/profile.js', [
             'manager' => $manager,
             'sessions' => $sessions,
-        ]);
+        ], ['title' => 'Профиль']);
     }
 }

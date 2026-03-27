@@ -1,0 +1,211 @@
+// =============================================================================
+// Drawer
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// Wrapper
+.drawer-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: $z-drawer;
+}
+
+.drawer-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: opacity 0.3s ease;
+
+  .dark & {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+}
+
+.drawer-overlay--dim {
+  background-color: rgba(0, 0, 0, 0.3);
+
+  .dark & {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+// Push wrapper for offset animation
+.drawer-push {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  transition: transform 0.3s ease-in-out;
+}
+
+// Animation
+.drawer-enter-from .drawer-overlay,
+.drawer-leave-to .drawer-overlay {
+  opacity: 0;
+}
+
+.drawer-enter-active .drawer-panel {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.drawer-leave-active .drawer-panel {
+  transition: transform 0.2s ease-in, opacity 0.2s ease;
+}
+
+.drawer-enter-from .drawer-panel,
+.drawer-leave-to .drawer-panel {
+  transform: translateX(var(--drawer-slide, 100%));
+  opacity: 0;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: $spacing-drawer;
+  max-width: 100%;
+  background-color: #fff;
+  box-shadow: $shadow-xl;
+  z-index: $z-drawer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-left: 1px solid $neutral-700;
+  }
+}
+
+// Sizes
+.drawer--sm { width: 24rem; }
+.drawer--md { width: 30rem; }
+.drawer--lg { width: 40rem; }
+.drawer--xl { width: 50rem; }
+.drawer--full { width: 100%; }
+
+// Left position
+.drawer--left {
+  right: auto;
+  left: 0;
+
+  .dark & {
+    border-left: none;
+    border-right: 1px solid $neutral-700;
+  }
+}
+
+// Resize handle
+.drawer__resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  @include transition-fast(background-color);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 48px;
+    border-radius: 2px;
+    background-color: transparent;
+    @include transition-fast(background-color);
+  }
+
+  &:hover,
+  .drawer--resizing & {
+    background-color: rgba($primary-500, 0.15);
+
+    &::after {
+      background-color: $primary-400;
+    }
+  }
+}
+
+.drawer__resize--right {
+  left: auto;
+  right: 0;
+}
+
+// No transitions while resizing
+.drawer--resizing {
+  transition: none !important;
+}
+
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid $neutral-200;
+  flex-shrink: 0;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.drawer__title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: rgb(var(--color-text-primary));
+}
+
+.drawer__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius;
+  color: $neutral-400;
+  background: none;
+  border: none;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $neutral-600;
+    background-color: $neutral-100;
+
+    .dark & {
+      color: $neutral-300;
+      background-color: $neutral-700;
+    }
+  }
+}
+
+.drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  @include custom-scrollbar;
+
+  &--no-padding {
+    padding: 0;
+  }
+}
+
+.drawer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $neutral-200;
+  flex-shrink: 0;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}

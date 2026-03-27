@@ -1,0 +1,422 @@
+// =============================================================================
+// Editor Workspace — shared CodePen-like workspace for block/component/template editors
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// =============================================================================
+// Workspace
+// =============================================================================
+
+.editor-workspace {
+  position: fixed;
+  top: 104px; // header + subheader
+  bottom: 0;
+  background-color: $neutral-900;
+  overflow: hidden;
+}
+
+.editor-workspace--animated {
+  transition: left $transition-normal ease-in-out, right $transition-normal ease-in-out;
+}
+
+.editor-workspace--no-select {
+  user-select: none;
+}
+
+.editor-workspace__panel-full {
+  width: 100%;
+  height: 100%;
+}
+
+.editor-workspace__split {
+  display: flex;
+  height: 100%;
+}
+
+.editor-workspace__split--horizontal {
+  flex-direction: row;
+}
+
+.editor-workspace__split--vertical {
+  flex-direction: column;
+}
+
+.editor-workspace__pane {
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-workspace__pane--flex {
+  flex: 1;
+}
+
+// Resizer bars
+.editor-workspace__resizer {
+  flex-shrink: 0;
+  background-color: $neutral-700;
+  z-index: $z-workspace-resizer;
+  @include transition-fast(background-color);
+
+  &:hover {
+    background-color: $primary-500;
+  }
+}
+
+.editor-workspace__resizer--active {
+  background-color: $primary-500;
+}
+
+.editor-workspace__resizer--horizontal {
+  width: 4px;
+  cursor: col-resize;
+}
+
+.editor-workspace__resizer--vertical {
+  height: 4px;
+  cursor: row-resize;
+}
+
+// Non-interactive divider (between stacked code panels)
+.editor-workspace__divider {
+  flex-shrink: 0;
+  background-color: $neutral-700;
+  z-index: $z-workspace-resizer;
+  @include transition-fast(background-color);
+}
+
+.editor-workspace__divider--horizontal {
+  width: 4px;
+}
+
+.editor-workspace__divider--vertical {
+  height: 4px;
+}
+
+.editor-workspace__grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-workspace__grid-row {
+  display: flex;
+}
+
+.editor-workspace__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: $neutral-500;
+}
+
+// Format button inside WorkspacePanel header
+.editor-workspace__format-btn {
+  padding: 2px;
+  border-radius: $radius;
+  color: $neutral-500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    background-color: $neutral-700;
+    color: $neutral-300;
+  }
+}
+
+// =============================================================================
+// WorkspacePanel
+// =============================================================================
+
+.workspace-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.workspace-panel__header {
+  flex-shrink: 0;
+  height: 1.5rem;
+  padding: 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: $neutral-800;
+  border-bottom: 1px solid $neutral-700;
+}
+
+.workspace-panel__header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.workspace-panel__header-title {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-400;
+}
+
+.workspace-panel__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.workspace-panel__content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// =============================================================================
+// Preview Panel
+// =============================================================================
+
+.preview-panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+}
+
+.preview-panel__toolbar {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.preview-panel__preset-dropdown {
+  position: relative;
+}
+
+.preview-panel__preset-trigger {
+  height: 1.75rem;
+  padding-left: 0.625rem;
+  padding-right: 0.375rem;
+  border-radius: $radius;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: $shadow-sm;
+  border: 1px solid $neutral-200;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: $font-size-xs;
+  color: $neutral-600;
+  cursor: pointer;
+  @include transition-fast(border-color);
+
+  &:hover {
+    border-color: $neutral-300;
+  }
+
+  .dark & {
+    background-color: rgba($neutral-800, 0.9);
+    border-color: $neutral-700;
+    color: $neutral-300;
+
+    &:hover {
+      border-color: $neutral-600;
+    }
+  }
+}
+
+.preview-panel__preset-label {
+  max-width: 140px;
+  @include truncate;
+}
+
+.preview-panel__preset-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  width: 18rem;
+  max-height: 20rem;
+  overflow-y: auto;
+  border-radius: $radius-lg;
+  background-color: #fff;
+  box-shadow: $shadow-lg;
+  border: 1px solid $neutral-200;
+  padding: 0.375rem;
+
+  .dark & {
+    background-color: $neutral-900;
+    border-color: $neutral-700;
+  }
+}
+
+.preview-panel__preset-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem;
+  border-radius: $radius-lg;
+  @include transition-fast(background-color, border-color);
+  text-align: left;
+  background: none;
+  cursor: pointer;
+}
+
+.preview-panel__preset-option--active {
+  background-color: $primary-50;
+  border: 1px solid $primary-300;
+
+  .dark & {
+    background-color: rgba($primary-900, 0.3);
+    border-color: $primary-700;
+  }
+}
+
+.preview-panel__preset-option--inactive {
+  border: 1px solid transparent;
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-800;
+  }
+}
+
+.preview-panel__preset-thumb {
+  width: 4rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  background-color: $neutral-100;
+  border-radius: $radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+}
+
+.preview-panel__preset-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-panel__preset-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-panel__preset-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.preview-panel__preset-hint {
+  font-size: 10px;
+  color: $neutral-400;
+}
+
+.preview-panel__refresh-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: $shadow-sm;
+  border: 1px solid $neutral-200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-500;
+  cursor: pointer;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $success-500;
+  }
+
+  .dark & {
+    background-color: rgba($neutral-800, 0.9);
+    border-color: $neutral-700;
+  }
+}
+
+.preview-panel__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  z-index: 5;
+}
+
+.preview-panel__error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  z-index: 5;
+}
+
+.preview-panel__error-text {
+  font-size: $font-size-sm;
+  color: $error-600;
+  text-align: center;
+}
+
+.preview-panel__error-retry {
+  margin-top: 0.5rem;
+  font-size: $font-size-xs;
+  color: $primary-600;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.preview-panel__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $neutral-100;
+  color: $neutral-400;
+  font-size: $font-size-sm;
+}
+
+.preview-panel__iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+// =============================================================================
+// Chevron rotation
+// =============================================================================
+
+.editor-workspace-chevron--open {
+  transform: rotate(180deg);
+}

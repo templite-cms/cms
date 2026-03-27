@@ -71,6 +71,7 @@ class BlockDataValidator
             case 'text':
             case 'textfield':
             case 'editor':
+            case 'tiptap':
             case 'html':
             case 'color':
                 $errors = array_merge($errors, $this->validateStringField($field, $value, $path, $fieldData));
@@ -117,6 +118,14 @@ class BlockDataValidator
 
             case 'array':
                 $errors = array_merge($errors, $this->validateArrayField($field, $value, $path));
+                break;
+
+            case 'page':
+                if (!is_numeric($value)) {
+                    $errors[$path][] = "Поле \"{$field->name}\" должно содержать ID страницы.";
+                } elseif (!\Templite\Cms\Models\Page::where('id', (int) $value)->exists()) {
+                    $errors[$path][] = "Страница для поля \"{$field->name}\" не найдена (ID: {$value}).";
+                }
                 break;
 
             case 'category':

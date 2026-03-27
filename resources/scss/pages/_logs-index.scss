@@ -1,0 +1,127 @@
+// =============================================================================
+// Logs Index — Activity logs page
+// =============================================================================
+
+@use '../variables' as *;
+
+.logs-index {
+  padding: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.logs-index__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+  margin-bottom: 1.5rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Filters
+// -----------------------------------------------------------------------------
+
+.logs-index__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.logs-index__search {
+  position: relative;
+  width: 16rem;
+}
+
+.logs-index__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+}
+
+.logs-index__search-input {
+  padding-left: 2.5rem;
+}
+
+.logs-index__filter-select {
+  width: 11rem;
+}
+
+// -----------------------------------------------------------------------------
+// Table column cells
+// -----------------------------------------------------------------------------
+
+.logs-index__date {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+.logs-index__entity-type {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+}
+
+.logs-index__entity-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.logs-index__entity-id {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-400;
+}
+
+.logs-index__entity-none {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-400;
+}
+
+.logs-index__details {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+  display: inline-block;
+}
+
+// -----------------------------------------------------------------------------
+// Empty state
+// -----------------------------------------------------------------------------
+
+.logs-index__empty {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.logs-index__empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: $neutral-300;
+  margin: 0 auto 0.5rem;
+}
+
+.logs-index__empty-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}

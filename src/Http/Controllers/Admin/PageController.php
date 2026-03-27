@@ -3,8 +3,7 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Block;
 use Templite\Cms\Models\CmsConfig;
 use Templite\Cms\Models\Language;
@@ -12,6 +11,7 @@ use Templite\Cms\Models\Page;
 use Templite\Cms\Models\PageType;
 use Templite\Cms\Helpers\StringHelper;
 use Templite\Cms\Models\TemplatePage;
+use Templite\Cms\Services\HandlerRegistry;
 
 class PageController extends Controller
 {
@@ -19,7 +19,7 @@ class PageController extends Controller
      * Список страниц (дерево).
      * Экран: Pages/Index
      */
-    public function index(): Response
+    public function index()
     {
         $request = request();
 
@@ -55,7 +55,7 @@ class PageController extends Controller
             'screenshot_url' => $page->screenshot?->url(),
         ]);
 
-        return Inertia::render('Pages/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/pages-index.js', [
             'pages' => $pages,
             'tree' => $tree,
             'pageTypes' => PageType::orderBy('name')->get(['id', 'name', 'slug']),
@@ -64,14 +64,14 @@ class PageController extends Controller
                 'type' => $request->input('type', ''),
                 'status' => $request->input('status', ''),
             ],
-        ]);
+        ], ['title' => 'Страницы']);
     }
 
     /**
      * Редактирование страницы.
      * Экран: Pages/Edit
      */
-    public function edit(int $id): Response
+    public function edit(int $id)
     {
         $page = Page::with([
             'pageType.attributes',
@@ -89,7 +89,7 @@ class PageController extends Controller
             'templatePage.rootFields.children.children',
         ])->findOrFail($id);
 
-        return Inertia::render('Pages/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/pages-edit.js', [
             'page' => $page,
             'pageTypes' => PageType::with('attributes')->orderBy('name')->get(),
             'templates' => TemplatePage::orderBy('name')->get(['id', 'name']),
@@ -102,16 +102,17 @@ class PageController extends Controller
             'languages' => CmsConfig::getValue('multilang_enabled', false)
                 ? Language::active()->ordered()->get()
                 : [],
-        ]);
+            'handlers' => app(HandlerRegistry::class)->all(),
+        ], ['title' => 'Редактирование страницы']);
     }
 
     /**
      * Создание новой страницы.
      * Экран: Pages/Edit (пустая форма)
      */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('Pages/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/pages-edit.js', [
             'page' => null,
             'pageTypes' => PageType::with('attributes')->orderBy('name')->get(),
             'templates' => TemplatePage::orderBy('name')->get(['id', 'name']),
@@ -122,7 +123,8 @@ class PageController extends Controller
             'languages' => CmsConfig::getValue('multilang_enabled', false)
                 ? Language::active()->ordered()->get()
                 : [],
-        ]);
+            'handlers' => app(HandlerRegistry::class)->all(),
+        ], ['title' => 'Новая страница']);
     }
 
     /**
@@ -130,7 +132,7 @@ class PageController extends Controller
      */
     protected function getAvailableBlocks(): \Illuminate\Support\Collection
     {
-        return Block::with(['blockType', 'presets.screenFile'])
+        return Block::with(['blockType', 'screenshot', 'presets.screenFile'])
             ->orderBy('block_type_id')
             ->orderBy('name')
             ->get()
@@ -138,7 +140,7 @@ class PageController extends Controller
                 'id' => $b->id,
                 'name' => $b->name,
                 'slug' => $b->slug,
-                'screenshot_url' => $b->screen ? "/storage/{$b->screen}" : null,
+                'screenshot_url' => $b->screenshot?->url(),
                 'block_type' => $b->blockType ? [
                     'id' => $b->blockType->id,
                     'name' => $b->blockType->name,

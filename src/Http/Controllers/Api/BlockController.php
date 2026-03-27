@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Templite\Cms\Http\Resources\BlockResource;
 use Templite\Cms\Models\Block;
+use Templite\Cms\Models\BlockPreset;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BlockDataResolver;
 use Templite\Cms\Services\BlockRenderer;
@@ -164,11 +165,20 @@ class BlockController extends Controller
         $css = '';
         $js = '';
 
-        // Собираем default-данные из определений полей
+        // Собираем данные: из пресета (если указан) или из default-значений полей
         $rawData = [];
-        foreach ($block->fields as $field) {
-            if ($field->default_value !== null && $field->default_value !== '') {
-                $rawData[$field->key] = $field->default_value;
+        $presetId = $request->input('preset_id');
+        if ($presetId) {
+            $preset = BlockPreset::where('block_id', $block->id)->find($presetId);
+            if ($preset) {
+                $rawData = $preset->data ?? [];
+            }
+        }
+        if (empty($rawData)) {
+            foreach ($block->fields as $field) {
+                if ($field->default_value !== null && $field->default_value !== '') {
+                    $rawData[$field->key] = $field->default_value;
+                }
             }
         }
         $fields = $this->blockDataResolver->resolveBlockData($block, $rawData);
@@ -307,8 +317,15 @@ class BlockController extends Controller
             }
         }
 
-        $allCss = $localLibCss . ($templateCss ? "{$templateCss}\n" : '') . $css;
-        $allJs = $localLibJs . ($templateJs ? "{$templateJs}\n" : '') . $js;
+        // Component styles/scripts from block template content
+        $rawTemplate = $inlineTemplate ?? '';
+        if (!$rawTemplate && $path && file_exists($path . '/template.blade.php')) {
+            $rawTemplate = file_get_contents($path . '/template.blade.php');
+        }
+        $componentAssets = $this->blockRenderer->collectComponentAssets($rawTemplate);
+
+        $allCss = $localLibCss . ($templateCss ? "{$templateCss}\n" : '') . $componentAssets['css'] . $css;
+        $allJs = $localLibJs . ($templateJs ? "{$templateJs}\n" : '') . $componentAssets['js'] . $js;
 
         $html = $this->blockRenderer->renderPreviewWrapper([
             'cdnCss' => $cdnCssLinks,

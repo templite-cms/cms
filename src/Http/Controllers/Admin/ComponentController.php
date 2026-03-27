@@ -3,8 +3,7 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Component;
 use Templite\Cms\Models\GlobalField;
 use Templite\Cms\Models\PageTypeAttribute;
@@ -19,20 +18,20 @@ class ComponentController extends Controller
      * Список компонентов.
      * Экран: Components/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('Components/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/components-index.js', [
             'components' => Component::orderBy('name')->get(),
             'registryComponents' => $this->componentRegistry->all(),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
-        ]);
+        ], ['title' => 'Компоненты']);
     }
 
     /**
      * Редактирование компонента.
      * Экран: Components/Edit (CodePen IDE)
      */
-    public function edit(int $id): Response
+    public function edit(int $id)
     {
         $component = Component::findOrFail($id);
 
@@ -56,7 +55,7 @@ class ComponentController extends Controller
         // Мержим код в данные компонента
         $componentData = array_merge($component->toArray(), $code);
 
-        return Inertia::render('Components/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/components-edit.js', [
             'component' => $componentData,
             'templates' => TemplatePage::orderBy('name')->get(['id', 'name', 'slug']),
             'globalFieldDefinitions' => GlobalField::orderBy('order')
@@ -71,16 +70,16 @@ class ComponentController extends Controller
                     'page_type_name' => $attr->pageType->name ?? 'Без типа',
                 ]),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
-        ]);
+        ], ['title' => $component->name]);
     }
 
     /**
      * Создание нового компонента.
      * Экран: Components/Edit (пустая форма)
      */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('Components/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/components-edit.js', [
             'component' => null,
             'templates' => TemplatePage::orderBy('name')->get(['id', 'name', 'slug']),
             'globalFieldDefinitions' => GlobalField::orderBy('order')
@@ -95,6 +94,6 @@ class ComponentController extends Controller
                     'page_type_name' => $attr->pageType->name ?? 'Без типа',
                 ]),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
-        ]);
+        ], ['title' => 'Новый компонент']);
     }
 }

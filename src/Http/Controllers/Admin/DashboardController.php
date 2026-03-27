@@ -2,13 +2,15 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Page;
 use Templite\Cms\Models\Block;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Models\Component;
+use Templite\Cms\Models\PageType;
+use Templite\Cms\Models\BlockType;
 
 class DashboardController extends Controller
 {
@@ -62,6 +64,13 @@ class DashboardController extends Controller
                 ]);
         }
 
+        // Data for quick actions modals
+        if (in_array('quick_actions', $activeTypes)) {
+            $widgetData['page_types'] = PageType::select('id', 'name')->orderBy('name')->get();
+            $widgetData['all_pages'] = Page::select('id', 'title')->orderBy('title')->get();
+            $widgetData['block_types'] = BlockType::select('id', 'name')->orderBy('name')->get();
+        }
+
         if (in_array('content_stats', $activeTypes)) {
             $widgetData['content_stats'] = [
                 'pages' => Page::count(),
@@ -71,11 +80,11 @@ class DashboardController extends Controller
             ];
         }
 
-        return Inertia::render('Dashboard', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/dashboard.js', [
             'layout' => $layout,
             'preset' => $preset,
             'presets' => array_keys(self::PRESETS),
             'widgetData' => $widgetData,
-        ]);
+        ], ['title' => 'Дашборд']);
     }
 }

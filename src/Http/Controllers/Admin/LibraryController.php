@@ -2,9 +2,9 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Library;
 
 class LibraryController extends Controller
@@ -13,14 +13,14 @@ class LibraryController extends Controller
      * Список библиотек.
      * Экран: Libraries/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('Libraries/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/libraries-index.js', [
             'libraries' => Library::withCount(['blocks', 'templatePages'])
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(),
-        ]);
+        ], ['title' => 'Библиотеки']);
     }
 
     /**
@@ -29,9 +29,9 @@ class LibraryController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Libraries/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/libraries-edit.js', [
             'library' => null,
-        ]);
+        ], ['title' => 'Новая библиотека']);
     }
 
     /**
@@ -40,8 +40,8 @@ class LibraryController extends Controller
      */
     public function edit(int $id): Response
     {
-        return Inertia::render('Libraries/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/libraries-edit.js', [
             'library' => Library::withCount(['blocks', 'templatePages'])->findOrFail($id),
-        ]);
+        ], ['title' => 'Редактирование библиотеки']);
     }
 }

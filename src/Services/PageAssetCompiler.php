@@ -270,11 +270,7 @@ class PageAssetCompiler
      */
     protected function parseComponentReferences(string $content): array
     {
-        if (preg_match_all('/<x-cms::([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)[\s\/>]/i', $content, $matches)) {
-            return $matches[1];
-        }
-
-        return [];
+        return $this->blockRenderer->parseComponentReferences($content);
     }
 
     protected function buildCss(\Illuminate\Support\Collection $libraries, array $blockSlugs, Page $page, array $componentSlugs = []): string

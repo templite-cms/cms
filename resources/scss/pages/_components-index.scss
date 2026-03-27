@@ -1,0 +1,332 @@
+// =============================================================================
+// Components Index — Page-specific styles
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.components-index {
+  padding: 1.5rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.components-index__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.components-index__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Filters bar
+// -----------------------------------------------------------------------------
+
+.components-index__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+// -----------------------------------------------------------------------------
+// Search
+// -----------------------------------------------------------------------------
+
+.components-index__search {
+  position: relative;
+  width: 16rem;
+}
+
+.components-index__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+}
+
+.components-index__search-input {
+  padding-left: 2.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Vendor (system) components section
+// -----------------------------------------------------------------------------
+
+.components-index__vendor {
+  margin-top: 2rem;
+}
+
+.components-index__vendor-title {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-700;
+  margin-bottom: 0.25rem;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.components-index__vendor-desc {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  margin-bottom: 1rem;
+
+  code {
+    padding: 0.125rem 0.25rem;
+    background: $neutral-100;
+    border-radius: $radius-sm;
+
+    .dark & {
+      background: $neutral-700;
+    }
+  }
+}
+
+.components-index__vendor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+
+  @include sm {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @include md {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @include lg {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  @include xl {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.components-index__vendor-card {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  @include transition-fast(background-color, border-color);
+
+  &:hover {
+    background: $neutral-50;
+    border-color: $neutral-300;
+  }
+
+  .dark & {
+    border-color: $neutral-700;
+
+    &:hover {
+      background: rgba($neutral-700, 0.5);
+      border-color: $neutral-600;
+    }
+  }
+}
+
+.components-index__vendor-icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-300;
+  @include transition-fast(color);
+
+  .components-index__vendor-card:hover & {
+    color: $primary-500;
+  }
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.components-index__vendor-info {
+  min-width: 0;
+}
+
+.components-index__vendor-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  @include truncate;
+  @include transition-fast(color);
+
+  .components-index__vendor-card:hover & {
+    color: $primary-600;
+  }
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.components-index__vendor-slug {
+  font-size: 11px;
+  color: $neutral-400;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Drawer (resizable push wrapper + content sections)
+// -----------------------------------------------------------------------------
+
+.components-index__drawer-push {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+
+  &--dragging {
+    user-select: none;
+  }
+}
+
+.components-index__resizer {
+  width: 4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  z-index: 10;
+  @include transition-fast(background-color);
+
+  &:hover,
+  &--active {
+    background-color: $primary-500;
+  }
+}
+
+.components-index__section {
+  margin-bottom: 1.25rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.components-index__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+}
+
+.components-index__section-title {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $neutral-400;
+  margin-bottom: 0.375rem;
+
+  .components-index__section-header & {
+    margin-bottom: 0;
+  }
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+.components-index__section-text {
+  font-size: $font-size-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.components-index__code-block {
+  position: relative;
+  border-radius: $radius;
+  overflow: hidden;
+
+  &:hover .components-index__copy-btn {
+    opacity: 1;
+  }
+}
+
+.components-index__code {
+  background: $neutral-900;
+  color: $neutral-100;
+  padding: 0.75rem;
+  font-size: $font-size-xs;
+  line-height: 1.6;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.components-index__copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem;
+  border-radius: $radius-sm;
+  background: $neutral-700;
+  color: $neutral-300;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  @include transition-fast(opacity, background-color);
+
+  &:hover {
+    background: $neutral-600;
+  }
+}
+
+.components-index__code-editor {
+  border-radius: $radius-lg;
+  overflow: hidden;
+  border: 1px solid $neutral-700;
+}
+
+// -----------------------------------------------------------------------------
+// Create modal
+// -----------------------------------------------------------------------------
+
+.components-index__create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.components-index__modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

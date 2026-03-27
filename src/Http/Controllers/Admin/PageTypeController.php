@@ -2,9 +2,9 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\PageType;
 
 class PageTypeController extends Controller
@@ -13,11 +13,11 @@ class PageTypeController extends Controller
      * Список типов страниц.
      * Экран: PageTypes/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('PageTypes/Index', [
-            'pageTypes' => PageType::withCount(['pages', 'attributes'])->orderBy('name')->get(),
-        ]);
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/page-types-index.js', [
+            'pageTypes' => PageType::with('templatePage')->withCount(['pages', 'attributes'])->orderBy('name')->get(),
+        ], ['title' => 'Типы страниц']);
     }
 
     /**
@@ -30,9 +30,9 @@ class PageTypeController extends Controller
             'attributes' => fn ($q) => $q->orderBy('order'),
         ])->withCount('pages')->findOrFail($id);
 
-        return Inertia::render('PageTypes/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/page-types-edit.js', [
             'pageType' => $pageType,
-        ]);
+        ], ['title' => $pageType->name]);
     }
 
     /**
@@ -41,8 +41,8 @@ class PageTypeController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('PageTypes/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/page-types-edit.js', [
             'pageType' => null,
-        ]);
+        ], ['title' => 'Новый тип страницы']);
     }
 }

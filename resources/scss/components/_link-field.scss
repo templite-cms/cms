@@ -1,0 +1,182 @@
+// =============================================================================
+// Link Field — URL input with icon and target select
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.link-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+// URL input section
+.link-field__url-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.link-field__url-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $neutral-400;
+  pointer-events: none;
+  display: flex;
+}
+
+.link-field__url-input {
+  width: 100%;
+  border-radius: $radius;
+  border: 1px solid $neutral-300;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+  padding-left: 2.5rem;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  color: $neutral-900;
+  @include transition-fast(color, background-color, border-color, box-shadow);
+
+  &::placeholder {
+    color: $neutral-400;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+  }
+
+  &:disabled {
+    background: $neutral-100;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background: $neutral-900;
+    color: $neutral-50;
+
+    &::placeholder {
+      color: $neutral-500;
+    }
+
+    &:focus {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+    }
+
+    &:disabled {
+      background: $neutral-800;
+    }
+  }
+}
+
+.link-field__url-input--error {
+  border-color: $error-500;
+
+  &:focus {
+    border-color: $error-500;
+    box-shadow: 0 0 0 2px rgba($error-500, 0.2);
+  }
+
+  .dark & {
+    border-color: $error-500;
+
+    &:focus {
+      border-color: $error-500;
+      box-shadow: 0 0 0 2px rgba($error-500, 0.2);
+    }
+  }
+}
+
+.link-field__url-input--has-picker {
+  padding-right: 2.5rem;
+}
+
+// Page picker button (inside URL input)
+.link-field__pick-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: $radius;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $primary-500;
+    background: $primary-50;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .dark & {
+    &:hover {
+      background: rgba($primary-500, 0.15);
+    }
+  }
+}
+
+// Target select
+.link-field__target {
+  flex-shrink: 0;
+  width: 11rem;
+}
+
+.link-field__target-select {
+  width: 100%;
+  border-radius: $radius;
+  border: 1px solid $neutral-300;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  color: $neutral-900;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem;
+  padding-right: 2.5rem;
+  @include transition-fast(color, background-color, border-color, box-shadow);
+
+  &:focus {
+    outline: none;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+  }
+
+  &:disabled {
+    background: $neutral-100;
+    cursor: not-allowed;
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background-color: $neutral-900;
+    color: $neutral-50;
+
+    &:focus {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+    }
+
+    &:disabled {
+      background: $neutral-800;
+    }
+  }
+}

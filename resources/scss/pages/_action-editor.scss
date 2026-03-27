@@ -1,0 +1,151 @@
+// =============================================================================
+// Action Editor — workspace styles
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.action-workspace {
+  position: fixed;
+  top: 104px; // header (56px) + submenu (48px)
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: $neutral-900;
+}
+
+.action-workspace--smooth {
+  transition: left $transition-normal ease-in-out, right $transition-normal ease-in-out;
+}
+
+.action-workspace__editor {
+  flex: 1;
+  min-height: 0;
+}
+
+// =============================================================================
+// Action Main Fields — side panel form
+// =============================================================================
+
+.action-main-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Endpoint block (shown when allow_http is on)
+
+.action-main-fields__endpoint {
+  margin-top: -0.5rem;
+}
+
+.action-main-fields__endpoint-label {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  margin-bottom: 0.375rem;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.action-main-fields__endpoint-row {
+  display: flex;
+  align-items: center;
+}
+
+.action-main-fields__endpoint-input {
+  flex: 1;
+  height: 38px;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  font-family: $font-mono;
+  border: 1px solid $neutral-300;
+  border-right: none;
+  border-radius: $radius 0 0 $radius;
+  background-color: $neutral-100;
+  color: $neutral-900;
+  cursor: default;
+  outline: none;
+
+  .dark & {
+    border-color: $neutral-600;
+    background-color: $neutral-800;
+    color: $neutral-50;
+  }
+}
+
+.action-main-fields__endpoint-copy {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $neutral-300;
+  border-radius: 0 $radius $radius 0;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+}
+
+.action-main-fields__endpoint-copy--idle {
+  background-color: $neutral-50;
+  color: $neutral-500;
+
+  &:hover {
+    color: $primary-500;
+    background-color: $primary-50;
+  }
+
+  .dark & {
+    background-color: $neutral-700;
+
+    &:hover {
+      background-color: rgba($primary-900, 0.3);
+    }
+  }
+}
+
+.action-main-fields__endpoint-copy--success {
+  background-color: $success-50;
+  color: $success-500;
+
+  .dark & {
+    background-color: rgba($success-900, 0.3);
+  }
+}
+
+// Source badge
+
+.action-main-fields__source {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-main-fields__source-label {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+.action-main-fields__source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: $radius;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  background-color: $neutral-100;
+  color: $neutral-600;
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-300;
+  }
+}

@@ -4,15 +4,14 @@ namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Manager;
 use Templite\Cms\Helpers\StringHelper;
 use Templite\Cms\Models\ManagerLog;
 
 class LogController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
         $query = ManagerLog::with('manager')->orderByDesc('created_at');
 
@@ -39,7 +38,7 @@ class LogController extends Controller
         $perPage = min((int) $request->input('per_page', 30), 100);
         $logs = $query->paginate($perPage);
 
-        return Inertia::render('Logs/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/logs-index.js', [
             'logs' => [
                 'data' => $logs->map(fn ($log) => [
                     'id'           => $log->id,
@@ -80,6 +79,6 @@ class LogController extends Controller
                 'compile', 'rebuild', 'clear_cache', 'invalidate_cache',
                 'save_values',
             ],
-        ]);
+        ], ['title' => 'Логи']);
     }
 }

@@ -30,13 +30,13 @@ class StoreBlockFieldRequest extends FormRequest
                     ->where('parent_id', $parentId),
                 Rule::notIn([
                     'id', 'type', 'block', 'page', 'data', 'fields', 'global',
-                    'actionData', 'request', 'slot', 'attributes', 'errors',
+                    'actions', 'request', 'slot', 'attributes', 'errors',
                 ]),
             ],
             'type' => [
                 'required',
                 'string',
-                'in:text,textfield,number,img,file,editor,html,select,checkbox,radio,link,date,datetime,array,category,product,product_option,color',
+                'in:text,textfield,number,img,file,editor,tiptap,html,select,checkbox,radio,link,date,datetime,array,color,page,user,category,product,product_option',
             ],
             'parent_id' => [
                 'nullable',

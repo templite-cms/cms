@@ -3,8 +3,7 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Component;
 use Templite\Cms\Models\GlobalField;
 use Templite\Cms\Models\Library;
@@ -19,20 +18,20 @@ class TemplatePageController extends Controller
      * Список шаблонов.
      * Экран: Templates/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('Templates/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/templates-index.js', [
             'templates' => TemplatePage::withCount('pages')
                 ->orderBy('name')
                 ->get(),
-        ]);
+        ], ['title' => 'Шаблоны']);
     }
 
     /**
      * Редактирование шаблона.
      * Экран: Templates/Edit (IDE-подобный интерфейс)
      */
-    public function edit(int $id): Response
+    public function edit(int $id)
     {
         $template = TemplatePage::with([
             'libraries',
@@ -62,7 +61,7 @@ class TemplatePageController extends Controller
 
         $templateData = array_merge($template->toArray(), $code);
 
-        return Inertia::render('Templates/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/templates-edit.js', [
             'template' => $templateData,
             'allLibraries' => Library::where('active', true)
                 ->orderBy('name')
@@ -81,17 +80,17 @@ class TemplatePageController extends Controller
             'componentDefinitions' => Component::orderBy('name')
                 ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
-        ]);
+        ], ['title' => $template->name]);
     }
 
     /**
      * Создание нового шаблона.
      * Экран: Templates/Edit (пустая форма)
      */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('Templates/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/templates-edit.js', [
             'template' => null,
-        ]);
+        ], ['title' => 'Новый шаблон']);
     }
 }

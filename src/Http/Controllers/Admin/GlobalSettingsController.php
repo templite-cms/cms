@@ -2,10 +2,10 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\CmsConfig;
 use Templite\Cms\Models\GlobalField;
 use Templite\Cms\Models\GlobalFieldPage;
@@ -45,20 +45,20 @@ class GlobalSettingsController extends Controller
 
         $multilangEnabled = (bool) CmsConfig::getValue('multilang_enabled', false);
 
-        return Inertia::render('Settings/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/settings-index.js', [
             'pages' => $pages,
             'values' => $values,
             'valueIdMap' => $valueIdMap,
             'fieldTypes' => config('cms.field_types', [
-                'text', 'textfield', 'number', 'img', 'file', 'editor', 'html',
+                'text', 'textfield', 'number', 'img', 'file', 'editor', 'tiptap', 'html',
                 'select', 'checkbox', 'radio', 'link', 'date', 'datetime',
-                'array', 'category', 'product', 'product_option', 'color',
+                'array', 'color', 'page', 'user',
             ]),
             'multilanguageEnabled' => $multilangEnabled,
             'languages' => $multilangEnabled
                 ? Language::active()->ordered()->get()
                 : [],
-        ]);
+        ], ['title' => 'Настройки']);
     }
 
     /**
@@ -121,13 +121,13 @@ class GlobalSettingsController extends Controller
             'sections.fields.allChildren',
         ])->orderBy('order')->get();
 
-        return Inertia::render('Settings/Structure', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/settings-structure.js', [
             'pages' => $pages,
             'fieldTypes' => config('cms.field_types', [
-                'text', 'textfield', 'number', 'img', 'file', 'editor', 'html',
+                'text', 'textfield', 'number', 'img', 'file', 'editor', 'tiptap', 'html',
                 'select', 'checkbox', 'radio', 'link', 'date', 'datetime',
-                'array', 'category', 'product', 'product_option', 'color',
+                'array', 'color', 'page', 'user',
             ]),
-        ]);
+        ], ['title' => 'Структура настроек']);
     }
 }

@@ -1,0 +1,26 @@
+// =============================================================================
+// Settings/Structure — Global settings structure page
+// =============================================================================
+
+@use '../variables' as *;
+
+.settings-structure {
+  padding: 1.5rem;
+}
+
+.settings-structure__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.settings-structure__title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}

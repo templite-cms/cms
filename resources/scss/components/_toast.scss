@@ -1,0 +1,163 @@
+// =============================================================================
+// Toast (glass style)
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.toast-container {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: $z-toast;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 24rem;
+  width: 100%;
+  pointer-events: none;
+
+  @include below-sm {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+
+  &--top-left { top: 1rem; left: 1rem; right: auto; }
+  &--bottom-right { top: auto; bottom: 1rem; }
+  &--bottom-left { top: auto; bottom: 1rem; left: 1rem; right: auto; }
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: $radius-xl;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  pointer-events: auto;
+  animation: toast-slide-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  .dark & {
+    background: rgba(30, 41, 59, 0.75);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.0625rem;
+}
+
+.toast__message {
+  flex: 1;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: rgb(var(--color-text-primary));
+  min-width: 0;
+}
+
+.toast__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  background: none;
+  border-radius: $radius-full;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $neutral-700;
+    background: rgba(0, 0, 0, 0.08);
+
+    .dark & {
+      color: $neutral-200;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+// Variants — tinted glass bg + border accent + icon color
+.toast--success {
+  background: rgba($success-50, 0.7);
+  border-color: rgba($success-300, 0.5);
+  border-left: 3px solid $success-500;
+  .toast__icon { color: $success-600; }
+  .toast__message { color: $success-800; }
+
+  .dark & {
+    background: rgba($success-900, 0.4);
+    border-color: rgba($success-700, 0.4);
+    .toast__icon { color: $success-400; }
+    .toast__message { color: $success-200; }
+  }
+}
+
+.toast--error {
+  background: rgba($error-50, 0.7);
+  border-color: rgba($error-300, 0.5);
+  border-left: 3px solid $error-500;
+  .toast__icon { color: $error-600; }
+  .toast__message { color: $error-800; }
+
+  .dark & {
+    background: rgba($error-900, 0.4);
+    border-color: rgba($error-700, 0.4);
+    .toast__icon { color: $error-400; }
+    .toast__message { color: $error-200; }
+  }
+}
+
+.toast--warning {
+  background: rgba($warning-50, 0.7);
+  border-color: rgba($warning-300, 0.5);
+  border-left: 3px solid $warning-500;
+  .toast__icon { color: $warning-600; }
+  .toast__message { color: $warning-800; }
+
+  .dark & {
+    background: rgba($warning-900, 0.4);
+    border-color: rgba($warning-700, 0.4);
+    .toast__icon { color: $warning-400; }
+    .toast__message { color: $warning-200; }
+  }
+}
+
+.toast--info {
+  background: rgba($info-50, 0.7);
+  border-color: rgba($info-300, 0.5);
+  border-left: 3px solid $info-500;
+  .toast__icon { color: $info-600; }
+  .toast__message { color: $info-800; }
+
+  .dark & {
+    background: rgba($info-900, 0.4);
+    border-color: rgba($info-700, 0.4);
+    .toast__icon { color: $info-400; }
+    .toast__message { color: $info-200; }
+  }
+}
+
+// Animation
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

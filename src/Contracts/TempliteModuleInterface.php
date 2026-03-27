@@ -63,14 +63,15 @@ interface TempliteModuleInterface
     public function getSettings(): array;
 
     /**
-     * JS-файлы модуля (IIFE-бандлы). Пути относительно public/.
-     * Пример: ['vendor/crm/js/crm-pages.iife.js']
+     * Путь к Vite manifest.json для резолва ассетов модуля.
+     * Возвращает абсолютный путь или null если модуль не имеет pre-built assets.
      */
-    public function getScripts(): array;
+    public function getAssetManifest(): ?string;
 
     /**
-     * CSS-файлы модуля. Пути относительно public/.
-     * Пример: ['vendor/crm/css/crm.css']
+     * Guard'ы пользователей сайта, предоставляемые модулем.
+     *
+     * @return UserGuardInterface[]
      */
-    public function getStyles(): array;
+    public function getGuards(): array;
 }

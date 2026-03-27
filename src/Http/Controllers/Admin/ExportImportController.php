@@ -3,13 +3,12 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 
 class ExportImportController extends Controller
 {
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('cms::ExportImport/Index');
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/export-import-index.js', [], ['title' => 'Импорт / Экспорт']);
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Routing\Router;
 use Templite\Cms\Http\Middleware\AddSecurityHeaders;
 use Templite\Cms\Http\Middleware\AuthManager;
+use Templite\Cms\Http\Middleware\AuthUser;
 use Templite\Cms\Http\Middleware\CityResolver;
 use Templite\Cms\Http\Middleware\GlobalFieldsMiddleware;
 use Templite\Cms\Http\Middleware\HoneypotProtection;
@@ -18,6 +19,7 @@ use Templite\Cms\Services\ActionRegistry;
 use Templite\Cms\Services\BlockRegistry;
 use Templite\Cms\Services\CacheManager;
 use Templite\Cms\Services\ComponentRegistry;
+use Templite\Cms\Services\HandlerRegistry;
 use Templite\Cms\Services\ModuleRegistry;
 use Templite\Cms\Modules\CmsModule;
 
@@ -33,6 +35,7 @@ class CmsServiceProvider extends ServiceProvider
 
         // 2. Модульная система
         $this->app->singleton(ModuleRegistry::class);
+        $this->app->singleton(HandlerRegistry::class);
         $this->app->singleton(CmsModule::class);
         $this->app->tag([CmsModule::class], 'cms.modules');
 
@@ -42,6 +45,9 @@ class CmsServiceProvider extends ServiceProvider
         $this->app->singleton(ActionRegistry::class);
         $this->app->singleton(ComponentRegistry::class);
         $this->app->singleton(\Templite\Cms\Services\TwoFactorService::class);
+        $this->app->singleton(\Templite\Cms\Services\AssetResolver::class);
+        $this->app->singleton(\Templite\Cms\Services\TiptapHtmlProcessor::class);
+        $this->app->singleton(\Templite\Cms\Services\GuardRegistry::class);
     }
 
     /**
@@ -54,6 +60,8 @@ class CmsServiceProvider extends ServiceProvider
             'block' => \Templite\Cms\Models\Block::class,
             'template_page' => \Templite\Cms\Models\TemplatePage::class,
             'manager' => \Templite\Cms\Models\Manager::class,
+            'site_user' => \Templite\Cms\Models\User::class,
+            'site_user_type' => \Templite\Cms\Models\UserType::class,
         ]);
 
         // 0. Force HTTPS if APP_URL uses https
@@ -64,35 +72,10 @@ class CmsServiceProvider extends ServiceProvider
         // 0. Auth guard & provider для менеджеров CMS
         $this->configureAuth();
 
-        // 0.1. Inertia root view из пакета
-        \Inertia\Inertia::setRootView('cms::app');
-
-        // 0.2. Inertia shared data
-        \Inertia\Inertia::share([
-            'auth' => fn () => [
-                'user' => auth('manager')->user(),
-                'permissions' => auth('manager')->user()?->use_personal_permissions
-                    ? (auth('manager')->user()?->personal_permissions ?? [])
-                    : (auth('manager')->user()?->managerType?->permissions ?? []),
-            ],
-            'navigation' => fn () => app(ModuleRegistry::class)->getNavigation(auth('manager')->user()),
-            'modules' => fn () => app(ModuleRegistry::class)->getModuleInfo(),
-            'cmsConfig' => fn () => [
-                'admin_url' => \Templite\Cms\Models\CmsConfig::getAdminUrl(),
-                'multicity_enabled' => (bool) \Templite\Cms\Models\CmsConfig::getValue('multicity_enabled', false),
-                'two_factor_mode' => \Templite\Cms\Models\CmsConfig::getValue('two_factor_mode', config('cms.two_factor.mode', 'off')),
-                'two_factor_trust_days' => (int) \Templite\Cms\Models\CmsConfig::getValue('two_factor_trust_days', config('cms.two_factor.trust_days', 0)),
-                'multilang_enabled' => (bool) \Templite\Cms\Models\CmsConfig::getValue('multilang_enabled', false),
-                'languages' => \Templite\Cms\Models\CmsConfig::getValue('multilang_enabled', false)
-                    ? \Templite\Cms\Models\Language::active()->ordered()->get()->map(fn ($l) => [
-                        'id' => $l->id,
-                        'code' => $l->code,
-                        'name' => $l->name,
-                        'is_default' => $l->is_default,
-                    ])
-                    : [],
-            ],
-        ]);
+        // 0. Регистрация resolver'а для типа поля "user"
+        app(\Templite\Cms\Services\BlockDataResolver::class)->registerType('user', function (int $id) {
+            return \Templite\Cms\Models\User::find($id);
+        });
 
         // 1. Миграции
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
@@ -105,6 +88,11 @@ class CmsServiceProvider extends ServiceProvider
 
         // 3. Views (Blade)
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'cms');
+
+        // 3.05. Blade directive for CMS asset resolution
+        Blade::directive('cmsAsset', function ($expression) {
+            return "<?php echo app(\Templite\Cms\Services\AssetResolver::class)->resolve({$expression}); ?>";
+        });
 
         // 3.1. Anonymous Blade components: <x-cms::slug />
         // Resolves storage/cms/components/{slug}/index.blade.php
@@ -137,6 +125,7 @@ class CmsServiceProvider extends ServiceProvider
             // Команды
             $this->commands([
                 Console\Commands\CmsInstallCommand::class,
+                Console\Commands\CmsUpdateCommand::class,
                 Console\Commands\MakeBlockCommand::class,
                 Console\Commands\MakeActionCommand::class,
                 Console\Commands\MakeComponentCommand::class,
@@ -206,6 +195,37 @@ class CmsServiceProvider extends ServiceProvider
                 $config->set('sanctum.stateful', $stateful);
             }
         }
+
+        // Кастомный auth provider driver для пользователей сайта
+        \Illuminate\Support\Facades\Auth::provider('cms_users', function ($app, array $config) {
+            $provider = new \Templite\Cms\Auth\ScopedUserProvider(
+                $app['hash'], $config['model']
+            );
+            if (isset($config['guard'])) {
+                $provider->setGuardName($config['guard']);
+            }
+            return $provider;
+        });
+
+        // Собираем guard'ы из всех модулей и регистрируем
+        $guardRegistry = app(\Templite\Cms\Services\GuardRegistry::class);
+        $moduleRegistry = app(\Templite\Cms\Services\ModuleRegistry::class);
+        foreach ($moduleRegistry->getModules() as $module) {
+            foreach ($module->getGuards() as $guard) {
+                $guardRegistry->register($guard);
+            }
+        }
+        $guardRegistry->configureAuthGuards();
+
+        // Автосоздание UserType для зарегистрированных guard'ов
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('cms_user_types')) {
+                $guardRegistry->ensureUserTypes();
+            }
+        } catch (\Throwable $e) {
+            // Fresh install before migrations — silently skip
+            \Illuminate\Support\Facades\Log::debug('CMS guard ensureUserTypes skipped: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -225,6 +245,7 @@ class CmsServiceProvider extends ServiceProvider
         $router->aliasMiddleware('cms.timezone', Timezone::class);
         $router->aliasMiddleware('cms.honeypot', HoneypotProtection::class);
         $router->aliasMiddleware('cms.security_headers', AddSecurityHeaders::class);
+        $router->aliasMiddleware('cms.user_auth', AuthUser::class);
     }
 
     /**

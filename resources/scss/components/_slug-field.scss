@@ -1,0 +1,134 @@
+// =============================================================================
+// Slug Field
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.slug-field__row {
+  display: flex;
+  align-items: center;
+}
+
+.slug-field__prefix {
+  flex-shrink: 0;
+  padding: 0 0.75rem;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  background: $neutral-50;
+  border: 1px solid $neutral-300;
+  border-right: none;
+  border-radius: $radius 0 0 $radius;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+
+  .dark & {
+    background: $neutral-800;
+    border-color: $neutral-600;
+  }
+}
+
+.slug-field__input-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.slug-field__input {
+  width: 100%;
+  height: 38px;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  font-family: $font-mono;
+  border: 1px solid $neutral-300;
+  background: #fff;
+  color: $neutral-900;
+  @include transition-fast(border-color, box-shadow);
+
+  &::placeholder { color: $neutral-400; }
+  &:focus {
+    outline: none;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+  }
+  &:disabled {
+    background: $neutral-100;
+    cursor: not-allowed;
+  }
+
+  .dark & {
+    background: $neutral-900;
+    border-color: $neutral-600;
+    color: $neutral-50;
+    &:disabled { background: $neutral-800; }
+  }
+}
+
+.slug-field__input--no-prefix {
+  border-radius: $radius 0 0 $radius;
+}
+
+.slug-field__input--error {
+  border-color: $error-500;
+  &:focus {
+    border-color: $error-500;
+    box-shadow: 0 0 0 2px rgba($error-500, 0.2);
+  }
+}
+
+.slug-field__btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: 1px solid $neutral-300;
+  border-left: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  .dark & { border-color: $neutral-600; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.slug-field__btn--lock {
+  background: $neutral-50;
+  color: $neutral-500;
+
+  &:hover { color: $neutral-700; }
+
+  .dark & {
+    background: $neutral-700;
+    &:hover { color: $neutral-200; }
+  }
+}
+
+.slug-field__btn--locked {
+  background: rgba($primary-500, 0.08);
+  color: $primary-500;
+
+  .dark & { background: rgba($primary-500, 0.15); }
+}
+
+.slug-field__btn--regen {
+  border-radius: 0 $radius $radius 0;
+  background: $neutral-50;
+  color: $neutral-500;
+
+  &:hover {
+    color: $primary-500;
+    background: rgba($primary-500, 0.08);
+  }
+
+  .dark & {
+    background: $neutral-700;
+    &:hover { background: rgba($primary-500, 0.15); }
+  }
+}
+
+.slug-field__hint {
+  margin-top: 0.25rem;
+  font-size: $font-size-xs;
+  color: $neutral-400;
+}

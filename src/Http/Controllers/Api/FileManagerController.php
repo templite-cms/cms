@@ -219,6 +219,8 @@ class FileManagerController extends Controller
             'path' => 'nullable|string',
             'files' => 'required|array|min:1',
             'files.*' => 'required|file|max:10240', // 10 MB
+            'paths' => 'nullable|array',
+            'paths.*' => 'nullable|string|max:500',
         ]);
 
         $relativePath = trim($request->input('path', ''), '/');
@@ -238,8 +240,10 @@ class FileManagerController extends Controller
             return $this->error('Целевая директория не найдена.', 404);
         }
 
+        $filePaths = $request->input('paths', []);
         $uploaded = [];
-        foreach ($request->file('files') as $file) {
+
+        foreach ($request->file('files') as $i => $file) {
             $name = $file->getClientOriginalName();
 
             // Проверка основного расширения
@@ -259,8 +263,30 @@ class FileManagerController extends Controller
                 return $this->error('Загрузка файлов с данным MIME-типом запрещена.', 422);
             }
 
-            $file->move($absolutePath, $name);
-            $uploaded[] = $relativePath !== '' ? $relativePath . '/' . $name : $name;
+            // Определяем целевую директорию: если передан относительный путь файла — создаём подпапки
+            $targetDir = $absolutePath;
+            $subPath = isset($filePaths[$i]) ? trim($filePaths[$i], '/') : '';
+
+            if ($subPath !== '' && str_contains($subPath, '/')) {
+                // Безопасность: запрет ".." в путях
+                if (str_contains($subPath, '..')) {
+                    return $this->error('Недопустимый путь файла.', 422);
+                }
+
+                $subDir = dirname($subPath);
+                $name = basename($subPath);
+                $targetDir = $absolutePath . '/' . $subDir;
+
+                if (!File::isDirectory($targetDir)) {
+                    File::makeDirectory($targetDir, 0755, true);
+                }
+            } elseif ($subPath !== '') {
+                $name = basename($subPath);
+            }
+
+            $file->move($targetDir, $name);
+            $finalRelative = $relativePath !== '' ? $relativePath . '/' : '';
+            $uploaded[] = $finalRelative . ($subPath !== '' ? $subPath : $name);
         }
 
         $this->logAction('upload', 'file', null, ['path' => $relativePath, 'count' => count($uploaded), 'files' => $uploaded]);
@@ -400,10 +426,6 @@ class FileManagerController extends Controller
         $isDir = File::isDirectory($absolutePath);
 
         if ($isDir) {
-            // Разрешаем удалять только пустые папки
-            if (count(File::allFiles($absolutePath)) > 0 || count(File::directories($absolutePath)) > 0) {
-                return $this->error('Удалять можно только пустые папки.', 422);
-            }
             File::deleteDirectory($absolutePath);
         } else {
             File::delete($absolutePath);

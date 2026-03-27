@@ -3,8 +3,7 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Action;
 use Templite\Cms\Models\Block;
 use Templite\Cms\Models\BlockType;
@@ -27,9 +26,9 @@ class BlockController extends Controller
      * Список блоков.
      * Экран: Blocks/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('Blocks/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/blocks-index.js', [
             'blocks' => Block::with(['blockType', 'screenshot'])
                 ->withCount('pageBlocks')
                 ->orderBy('name')
@@ -44,7 +43,7 @@ class BlockController extends Controller
                     'screenshot_url' => $block->screenshot?->url(),
                 ]),
             'blockTypes' => BlockType::orderBy('name')->get(['id', 'name', 'slug']),
-        ]);
+        ], ['title' => 'Блоки']);
     }
 
     /**
@@ -54,7 +53,7 @@ class BlockController extends Controller
      * BF-017: Загрузка fields (плоский массив всех полей),
      * tabs и sections отдельными коллекциями.
      */
-    public function edit(int $id): Response
+    public function edit(int $id)
     {
         $block = Block::with([
             'blockType',
@@ -86,7 +85,7 @@ class BlockController extends Controller
         // Мержим код в данные блока
         $blockData = array_merge($block->toArray(), $code);
 
-        return Inertia::render('Blocks/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/blocks-edit.js', [
             'block' => $blockData,
             'blockTypes' => BlockType::orderBy('name')->get(['id', 'name', 'slug']),
             'templates' => TemplatePage::orderBy('name')->get(['id', 'name', 'slug']),
@@ -106,16 +105,16 @@ class BlockController extends Controller
             'componentDefinitions' => Component::orderBy('name')
                 ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
-        ]);
+        ], ['title' => $block->name]);
     }
 
     /**
      * Создание нового блока.
      * Экран: Blocks/Edit (пустая форма)
      */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('Blocks/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/blocks-edit.js', [
             'block' => null,
             'blockTypes' => BlockType::orderBy('name')->get(['id', 'name', 'slug']),
             'globalFieldDefinitions' => GlobalField::orderBy('order')
@@ -132,6 +131,6 @@ class BlockController extends Controller
             'componentDefinitions' => Component::orderBy('name')
                 ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
-        ]);
+        ], ['title' => 'Новый блок']);
     }
 }

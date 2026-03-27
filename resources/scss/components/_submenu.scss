@@ -1,0 +1,283 @@
+// =============================================================================
+// SubMenu — shared sub-header for editor pages (block, component, template, etc.)
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// =============================================================================
+// SubMenu root
+// =============================================================================
+
+.submenu {
+  position: fixed;
+  top: $spacing-header;
+  left: 0;
+  right: 0;
+  z-index: $z-subheader;
+  height: $spacing-subheader;
+  background-color: #fff;
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.submenu__inner {
+  height: 100%;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  @include lg {
+    padding: 0 1.5rem;
+  }
+}
+
+.submenu__left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.submenu__back {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $neutral-600;
+    background-color: $neutral-100;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-700;
+  }
+}
+
+.submenu__title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  @include truncate;
+  max-width: 200px;
+
+  @include lg {
+    max-width: 250px;
+  }
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.submenu__divider {
+  height: 1.25rem;
+  width: 1px;
+  background-color: $neutral-200;
+  flex-shrink: 0;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+// =============================================================================
+// Tabs
+// =============================================================================
+
+.submenu__tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.submenu__tab {
+  padding: 0.375rem 0.75rem;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border-radius: $radius;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  @include transition-fast(color, background-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.submenu__tab--active {
+  color: $primary-600;
+  background-color: $primary-50;
+
+  .dark & {
+    color: $primary-400;
+    background-color: rgba($primary-900, 0.2);
+  }
+}
+
+.submenu__tab--inactive {
+  color: $neutral-500;
+
+  &:hover {
+    color: $neutral-700;
+    background-color: $neutral-100;
+  }
+
+  .dark &:hover {
+    color: $neutral-300;
+    background-color: $neutral-700;
+  }
+}
+
+.submenu__tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.25rem;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-full;
+  line-height: 1;
+}
+
+.submenu__tab-count--active {
+  background-color: $primary-100;
+  color: $primary-700;
+
+  .dark & {
+    background-color: $primary-800;
+    color: $primary-300;
+  }
+}
+
+.submenu__tab-count--inactive {
+  background-color: $neutral-200;
+  color: $neutral-600;
+
+  .dark & {
+    background-color: $neutral-600;
+    color: $neutral-300;
+  }
+}
+
+// =============================================================================
+// Right section
+// =============================================================================
+
+.submenu__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.submenu__controls {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+
+  @include md {
+    display: flex;
+  }
+}
+
+// =============================================================================
+// Toggle group (for PanelToggles / LayoutSwitcher inlined by pages)
+// =============================================================================
+
+.submenu__toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.submenu__toggle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @include transition-fast(color, background-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.submenu__toggle--active {
+  color: $primary-600;
+  background-color: $primary-50;
+
+  .dark & {
+    color: $primary-400;
+    background-color: rgba($primary-900, 0.2);
+  }
+}
+
+.submenu__toggle--inactive {
+  color: $neutral-400;
+
+  &:hover {
+    color: $neutral-600;
+    background-color: $neutral-100;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-700;
+  }
+}
+
+// =============================================================================
+// Save / Delete / Dirty dot
+// =============================================================================
+
+.submenu__save-label {
+  display: none;
+
+  @include sm {
+    display: inline;
+  }
+}
+
+.submenu__dirty-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: $radius-full;
+  background-color: $warning-500;
+}
+
+.submenu__delete-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  background: none;
+  border: none;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $error-500;
+    background-color: $error-50;
+  }
+
+  .dark &:hover {
+    background-color: rgba($error-900, 0.2);
+  }
+}

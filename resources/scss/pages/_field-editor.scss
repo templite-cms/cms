@@ -1,0 +1,1838 @@
+// =============================================================================
+// Field Editor — Field management components (shared between block/template editors)
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// =============================================================================
+// FieldsManager
+// =============================================================================
+
+// Empty state
+.fields-manager__empty {
+  padding: 2.5rem 0;
+  text-align: center;
+}
+
+.fields-manager__empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: $neutral-300;
+  margin: 0 auto 0.75rem;
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.fields-manager__empty-text {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+  margin-bottom: 1rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.fields-manager__empty-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.fields-manager__add-tab-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+// Tab bar
+.fields-manager__tab-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+// Inline rename input (shared by tabs, sections)
+.fields-manager__rename-input {
+  padding: 0.125rem 0.375rem;
+  font-size: $font-size-xs;
+  background-color: #fff;
+  border: 1px solid $primary-300;
+  border-radius: $radius-sm;
+  outline: none;
+  color: $neutral-700;
+  width: 6rem;
+
+  &:focus {
+    box-shadow: 0 0 0 1px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    background-color: $neutral-700;
+    border-color: $primary-600;
+    color: $neutral-200;
+  }
+}
+
+// Add tab wrapper
+.fields-manager__add-tab {
+  flex-shrink: 0;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+// Tab panel
+.fields-manager__tab-panel {
+  padding-top: 0.75rem;
+}
+
+// Columns grid
+.fields-manager__columns {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+  min-height: 200px;
+}
+
+.fields-manager__column {
+  min-height: 150px;
+}
+
+.fields-manager__column-inner {
+  padding: 0 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// Section card
+.fields-manager__section-card {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.fields-manager__section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  background-color: $neutral-50;
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    background-color: rgba($neutral-900, 0.3);
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.fields-manager__section-drag {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: $neutral-400;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+
+.fields-manager__section-body {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+// Add section inline form
+.fields-manager__add-section-form {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.fields-manager__add-section-input {
+  flex: 1;
+  padding: 0.25rem 0.375rem;
+  font-size: $font-size-xs;
+  background-color: #fff;
+  border: 1px solid $primary-300;
+  border-radius: $radius-sm;
+  outline: none;
+  color: $neutral-700;
+
+  &:focus {
+    box-shadow: 0 0 0 1px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    background-color: $neutral-700;
+    border-color: $primary-600;
+    color: $neutral-200;
+  }
+}
+
+// Orphan sections
+.fields-manager__orphan-group {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fields-manager__orphan-label {
+  font-size: 11px;
+  color: $neutral-400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 0.25rem;
+}
+
+// Orphan fields
+.fields-manager__orphan-fields {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+// Variables panel (inline in FieldsManager)
+.fields-manager__variables {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background-color: $neutral-50;
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+
+  .dark & {
+    background-color: $neutral-900;
+    border-color: $neutral-700;
+  }
+}
+
+.fields-manager__variables-label {
+  font-size: 11px;
+  font-weight: $font-weight-medium;
+  color: $neutral-600;
+  margin-bottom: 0.25rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.fields-manager__variables-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.fields-manager__variable-tag {
+  font-size: 10px;
+  padding: 0.125rem 0.25rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-sm;
+  color: $neutral-600;
+  cursor: pointer;
+  @include transition-fast(color, border-color);
+
+  &:hover {
+    border-color: $primary-300;
+    color: $primary-600;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-300;
+
+    &:hover {
+      border-color: $primary-600;
+      color: $primary-400;
+    }
+  }
+}
+
+// Ghost styles for drag and drop
+.section-ghost {
+  opacity: 0.3;
+
+  .fields-manager__section-body {
+    display: none !important;
+  }
+}
+
+// =============================================================================
+// FieldEditorInline
+// =============================================================================
+
+.field-editor-inline {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.field-editor-inline__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid $neutral-200;
+  flex-shrink: 0;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.field-editor-inline__back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $neutral-700;
+  }
+
+  .dark & {
+    color: $neutral-400;
+
+    &:hover {
+      color: $neutral-200;
+    }
+  }
+}
+
+.field-editor-inline__title-area {
+  padding: 0.75rem 1rem 0.25rem;
+  flex-shrink: 0;
+}
+
+.field-editor-inline__title {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.field-editor-inline__content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0 1rem 6rem;
+}
+
+.field-editor-inline__form {
+  display: flex;
+  flex-direction: column;
+
+  > * {
+    // space-y-0 equivalent -- no auto spacing between sections
+  }
+}
+
+.field-editor-inline__footer {
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid $neutral-200;
+  padding: 0.75rem 1rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-top-color: $neutral-700;
+  }
+}
+
+.field-editor-inline__spinner {
+  animation: spin 1s linear infinite;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.field-editor-inline__spinner-circle {
+  opacity: 0.25;
+}
+
+.field-editor-inline__spinner-path {
+  opacity: 0.75;
+}
+
+// =============================================================================
+// FieldEditor (Drawer-based)
+// =============================================================================
+
+.field-editor {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.field-editor__content {
+  flex: 1;
+  padding: 0 1.25rem;
+}
+
+.field-editor__form {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-editor__footer {
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid $neutral-200;
+  padding: 0.75rem 1.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-top-color: $neutral-700;
+  }
+}
+
+// =============================================================================
+// Collapsible Section (shared by FieldEditorInline & FieldEditor)
+// =============================================================================
+
+.field-section {
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.field-section__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 0;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  @include transition-fast(color);
+
+  &:hover .field-section__label {
+    color: $primary-600;
+
+    .dark & {
+      color: $primary-400;
+    }
+  }
+}
+
+.field-section__label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.field-section__error-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: $radius-full;
+  background-color: $error-500;
+  display: inline-block;
+}
+
+.field-section__chevron {
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+.field-section__body {
+  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// Type label inside section
+.field-section__type-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  margin-bottom: 0.375rem;
+  display: block;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.field-section__type-required {
+  color: $error-500;
+}
+
+// Validation error text
+.field-section__error-text {
+  font-size: $font-size-sm;
+  color: $error-500;
+}
+
+// =============================================================================
+// FieldSettingsPanel
+// =============================================================================
+
+.field-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field-settings__grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.field-settings__grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.field-settings__label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  margin-bottom: 0.5rem;
+  display: block;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.field-settings__checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.field-settings__checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.field-settings__native-checkbox {
+  border-radius: $radius-sm;
+  border: 1px solid $neutral-300;
+  color: $primary-500;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.3);
+  }
+}
+
+.field-settings__native-radio {
+  color: $primary-500;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.3);
+  }
+}
+
+.field-settings__no-settings {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+// FieldTypeDropdown — uses shared .select__trigger and .dropdown__menu
+// (all custom styles removed — now uses .select and .dropdown components)
+
+// =============================================================================
+// FieldCard
+// =============================================================================
+// FieldCard
+// =============================================================================
+
+.field-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  @include transition-fast(border-color);
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+
+  &:hover {
+    border-color: $neutral-300;
+
+    .dark &:hover {
+      border-color: $neutral-600;
+    }
+  }
+
+  &--nested {
+    padding: 0.5rem 0.75rem;
+    background-color: $neutral-50;
+    border-radius: $radius;
+
+    .dark & {
+      background-color: rgba($neutral-800, 0.3);
+    }
+  }
+}
+
+.field-card__drag {
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.field-card__name {
+  font-size: $font-size-sm;
+  color: $neutral-700;
+  @include truncate;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $primary-600;
+  }
+
+  .dark & {
+    color: $neutral-200;
+
+    &:hover {
+      color: $primary-400;
+    }
+  }
+}
+
+.field-card__required {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: $error-500;
+  flex-shrink: 0;
+}
+
+.field-card__key {
+  font-size: $font-size-xs;
+  font-family: $font-mono;
+  color: $neutral-400;
+  @include truncate;
+  flex-shrink: 0;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+.field-card__type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius-sm;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+// Type badge color variants
+.field-card__type-badge--text,
+.field-card__type-badge--textfield {
+  background-color: $neutral-100;
+  color: $neutral-600;
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-300;
+  }
+}
+
+.field-card__type-badge--number {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+
+  .dark & {
+    background-color: rgba(30, 58, 138, 0.4);
+    color: #93c5fd;
+  }
+}
+
+.field-card__type-badge--img {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+
+  .dark & {
+    background-color: rgba(88, 28, 135, 0.4);
+    color: #d8b4fe;
+  }
+}
+
+.field-card__type-badge--file {
+  background-color: #ffedd5;
+  color: #c2410c;
+
+  .dark & {
+    background-color: rgba(124, 45, 18, 0.4);
+    color: #fdba74;
+  }
+}
+
+.field-card__type-badge--editor {
+  background-color: #d1fae5;
+  color: #047857;
+
+  .dark & {
+    background-color: rgba(6, 78, 59, 0.4);
+    color: #6ee7b7;
+  }
+}
+
+.field-card__type-badge--html {
+  background-color: #fee2e2;
+  color: #b91c1c;
+
+  .dark & {
+    background-color: rgba(127, 29, 29, 0.4);
+    color: #fca5a5;
+  }
+}
+
+.field-card__type-badge--select {
+  background-color: #e0e7ff;
+  color: #4338ca;
+
+  .dark & {
+    background-color: rgba(49, 46, 129, 0.4);
+    color: #a5b4fc;
+  }
+}
+
+.field-card__type-badge--checkbox,
+.field-card__type-badge--radio {
+  background-color: #ccfbf1;
+  color: #0f766e;
+
+  .dark & {
+    background-color: rgba(19, 78, 74, 0.4);
+    color: #5eead4;
+  }
+}
+
+.field-card__type-badge--link {
+  background-color: #e0f2fe;
+  color: #0369a1;
+
+  .dark & {
+    background-color: rgba(12, 74, 110, 0.4);
+    color: #7dd3fc;
+  }
+}
+
+.field-card__type-badge--date,
+.field-card__type-badge--datetime {
+  background-color: #fef3c7;
+  color: #b45309;
+
+  .dark & {
+    background-color: rgba(120, 53, 15, 0.4);
+    color: #fcd34d;
+  }
+}
+
+.field-card__type-badge--array {
+  background-color: #ede9fe;
+  color: #6d28d9;
+
+  .dark & {
+    background-color: rgba(76, 29, 149, 0.4);
+    color: #c4b5fd;
+  }
+}
+
+.field-card__type-badge--color {
+  background-color: #fce7f3;
+  color: #be185d;
+
+  .dark & {
+    background-color: rgba(131, 24, 67, 0.4);
+    color: #f9a8d4;
+  }
+}
+
+.field-card__type-badge--category,
+.field-card__type-badge--product,
+.field-card__type-badge--product_option {
+  background-color: #ecfccb;
+  color: #4d7c0f;
+
+  .dark & {
+    background-color: rgba(54, 83, 20, 0.4);
+    color: #bef264;
+  }
+}
+
+.field-card__spacer {
+  flex: 1;
+}
+
+.field-card__actions {
+  position: relative;
+}
+
+.field-card__more-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0;
+
+  .field-card__row:hover & {
+    opacity: 1;
+  }
+}
+
+.field-card__dropdown {
+  position: absolute;
+  right: 0;
+  top: 1.75rem;
+  z-index: 20;
+  width: 10rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  padding: 0.25rem 0;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+// Reuse .fields-manager__tab-menu-item for dropdown items
+
+// Children section
+.field-card__children {
+  margin-left: 1.5rem;
+  margin-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field-card__children-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.field-card__children-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: $neutral-400;
+}
+
+.field-card__children-label {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.field-card__add-child-btn {
+  margin-left: 0.5rem;
+  font-size: $font-size-xs;
+  color: $primary-500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $primary-700;
+  }
+
+  .dark &:hover {
+    color: $primary-300;
+  }
+}
+
+// =============================================================================
+// ImageSizesEditor
+// =============================================================================
+
+.image-sizes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.image-sizes__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.image-sizes__label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.image-sizes__presets {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.image-sizes__preset-btn {
+  font-size: $font-size-xs;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: $radius-sm;
+  @include transition-fast(color, background-color);
+
+  &--primary {
+    color: $primary-500;
+
+    &:hover {
+      color: $primary-700;
+      background-color: $primary-50;
+    }
+
+    .dark &:hover {
+      color: $primary-300;
+      background-color: rgba($primary-900, 0.2);
+    }
+  }
+
+  &--secondary {
+    color: $neutral-500;
+
+    &:hover {
+      color: $neutral-700;
+      background-color: $neutral-100;
+    }
+
+    .dark &:hover {
+      color: $neutral-300;
+      background-color: $neutral-700;
+    }
+  }
+}
+
+.image-sizes__table {
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  overflow: hidden;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.image-sizes__table-header {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 140px 36px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: $neutral-50;
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.image-sizes__table-th {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.image-sizes__table-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 140px 36px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid $neutral-100;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  .dark & {
+    border-bottom-color: rgba($neutral-700, 0.5);
+  }
+}
+
+.image-sizes__input {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  font-size: $font-size-sm;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-sm;
+  outline: none;
+  color: $neutral-700;
+
+  &:focus {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 1px rgba($primary-500, 0.2);
+  }
+
+  &--mono {
+    font-family: $font-mono;
+  }
+
+  &--center {
+    text-align: center;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-200;
+  }
+}
+
+.image-sizes__select {
+  @extend .image-sizes__input;
+}
+
+.image-sizes__remove-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $error-500;
+    background-color: $error-50;
+  }
+
+  .dark &:hover {
+    background-color: rgba($error-900, 0.2);
+  }
+}
+
+.image-sizes__empty {
+  padding: 1rem 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+  border: 1px dashed $neutral-300;
+  border-radius: $radius-lg;
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+}
+
+.image-sizes__add-btn {
+  font-size: $font-size-sm;
+  color: $primary-500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $primary-700;
+  }
+
+  .dark &:hover {
+    color: $primary-300;
+  }
+}
+
+// =============================================================================
+// OptionsEditor
+// =============================================================================
+
+.options-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.options-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.options-editor__label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.options-editor__mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  background-color: $neutral-100;
+  border-radius: $radius;
+  padding: 0.125rem;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.options-editor__mode-btn {
+  padding: 0.25rem 0.625rem;
+  font-size: $font-size-xs;
+  border-radius: $radius-sm;
+  @include transition-fast(color, background-color, box-shadow);
+
+  &--active {
+    background-color: #fff;
+    color: $neutral-700;
+    box-shadow: $shadow-sm;
+
+    .dark & {
+      background-color: $neutral-600;
+      color: $neutral-100;
+    }
+  }
+
+  &--inactive {
+    color: $neutral-500;
+
+    &:hover {
+      color: $neutral-700;
+    }
+
+    .dark & {
+      color: $neutral-400;
+
+      &:hover {
+        color: $neutral-200;
+      }
+    }
+  }
+}
+
+.options-editor__textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: $font-size-sm;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  outline: none;
+  font-family: $font-mono;
+  color: $neutral-700;
+  resize: vertical;
+
+  &:focus {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 1px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-200;
+  }
+}
+
+.options-editor__hint {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  margin-top: 0.25rem;
+}
+
+.options-editor__hint-code {
+  font-size: $font-size-xs;
+  background-color: $neutral-100;
+  padding: 0 0.25rem;
+  border-radius: $radius-sm;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.options-editor__table-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.options-editor__table-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.options-editor__table-input {
+  flex: 1;
+  padding: 0.375rem 0.5rem;
+  font-size: $font-size-sm;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-sm;
+  outline: none;
+  color: $neutral-700;
+
+  &:focus {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 1px rgba($primary-500, 0.2);
+  }
+
+  &--mono {
+    font-family: $font-mono;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-200;
+  }
+}
+
+.options-editor__drag-handle {
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.options-editor__remove-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  flex-shrink: 0;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $error-500;
+    background-color: $error-50;
+  }
+
+  .dark &:hover {
+    background-color: rgba($error-900, 0.2);
+  }
+}
+
+.options-editor__empty {
+  padding: 0.75rem 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+.options-editor__add-btn {
+  margin-top: 0.5rem;
+  font-size: $font-size-sm;
+  color: $primary-500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $primary-700;
+  }
+
+  .dark &:hover {
+    color: $primary-300;
+  }
+}
+
+// =============================================================================
+// VariablesPanel
+// =============================================================================
+
+.variables-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.variables-panel__section-count {
+  color: $neutral-400;
+  font-weight: $font-weight-normal;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+.variables-panel__section-body {
+  font-size: $font-size-xs;
+}
+
+.variables-panel__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.variables-panel__empty {
+  font-size: 11px;
+  color: $neutral-400;
+  font-style: italic;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+// =============================================================================
+// RepeaterFieldConfig
+// =============================================================================
+
+.repeater-config {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.repeater-config__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.repeater-config__children-section {
+  border-top: 1px solid $neutral-200;
+  padding-top: 1rem;
+  margin-top: 1rem;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}
+
+.repeater-config__children-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.repeater-config__children-title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.repeater-config__children-count {
+  color: $neutral-400;
+  font-weight: $font-weight-normal;
+}
+
+.repeater-config__children-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.repeater-config__children-empty {
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+  border: 1px dashed $neutral-300;
+  border-radius: $radius-lg;
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+}
+
+.repeater-config__children-empty-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: $neutral-400;
+  margin: 0 auto 0.5rem;
+}
+
+.repeater-config__usage-hint {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: $neutral-50;
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.repeater-config__usage-label {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  font-weight: $font-weight-medium;
+  margin-bottom: 0.25rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.repeater-config__usage-code {
+  font-size: $font-size-xs;
+  font-family: $font-mono;
+  color: $neutral-500;
+  line-height: 1.625;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+// =============================================================================
+// FieldTypeSelector (grid)
+// =============================================================================
+
+.field-type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field-type-selector__group-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 0.5rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.field-type-selector__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.field-type-selector__card {
+  padding: 0.75rem;
+  border-radius: $radius-lg;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  @include transition-fast(border-color, background-color, box-shadow);
+
+  &--selected {
+    border: 2px solid $primary-500;
+    background-color: $primary-50;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+
+    .dark & {
+      background-color: rgba($primary-900, 0.2);
+    }
+  }
+
+  &--unselected {
+    border: 1px solid $neutral-200;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $primary-300;
+      background-color: rgba($primary-50, 0.5);
+    }
+
+    .dark & {
+      border-color: $neutral-700;
+
+      &:hover {
+        background-color: rgba($primary-900, 0.1);
+      }
+    }
+  }
+}
+
+.field-type-selector__card-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-bottom: 0.375rem;
+
+  &--selected {
+    color: $primary-600;
+
+    .dark & {
+      color: $primary-400;
+    }
+  }
+
+  &--unselected {
+    color: $neutral-400;
+
+    .dark & {
+      color: $neutral-500;
+    }
+  }
+}
+
+.field-type-selector__card-label {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  line-height: 1.25;
+
+  &--selected {
+    color: $primary-700;
+
+    .dark & {
+      color: $primary-300;
+    }
+  }
+
+  &--unselected {
+    color: $neutral-700;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+}
+
+.field-type-selector__card-desc {
+  font-size: 10px;
+  color: $neutral-400;
+  margin-top: 0.125rem;
+  line-height: 1.25;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+// =============================================================================
+// BlockFieldRenderer
+// =============================================================================
+
+.block-field-array__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.block-field-array__label {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.block-field-array__count {
+  color: $neutral-400;
+  font-weight: $font-weight-normal;
+}
+
+.block-field-array__toggle-all {
+  font-size: 11px;
+  color: $neutral-400;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $neutral-600;
+  }
+
+  .dark &:hover {
+    color: $neutral-300;
+  }
+}
+
+.block-field-array__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.block-field-array__item {
+  display: flex;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  background-color: #fff;
+  overflow: hidden;
+
+  .dark & {
+    border-color: $neutral-700;
+    background-color: rgba($neutral-800, 0.5);
+  }
+}
+
+.block-field-array__item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.375rem;
+  background-color: $neutral-50;
+  border-right: 1px solid $neutral-200;
+  flex-shrink: 0;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-right-color: $neutral-700;
+  }
+}
+
+.block-field-array__side-top,
+.block-field-array__side-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.block-field-array__drag-handle {
+  cursor: grab;
+  color: $neutral-400;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    color: $neutral-600;
+  }
+}
+
+.block-field-array__item-preview {
+  flex: 1;
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.block-field-array__preview-index {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+.block-field-array__preview-text {
+  font-size: $font-size-sm;
+  color: $neutral-600;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.block-field-array__item-fields {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.block-field-array__error {
+  margin-top: 0.25rem;
+  font-size: $font-size-xs;
+  color: $error-500;
+}
+
+.block-field-renderer__unknown {
+  padding: 0.75rem;
+  background-color: $warning-50;
+  border: 1px solid $warning-200;
+  border-radius: $radius-lg;
+  font-size: $font-size-sm;
+  color: $warning-700;
+
+  .dark & {
+    background-color: rgba($warning-900, 0.2);
+    border-color: $warning-800;
+    color: $warning-300;
+  }
+}
+
+.block-field-renderer__unknown-code {
+  font-family: $font-mono;
+}
+
+// =============================================================================
+// ParamsManager (Component editor)
+// =============================================================================
+
+.params-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.params-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.params-manager__param-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  flex: 1;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.params-manager__param-type {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+.params-manager__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.params-manager__form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.params-manager__add-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.params-manager__empty {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-400;
+}
+
+// =============================================================================
+// Spin animation (shared)
+// =============================================================================
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

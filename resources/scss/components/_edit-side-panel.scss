@@ -1,0 +1,124 @@
+// =============================================================================
+// EditSidePanel
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.edit-side-panel {
+  position: fixed;
+  top: 104px;
+  bottom: 0;
+  z-index: $z-subheader;
+  display: flex;
+}
+
+.edit-side-panel--left {
+  left: 0;
+}
+
+.edit-side-panel--right {
+  right: 0;
+}
+
+.edit-side-panel--no-select {
+  user-select: none;
+}
+
+.edit-side-panel__content {
+  height: 100%;
+  background-color: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  .edit-side-panel--left & {
+    border-right: 1px solid $neutral-200;
+  }
+
+  .edit-side-panel--right & {
+    border-left: 1px solid $neutral-200;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.edit-side-panel__header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid $neutral-100;
+
+  .dark & {
+    background-color: rgba($neutral-800, 0.95);
+    border-bottom-color: rgba($neutral-700, 0.5);
+  }
+}
+
+.edit-side-panel__title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.edit-side-panel__close {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.edit-side-panel__body {
+  padding: 1rem;
+}
+
+.edit-side-panel__resizer {
+  width: 4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  z-index: 10;
+  @include transition-fast(background-color);
+  background-color: transparent;
+
+  &:hover {
+    background-color: $primary-500;
+  }
+}
+
+.edit-side-panel__resizer--active {
+  background-color: $primary-500;
+}
+
+// Transitions — left
+.edit-side-panel-left-enter-active,
+.edit-side-panel-left-leave-active {
+  transition: transform $transition-normal ease, opacity $transition-normal ease;
+}
+
+.edit-side-panel-left-enter-from,
+.edit-side-panel-left-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+// Transitions — right
+.edit-side-panel-right-enter-active,
+.edit-side-panel-right-leave-active {
+  transition: transform $transition-normal ease, opacity $transition-normal ease;
+}
+
+.edit-side-panel-right-enter-from,
+.edit-side-panel-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}

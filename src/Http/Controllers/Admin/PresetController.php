@@ -2,9 +2,9 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Block;
 use Templite\Cms\Models\BlockPreset;
 use Templite\Cms\Models\BlockType;
@@ -16,7 +16,7 @@ class PresetController extends Controller
      * Список пресетов блоков.
      * Экран: Presets/Index
      */
-    public function index(): Response
+    public function index()
     {
         $presets = BlockPreset::with(['block:id,name,slug,block_type_id', 'screenFile'])
             ->orderBy('order')
@@ -31,11 +31,11 @@ class PresetController extends Controller
         $blockTypes = BlockType::orderBy('name')->get();
         $blocks = Block::select('id', 'name', 'slug', 'block_type_id')->orderBy('name')->get();
 
-        return Inertia::render('Presets/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/presets-index.js', [
             'presets' => $presets,
             'blockTypes' => $blockTypes,
             'blocks' => $blocks,
-        ]);
+        ], ['title' => 'Пресеты']);
     }
 
     /**
@@ -59,11 +59,11 @@ class PresetController extends Controller
         $blockTypes = BlockType::orderBy('name')->get();
         $templates = TemplatePage::select('id', 'name')->orderBy('name')->get();
 
-        return Inertia::render('Presets/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/presets-edit.js', [
             'preset' => $preset,
             'blocks' => $blocks,
             'blockTypes' => $blockTypes,
             'templates' => $templates,
-        ]);
+        ], ['title' => $preset->name ?? 'Редактирование пресета']);
     }
 }

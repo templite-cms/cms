@@ -1,0 +1,159 @@
+// =============================================================================
+// Template Switcher
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.template-switcher {
+  position: relative;
+}
+
+.template-switcher__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border-radius: $radius;
+  @include transition-fast(color, background-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.template-switcher__trigger--active {
+  color: $primary-600;
+  background-color: $primary-50;
+
+  &:hover {
+    background-color: $primary-100;
+  }
+
+  .dark & {
+    color: $primary-400;
+    background-color: rgba($primary-900, 0.2);
+
+    &:hover {
+      background-color: rgba($primary-900, 0.3);
+    }
+  }
+}
+
+.template-switcher__trigger--inactive {
+  color: $neutral-500;
+
+  &:hover {
+    color: $neutral-700;
+    background-color: $neutral-100;
+  }
+
+  .dark & {
+    color: $neutral-400;
+
+    &:hover {
+      color: $neutral-200;
+      background-color: $neutral-700;
+    }
+  }
+}
+
+.template-switcher__trigger-label {
+  display: none;
+  max-width: 120px;
+  @include truncate;
+
+  @include lg {
+    display: inline;
+  }
+}
+
+.template-switcher__dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 0.25rem;
+  width: 13rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  z-index: $z-dropdown;
+  padding: 0.25rem 0;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.template-switcher__option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  @include transition-fast(color, background-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.template-switcher__option--selected {
+  background-color: $neutral-100;
+  color: $neutral-900;
+  font-weight: $font-weight-medium;
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-50;
+  }
+}
+
+.template-switcher__option--selected-primary {
+  background-color: $primary-50;
+  color: $primary-700;
+  font-weight: $font-weight-medium;
+
+  .dark & {
+    background-color: rgba($primary-900, 0.3);
+    color: $primary-300;
+  }
+}
+
+.template-switcher__option--unselected {
+  color: $neutral-600;
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark & {
+    color: $neutral-300;
+
+    &:hover {
+      background-color: $neutral-700;
+    }
+  }
+}
+
+.template-switcher__check-placeholder {
+  width: 0.875rem;
+  flex-shrink: 0;
+}
+
+.template-switcher__option-label {
+  @include truncate;
+}
+
+.template-switcher__separator {
+  margin: 0.25rem 0;
+  border-top: 1px solid $neutral-200;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}

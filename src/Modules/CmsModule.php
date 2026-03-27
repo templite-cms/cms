@@ -2,10 +2,18 @@
 
 namespace Templite\Cms\Modules;
 
+use Templite\Cms\Auth\DefaultUserGuard;
 use Templite\Cms\Contracts\AbstractModule;
 
 class CmsModule extends AbstractModule
 {
+    public function getGuards(): array
+    {
+        return [
+            new DefaultUserGuard(),
+        ];
+    }
+
     public function getName(): string
     {
         return 'cms';
@@ -52,6 +60,7 @@ class CmsModule extends AbstractModule
                 'items' => [
                     ['label' => 'Ядро', 'route' => 'cms.core-settings.index', 'icon' => 'cpu', 'permission' => 'settings.view', 'position' => 10],
                     ['label' => 'Менеджеры', 'route' => 'cms.managers.index', 'icon' => 'users', 'permission' => 'managers.view', 'position' => 20],
+                    ['label' => 'Пользователи', 'route' => 'cms.users.index', 'icon' => 'user', 'permission' => 'users.view', 'position' => 25],
                     ['label' => 'Импорт / Экспорт', 'route' => 'cms.export-import.index', 'icon' => 'arrow-left-right', 'permission' => 'settings.edit', 'position' => 30],
                     ['label' => 'Логи', 'route' => 'cms.logs.index', 'icon' => 'scroll-text', 'permission' => 'logs.view', 'position' => 40],
                 ],
@@ -111,6 +120,13 @@ class CmsModule extends AbstractModule
             'manager_types.create' => 'Создание типов менеджеров',
             'manager_types.edit' => 'Редактирование типов менеджеров',
             'manager_types.delete' => 'Удаление типов менеджеров',
+            // Пользователи сайта
+            'users.view' => 'Просмотр пользователей сайта',
+            'users.create' => 'Создание пользователей сайта',
+            'users.edit' => 'Редактирование пользователей сайта',
+            'users.delete' => 'Удаление пользователей сайта',
+            'user_types.view' => 'Просмотр типов пользователей',
+            'user_types.edit' => 'Редактирование типов пользователей',
             'logs.view' => 'Просмотр логов',
         ];
     }
@@ -140,5 +156,10 @@ class CmsModule extends AbstractModule
                 'position' => 30,
             ],
         ];
+    }
+
+    public function getAssetManifest(): ?string
+    {
+        return public_path('vendor/cms/build/manifest.json');
     }
 }

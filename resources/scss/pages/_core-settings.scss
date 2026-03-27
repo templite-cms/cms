@@ -1,0 +1,519 @@
+// =============================================================================
+// Core Settings — Core settings page
+// =============================================================================
+
+@use '../variables' as *;
+
+.core-settings {
+  padding: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.core-settings__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.core-settings__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Columns grid
+// -----------------------------------------------------------------------------
+
+.core-settings__columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.core-settings__column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Card
+// -----------------------------------------------------------------------------
+
+.core-settings__card {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-xl;
+  padding: 1.5rem;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.core-settings__card-title {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  margin-bottom: 1.25rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+
+  &--with-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.core-settings__card-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: $neutral-400;
+}
+
+.core-settings__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// -----------------------------------------------------------------------------
+// Field
+// -----------------------------------------------------------------------------
+
+.core-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.core-settings__field-label {
+  display: block;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.core-settings__field-description {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Input / Textarea
+// -----------------------------------------------------------------------------
+
+.core-settings__input {
+  width: 100%;
+  border-radius: $radius;
+  border: 1px solid $neutral-300;
+  background-color: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-900;
+  outline: none;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:focus {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 1px $primary-500;
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background-color: $neutral-800;
+    color: $neutral-50;
+  }
+}
+
+.core-settings__textarea {
+  @extend .core-settings__input;
+  font-family: $font-mono;
+}
+
+// -----------------------------------------------------------------------------
+// Switch (toggle)
+// -----------------------------------------------------------------------------
+
+.core-settings__switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.core-settings__switch {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  border-radius: $radius-full;
+  border: 2px solid transparent;
+  transition: background-color 200ms ease-in-out;
+  background-color: $neutral-300;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px $primary-500, 0 0 0 4px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    background-color: $neutral-600;
+
+    &:focus {
+      box-shadow: 0 0 0 2px $primary-500, 0 0 0 4px $neutral-900;
+    }
+  }
+
+  &--active {
+    background-color: $primary-600;
+
+    .dark & {
+      background-color: $primary-600;
+    }
+  }
+}
+
+.core-settings__switch-handle {
+  pointer-events: none;
+  display: inline-block;
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: $radius-full;
+  background-color: #fff;
+  box-shadow: $shadow-sm;
+  transition: transform 200ms ease-in-out;
+  transform: translateX(0);
+
+  &--active {
+    transform: translateX(1.25rem);
+  }
+}
+
+.core-settings__switch-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Table toolbar
+// -----------------------------------------------------------------------------
+
+.core-settings__table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+  margin-bottom: 1rem;
+
+  &--spaced {
+    gap: 0.75rem;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Table cell helpers
+// -----------------------------------------------------------------------------
+
+.core-settings__cell-code {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+  background-color: $neutral-100;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius-sm;
+  font-family: $font-mono;
+  text-transform: uppercase;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+}
+
+.core-settings__cell-slug {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+  background-color: $neutral-100;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius-sm;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+}
+
+.core-settings__cell-name {
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.core-settings__cell-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.core-settings__cell-muted {
+  color: $neutral-400;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}
+
+.core-settings__cell-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.core-settings__action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-600;
+  border-radius: $radius-sm;
+  transition: color $transition-fast, background-color $transition-fast;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $primary-600;
+    background-color: $primary-50;
+  }
+
+  .dark & {
+    color: $neutral-300;
+
+    &:hover {
+      color: $primary-400;
+      background-color: rgba($primary-900, 0.2);
+    }
+  }
+}
+
+.core-settings__action-btn--warning {
+  color: $warning-600;
+
+  &:hover {
+    background-color: $warning-50;
+  }
+
+  .dark & {
+    color: $warning-600;
+
+    &:hover {
+      background-color: rgba($warning-900, 0.2);
+    }
+  }
+}
+
+.core-settings__action-btn--success {
+  color: $success-600;
+
+  &:hover {
+    background-color: $success-50;
+  }
+
+  .dark & {
+    color: $success-600;
+
+    &:hover {
+      background-color: rgba($success-900, 0.2);
+    }
+  }
+}
+
+.core-settings__action-btn-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+// -----------------------------------------------------------------------------
+// Table empty state
+// -----------------------------------------------------------------------------
+
+.core-settings__empty {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.core-settings__empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: $neutral-300;
+  margin: 0 auto 0.5rem;
+}
+
+.core-settings__empty-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+.core-settings__empty-link {
+  margin-top: 0.5rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $primary-600;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $primary-700;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Preview card
+// -----------------------------------------------------------------------------
+
+.core-settings__preview-description {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+  margin-bottom: 1rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.core-settings__preview-badge {
+  margin-top: 0.5rem;
+}
+
+.core-settings__preview-loading {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.core-settings__preview-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: $neutral-400;
+  margin: 0 auto;
+  animation: spin 1s linear infinite;
+}
+
+.core-settings__preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Code variable (inline)
+// -----------------------------------------------------------------------------
+
+.core-settings__code-var {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  background-color: $neutral-100;
+  padding: 0.125rem 0.25rem;
+  border-radius: $radius-sm;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Hidden utility
+// -----------------------------------------------------------------------------
+
+.core-settings__hidden {
+  display: none;
+}
+
+// -----------------------------------------------------------------------------
+// Drawer
+// -----------------------------------------------------------------------------
+
+.core-settings__drawer-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.core-settings__drawer-section-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  margin-bottom: 0.75rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.core-settings__drawer-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.core-settings__drawer-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.core-settings__drawer-checkboxes {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.core-settings__drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}

@@ -1,0 +1,63 @@
+// =============================================================================
+// Code Panel — shared CodeMirror editor panel
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.code-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-panel__warning {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background-color: rgba(#92400e, 0.4);
+  border-bottom: 1px solid rgba(#b45309, 0.5);
+  color: #fcd34d;
+  font-size: $font-size-xs;
+}
+
+.code-panel__warning-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.code-panel__warning-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.code-panel__warning-label {
+  font-weight: $font-weight-medium;
+}
+
+.code-panel__warning-hint {
+  color: rgba(#fcd34d, 0.8);
+}
+
+.code-panel__warning-close {
+  flex-shrink: 0;
+  padding: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  @include transition-fast(color);
+
+  &:hover {
+    color: #fef3c7;
+  }
+}
+
+.code-panel__editor {
+  flex: 1;
+  min-height: 0;
+}

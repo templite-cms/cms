@@ -16,6 +16,7 @@ class PageType extends Model implements Exportable
     protected $fillable = [
         'name',
         'slug',
+        'icon',
         'template_page_id',
         'settings',
     ];
@@ -54,6 +55,7 @@ class PageType extends Model implements Exportable
         return [
             'name' => $this->name,
             'slug' => $this->slug,
+            'icon' => $this->icon,
             'template_page_slug' => $this->templatePage?->slug,
             'settings' => $this->settings,
             'attributes' => $this->attributes()->get()->sortBy('order')->map(fn ($a) => [
@@ -78,6 +80,7 @@ class PageType extends Model implements Exportable
             ['slug' => $data['slug']],
             [
                 'name' => $data['name'],
+                'icon' => $data['icon'] ?? null,
                 'template_page_id' => $templatePageId,
                 'settings' => $data['settings'] ?? null,
             ]

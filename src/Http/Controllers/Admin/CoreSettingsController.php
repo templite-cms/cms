@@ -2,9 +2,9 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\City;
 use Templite\Cms\Models\CmsConfig;
 use Templite\Cms\Models\Language;
@@ -78,11 +78,11 @@ class CoreSettingsController extends Controller
         $cities = City::orderBy('sort_order')->orderBy('name')->get();
         $languages = Language::orderBy('order')->get();
 
-        return Inertia::render('CoreSettings/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/core-settings.js', [
             'settings' => $settings,
             'grouped' => $grouped,
             'cities' => $cities,
             'languages' => $languages,
-        ]);
+        ], ['title' => 'Настройки ядра']);
     }
 }

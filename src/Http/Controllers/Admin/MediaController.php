@@ -3,8 +3,7 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\FileFolder;
 
 class MediaController extends Controller
@@ -13,7 +12,7 @@ class MediaController extends Controller
      * Медиа-менеджер (файлы + папки).
      * Экран: Media/Index
      */
-    public function index(): Response
+    public function index()
     {
         $folders = FileFolder::withCount('files')
             ->with(['children' => fn ($q) => $q->withCount('files')->orderBy('order')])
@@ -21,7 +20,7 @@ class MediaController extends Controller
             ->orderBy('order')
             ->get();
 
-        return Inertia::render('Media/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/media-index.js', [
             'folders' => $folders,
             'maxUploadSize' => config('cms.max_upload_size', 10), // MB
             'allowedExtensions' => config('cms.allowed_extensions', [
@@ -30,6 +29,6 @@ class MediaController extends Controller
                 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
                 'zip', 'rar', 'txt', 'csv',
             ]),
-        ]);
+        ], ['title' => 'Медиа']);
     }
 }

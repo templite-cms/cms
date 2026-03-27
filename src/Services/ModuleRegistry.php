@@ -173,38 +173,6 @@ class ModuleRegistry
     }
 
     /**
-     * Получить все JS-скрипты модулей.
-     */
-    public function getScripts(): array
-    {
-        $scripts = [];
-
-        foreach ($this->getModules() as $module) {
-            foreach ($module->getScripts() as $script) {
-                $scripts[] = $script;
-            }
-        }
-
-        return $scripts;
-    }
-
-    /**
-     * Получить все CSS-стили модулей.
-     */
-    public function getStyles(): array
-    {
-        $styles = [];
-
-        foreach ($this->getModules() as $module) {
-            foreach ($module->getStyles() as $style) {
-                $styles[] = $style;
-            }
-        }
-
-        return $styles;
-    }
-
-    /**
      * Получить информацию обо всех модулях (для отображения в админке).
      */
     public function getModuleInfo(): array

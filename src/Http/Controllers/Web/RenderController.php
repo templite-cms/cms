@@ -11,6 +11,7 @@ use Templite\Cms\Models\CityPage;
 use Templite\Cms\Models\CmsConfig;
 use Templite\Cms\Models\Page;
 use Templite\Cms\Helpers\UrlHelper;
+use Templite\Cms\Services\HandlerRegistry;
 use Templite\Cms\Services\PageRenderer;
 
 /**
@@ -26,6 +27,7 @@ class RenderController extends Controller
 {
     public function __construct(
         protected PageRenderer $pageRenderer,
+        protected HandlerRegistry $handlerRegistry,
     ) {}
 
     /**
@@ -69,11 +71,25 @@ class RenderController extends Controller
             ->where('status', 1)
             ->first();
 
-        if (!$page) {
-            return $this->render404($request, $url);
+        // Если страница найдена и имеет handler — делегируем обработку
+        if ($page && $page->handler && $this->handlerRegistry->has($page->handler)) {
+            return $this->handlerRegistry->resolve($page->handler)
+                ->handle($page, '', $request);
         }
 
-        return $this->renderPage($page, $request);
+        if ($page) {
+            return $this->renderPage($page, $request);
+        }
+
+        // Не нашли точное совпадение — ищем handler-страницу как prefix
+        $handlerPage = $this->findHandlerPage($url);
+        if ($handlerPage) {
+            $path = substr($url, strlen($handlerPage->url) + 1);
+            return $this->handlerRegistry->resolve($handlerPage->handler)
+                ->handle($handlerPage, $path, $request);
+        }
+
+        return $this->render404($request, $url);
     }
 
     /**
@@ -134,7 +150,16 @@ class RenderController extends Controller
             }
         }
 
-        // 4. Ничего не найдено → 404
+        // 4. Handler fallback — ищем handler-страницу как prefix
+        $handlerUrl = $cityFromUrl && $strippedUrl ? $strippedUrl : $url;
+        $handlerPage = $this->findHandlerPage($handlerUrl);
+        if ($handlerPage) {
+            $path = substr($handlerUrl, strlen($handlerPage->url) + 1);
+            return $this->handlerRegistry->resolve($handlerPage->handler)
+                ->handle($handlerPage, $path, $request);
+        }
+
+        // 5. Ничего не найдено → 404
         return $this->render404($request, $url);
     }
 
@@ -217,6 +242,33 @@ class RenderController extends Controller
 
         return response($html)
             ->header('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    /**
+     * Найти handler-страницу, чей URL является префиксом запрошенного URL.
+     *
+     * Например: URL='/blog/my-article', ищем страницу с url='/blog' и handler IS NOT NULL.
+     * Возвращает наиболее специфичный match (самый длинный URL).
+     */
+    protected function findHandlerPage(string $url): ?Page
+    {
+        $segments = explode('/', trim($url, '/'));
+        if (empty($segments) || $segments[0] === '') {
+            return null;
+        }
+
+        $prefixes = [];
+        $current = '';
+        foreach ($segments as $segment) {
+            $current .= '/' . $segment;
+            $prefixes[] = $current;
+        }
+
+        return Page::whereIn('url', array_reverse($prefixes))
+            ->whereNotNull('handler')
+            ->where('status', 1)
+            ->orderByRaw('LENGTH(url) DESC')
+            ->first();
     }
 
     /**

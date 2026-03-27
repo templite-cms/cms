@@ -23,13 +23,14 @@ use Templite\Cms\Http\Controllers\Admin\LanguageController as AdminLanguageContr
 use Templite\Cms\Http\Controllers\Admin\CoreSettingsController;
 use Templite\Cms\Http\Controllers\Admin\PresetController;
 use Templite\Cms\Http\Controllers\Admin\ExportImportController as AdminExportImportController;
+use Templite\Cms\Http\Controllers\Admin\UserController as AdminUserController;
 
 /*
 |--------------------------------------------------------------------------
-| CMS Admin Routes (Inertia)
+| CMS Admin Routes (MPA)
 |--------------------------------------------------------------------------
 |
-| Маршруты админки CMS. Каждый контроллер возвращает Inertia::render().
+| Маршруты админки CMS. Каждый контроллер возвращает CmsResponse::page().
 | Префикс: /admin/ (настраивается через config/cms.php admin_url)
 | Middleware: web, cms.auth
 |
@@ -40,7 +41,13 @@ Route::prefix(config('cms.admin_url', 'admin'))
     ->middleware(['web'])
     ->group(function () {
         Route::get('/login', function () {
-            return \Inertia\Inertia::render('Auth/Login');
+            return \Templite\Cms\Http\CmsResponse::guest(
+                'packages/templite/cms/resources/js/entries/login.js',
+                ['cmsConfig' => [
+                    'admin_url' => '/' . ltrim(\Templite\Cms\Models\CmsConfig::getAdminUrl(), '/'),
+                    'two_factor_trust_days' => (int) \Templite\Cms\Models\CmsConfig::getValue('two_factor_trust_days', config('cms.two_factor.trust_days', 0)),
+                ]]
+            );
         })->name('cms.login');
     });
 
@@ -150,6 +157,11 @@ Route::prefix(config('cms.admin_url', 'admin'))
         // Languages (Языки)
         // -------------------------------------------------------------------
         Route::get('/languages', [AdminLanguageController::class, 'index'])->name('cms.languages.index');
+
+        // -------------------------------------------------------------------
+        // Users (Пользователи сайта)
+        // -------------------------------------------------------------------
+        Route::get('/users', [AdminUserController::class, 'index'])->name('cms.users.index');
 
         // -------------------------------------------------------------------
         // Managers (Менеджеры + Типы менеджеров — единая страница)

@@ -1,0 +1,774 @@
+// =============================================================================
+// Managers Index — Managers & Manager Types page
+// =============================================================================
+
+@use '../variables' as *;
+
+.managers-index {
+  padding: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Grid layout
+// -----------------------------------------------------------------------------
+
+.managers-index__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.managers-index__managers-section {
+  grid-column: span 8 / span 8;
+}
+
+.managers-index__types-section {
+  grid-column: span 4 / span 4;
+}
+
+// -----------------------------------------------------------------------------
+// Section header
+// -----------------------------------------------------------------------------
+
+.managers-index__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.managers-index__section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.managers-index__section-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: $neutral-400;
+}
+
+.managers-index__btn-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+// -----------------------------------------------------------------------------
+// Table cells
+// -----------------------------------------------------------------------------
+
+.managers-index__avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius-full;
+  object-fit: cover;
+}
+
+.managers-index__cell-name {
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.managers-index__cell-muted {
+  color: $neutral-400;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}
+
+.managers-index__cell-count {
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Empty state
+// -----------------------------------------------------------------------------
+
+.managers-index__empty {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.managers-index__empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: $neutral-300;
+  margin: 0 auto 0.5rem;
+}
+
+.managers-index__empty-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Drawer body
+// -----------------------------------------------------------------------------
+
+.managers-index__drawer-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.managers-index__drawer-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Permissions
+// -----------------------------------------------------------------------------
+
+.managers-index__permissions-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  margin-bottom: 0.75rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.managers-index__permissions-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.managers-index__perm-group-label {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-semibold;
+  color: $neutral-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.375rem;
+}
+
+.managers-index__perm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.managers-index__perm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid $neutral-200;
+  background-color: $neutral-50;
+  color: $neutral-600;
+  transition: color $transition-fast, background-color $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    border-color: $neutral-300;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-400;
+  }
+
+  &--active {
+    background-color: $primary-50;
+    border-color: $primary-300;
+    color: $primary-700;
+
+    .dark & {
+      background-color: rgba($primary-900, 0.3);
+      border-color: $primary-700;
+      color: $primary-300;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Screen-reader only (for hidden checkboxes)
+// -----------------------------------------------------------------------------
+
+.managers-index__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// -----------------------------------------------------------------------------
+// Manager Drawer — Tabs
+// -----------------------------------------------------------------------------
+
+.managers-index__tabs {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.managers-index__tab {
+  padding: 0.75rem 1rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  border-bottom: 2px solid transparent;
+  transition: color $transition-fast, border-color $transition-fast;
+  color: $neutral-500;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $neutral-700;
+
+    .dark & {
+      color: $neutral-300;
+    }
+  }
+
+  &--active {
+    color: $primary-600;
+    border-bottom-color: $primary-500;
+
+    .dark & {
+      color: $primary-400;
+    }
+  }
+}
+
+.managers-index__tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.375rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: $radius-full;
+  background-color: $neutral-200;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Manager Drawer — Main tab content
+// -----------------------------------------------------------------------------
+
+.managers-index__main-tab {
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// -----------------------------------------------------------------------------
+// Avatar
+// -----------------------------------------------------------------------------
+
+.managers-index__avatar-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.managers-index__avatar-container {
+  position: relative;
+
+  &:hover .managers-index__avatar-overlay {
+    opacity: 1;
+  }
+}
+
+.managers-index__avatar-file-input {
+  display: none;
+}
+
+.managers-index__avatar-img {
+  width: 5rem;
+  height: 5rem;
+  border-radius: $radius-full;
+  object-fit: cover;
+  border: 2px solid $neutral-200;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.managers-index__avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: $radius-full;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity $transition-fast;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.managers-index__avatar-overlay--loading {
+  opacity: 1;
+}
+
+.managers-index__avatar-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius-full;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-700;
+  border: none;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: #fff;
+  }
+
+  &--danger {
+    color: $error-600;
+  }
+}
+
+.managers-index__avatar-btn-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.managers-index__avatar-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+// -----------------------------------------------------------------------------
+// Password strength
+// -----------------------------------------------------------------------------
+
+.managers-index__password-strength {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.managers-index__strength-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.managers-index__strength-track {
+  flex: 1;
+  height: 0.375rem;
+  background-color: $neutral-200;
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.managers-index__strength-bar {
+  height: 100%;
+  border-radius: $radius-full;
+  transition: all 300ms ease;
+
+  &--weak {
+    background-color: $error-500;
+  }
+
+  &--medium {
+    background-color: $warning-500;
+  }
+
+  &--good {
+    background-color: $primary-500;
+  }
+
+  &--strong {
+    background-color: $success-500;
+  }
+}
+
+.managers-index__strength-label {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+
+  &--weak {
+    color: $error-600;
+  }
+
+  &--medium {
+    color: $warning-600;
+  }
+
+  &--good {
+    color: $primary-600;
+  }
+
+  &--strong {
+    color: $success-600;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Password rules
+// -----------------------------------------------------------------------------
+
+.managers-index__password-rules {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.managers-index__password-rule {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: $neutral-400;
+
+  .dark & {
+    color: $neutral-500;
+  }
+
+  &--passed {
+    color: $success-600;
+
+    .dark & {
+      color: $success-400;
+    }
+  }
+}
+
+.managers-index__rule-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+}
+
+// -----------------------------------------------------------------------------
+// Status radios
+// -----------------------------------------------------------------------------
+
+.managers-index__status-label {
+  display: block;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  margin-bottom: 0.375rem;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.managers-index__status-options {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.managers-index__status-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.managers-index__status-radio {
+  width: 1rem;
+  height: 1rem;
+  color: $primary-500;
+  border-color: $neutral-300;
+  accent-color: $primary-500;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+  }
+}
+
+.managers-index__status-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Personal permissions toggle
+// -----------------------------------------------------------------------------
+
+.managers-index__personal-perms-toggle {
+  padding-top: 0.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Two-Factor section
+// -----------------------------------------------------------------------------
+
+.managers-index__2fa {
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid $neutral-200;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}
+
+.managers-index__2fa-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.managers-index__2fa-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.managers-index__2fa-hint {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+  margin-top: 0.125rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Sessions tab
+// -----------------------------------------------------------------------------
+
+.managers-index__sessions-tab {
+  padding: 1.5rem 0;
+}
+
+.managers-index__sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.managers-index__sessions-header {
+  margin-bottom: 1rem;
+}
+
+.managers-index__sessions-summary {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+  margin-bottom: 0.75rem;
+}
+
+.managers-index__sessions-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Session card
+// -----------------------------------------------------------------------------
+
+.managers-index__session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+  background-color: $neutral-50;
+  transition: opacity $transition-fast;
+
+  .dark & {
+    border-color: $neutral-700;
+    background-color: rgba($neutral-800, 0.5);
+  }
+
+  &--expired {
+    border-color: rgba($neutral-200, 0.6);
+    background-color: rgba($neutral-50, 0.6);
+    opacity: 0.5;
+
+    .dark & {
+      border-color: rgba($neutral-700, 0.6);
+      background-color: rgba($neutral-800, 0.3);
+    }
+  }
+}
+
+.managers-index__session-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.managers-index__session-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+.managers-index__session-details {
+  min-width: 0;
+}
+
+.managers-index__session-agent-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.managers-index__session-agent {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.managers-index__session-expired-badge {
+  flex-shrink: 0;
+  padding: 0.125rem 0.375rem;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-sm;
+  background-color: $neutral-200;
+  color: $neutral-500;
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-400;
+  }
+}
+
+.managers-index__session-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+  margin-top: 0.125rem;
+}
+
+.managers-index__session-terminate {
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    color: $error-500;
+    background-color: $error-50;
+
+    .dark & {
+      background-color: rgba($error-900, 0.2);
+    }
+  }
+}
+
+.managers-index__session-terminate-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+// -----------------------------------------------------------------------------
+// Sessions empty
+// -----------------------------------------------------------------------------
+
+.managers-index__sessions-empty {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.managers-index__sessions-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: $neutral-300;
+  margin: 0 auto 0.5rem;
+}
+
+.managers-index__sessions-empty-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}

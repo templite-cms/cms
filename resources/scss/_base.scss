@@ -1,0 +1,205 @@
+// =============================================================================
+// Base — Reset, typography, global styles
+// =============================================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// -----------------------------------------------------------------------------
+// CSS Custom Properties (Surface tokens)
+// -----------------------------------------------------------------------------
+
+:root {
+  @each $name, $value in $surface-tokens-light {
+    --color-#{$name}: #{$value};
+  }
+}
+
+.dark {
+  @each $name, $value in $surface-tokens-dark {
+    --color-#{$name}: #{$value};
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Reset
+// -----------------------------------------------------------------------------
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+// -----------------------------------------------------------------------------
+// Body
+// -----------------------------------------------------------------------------
+
+body {
+  font-family: $font-sans;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: rgb(var(--color-text-primary));
+  background-color: rgb(var(--color-surface-page));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+
+  // Ambient gradient glows
+  &::before,
+  &::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(140px);
+  }
+
+  &::before {
+    width: 500px;
+    height: 500px;
+    top: -15%;
+    left: -5%;
+    background: radial-gradient(circle, rgba($primary-500, 0.07) 0%, transparent 70%);
+  }
+
+  &::after {
+    width: 400px;
+    height: 400px;
+    bottom: -10%;
+    right: -5%;
+    background: radial-gradient(circle, rgba($secondary-400, 0.05) 0%, transparent 70%);
+  }
+
+  .dark &::before {
+    background: radial-gradient(circle, rgba($primary-500, 0.1) 0%, transparent 70%);
+  }
+
+  .dark &::after {
+    background: radial-gradient(circle, rgba($secondary-400, 0.08) 0%, transparent 70%);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Typography
+// -----------------------------------------------------------------------------
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: $font-weight-semibold;
+  color: rgb(var(--color-text-primary));
+}
+
+h1 {
+  font-size: $font-size-3xl;
+  line-height: $line-height-3xl;
+  letter-spacing: $letter-spacing-3xl;
+}
+
+h2 {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+}
+
+h3 {
+  font-size: $font-size-xl;
+  line-height: $line-height-xl;
+  letter-spacing: $letter-spacing-xl;
+}
+
+h4 {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+}
+
+h5 {
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+}
+
+h6 {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+a {
+  color: $primary-500;
+  text-decoration: none;
+
+  &:hover {
+    color: $primary-600;
+  }
+}
+
+code, pre {
+  font-family: $font-mono;
+}
+
+// -----------------------------------------------------------------------------
+// Scrollbar
+// -----------------------------------------------------------------------------
+
+::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: $neutral-300;
+  border-radius: $radius-full;
+
+  &:hover {
+    background-color: $neutral-400;
+  }
+
+  .dark & {
+    background-color: $neutral-600;
+
+    &:hover {
+      background-color: $neutral-500;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Selection
+// -----------------------------------------------------------------------------
+
+::selection {
+  background-color: $primary-200;
+  color: $primary-900;
+
+  .dark & {
+    background-color: $primary-800;
+    color: $primary-100;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Utility classes
+// -----------------------------------------------------------------------------
+
+.sr-only {
+  @include visually-hidden;
+}
+
+.text-muted {
+  color: rgb(var(--color-text-muted));
+}
+
+.text-secondary {
+  color: rgb(var(--color-text-secondary));
+}

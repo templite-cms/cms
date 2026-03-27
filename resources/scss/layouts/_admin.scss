@@ -1,0 +1,15 @@
+// =============================================================================
+// Admin Layout
+// =============================================================================
+
+@use '../variables' as *;
+
+.admin-layout {
+  min-height: 100vh;
+}
+
+.admin-layout__content {
+  position: relative;
+  padding-top: $spacing-header;
+  z-index: 1;
+}

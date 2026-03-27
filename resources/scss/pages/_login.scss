@@ -1,0 +1,347 @@
+// =============================================================================
+// Login Page — Auth screen styles
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// ---------------------------------------------------------------------------
+// Theme variables (light mode)
+// ---------------------------------------------------------------------------
+
+.login-bg {
+  --login-page-bg: #{$neutral-50};
+  --login-glow1: rgba(#{$primary-500}, 0.2);
+  --login-glow2: rgba(#{$secondary-400}, 0.15);
+  --login-glow3: rgba(#{$primary-500}, 0.1);
+  --login-glass-bg: rgba(255, 255, 255, 0.35);
+  --login-glass-border: rgba(255, 255, 255, 0.45);
+  --login-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  --login-label: #{$neutral-700};
+  --login-input-bg: rgba(255, 255, 255, 0.7);
+  --login-input-border: rgba(0, 0, 0, 0.1);
+  --login-input-color: #{$neutral-900};
+  --login-input-placeholder: #{$neutral-400};
+  --login-toggle-bg: rgba(255, 255, 255, 0.5);
+  --login-toggle-bg-hover: rgba(255, 255, 255, 0.7);
+  --login-toggle-border: rgba(0, 0, 0, 0.1);
+  --login-toggle-color: #{$neutral-600};
+}
+
+// ---------------------------------------------------------------------------
+// Theme variables (dark mode)
+// ---------------------------------------------------------------------------
+
+.dark .login-bg {
+  --login-page-bg: #0A0E1A;
+  --login-glow1: rgba(#{$primary-500}, 0.35);
+  --login-glow2: rgba(#{$secondary-400}, 0.25);
+  --login-glow3: rgba(#{$primary-500}, 0.15);
+  --login-glass-bg: rgba(255, 255, 255, 0.05);
+  --login-glass-border: rgba(255, 255, 255, 0.08);
+  --login-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  --login-label: #{$neutral-300};
+  --login-input-bg: rgba(255, 255, 255, 0.06);
+  --login-input-border: rgba(255, 255, 255, 0.12);
+  --login-input-color: #{$neutral-100};
+  --login-input-placeholder: #{$neutral-500};
+  --login-toggle-bg: rgba(255, 255, 255, 0.08);
+  --login-toggle-bg-hover: rgba(255, 255, 255, 0.14);
+  --login-toggle-border: rgba(255, 255, 255, 0.12);
+  --login-toggle-color: #{$neutral-300};
+}
+
+// ---------------------------------------------------------------------------
+// Background
+// ---------------------------------------------------------------------------
+
+.login-bg {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--login-page-bg);
+  overflow: hidden;
+  @include transition-slow(background);
+}
+
+// ---------------------------------------------------------------------------
+// Theme toggle button
+// ---------------------------------------------------------------------------
+
+.login-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 20;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-xl;
+  border: 1px solid var(--login-toggle-border);
+  background: var(--login-toggle-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--login-toggle-color);
+  cursor: pointer;
+  @include transition-normal(background, color, border-color);
+
+  &:hover {
+    background: var(--login-toggle-bg-hover);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Canvas animation layer
+// ---------------------------------------------------------------------------
+
+.login-bg__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+// ---------------------------------------------------------------------------
+// Radial glows
+// ---------------------------------------------------------------------------
+
+.login-bg__glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(140px);
+  @include transition-slow(background);
+}
+
+.login-bg__glow--1 {
+  width: 700px;
+  height: 700px;
+  top: -20%;
+  left: -10%;
+  background: radial-gradient(circle, var(--login-glow1) 0%, transparent 70%);
+}
+
+.login-bg__glow--2 {
+  width: 600px;
+  height: 600px;
+  bottom: -20%;
+  right: -10%;
+  background: radial-gradient(circle, var(--login-glow2) 0%, transparent 70%);
+}
+
+.login-bg__glow--3 {
+  width: 400px;
+  height: 400px;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, var(--login-glow3) 0%, transparent 70%);
+}
+
+// ---------------------------------------------------------------------------
+// Centered form container
+// ---------------------------------------------------------------------------
+
+.login-center {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+// ---------------------------------------------------------------------------
+// Glass card
+// ---------------------------------------------------------------------------
+
+.login-glass {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 36px;
+  border-radius: 24px;
+  user-select: none;
+  background: var(--login-glass-bg);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid var(--login-glass-border);
+  box-shadow: var(--login-glass-shadow);
+  @include transition-slow(background, border-color, box-shadow);
+}
+
+.login-glass__logo-wrap {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-glass__logo {
+  width: 200px;
+  max-width: 70%;
+  margin: 0 auto;
+}
+
+.login-glass__section {
+  margin-top: 0.5rem;
+}
+
+// ---------------------------------------------------------------------------
+// Login form
+// ---------------------------------------------------------------------------
+
+.login-form {
+  margin-top: 0.5rem;
+}
+
+.login-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-form__error {
+  margin-top: 0.75rem;
+  font-size: $font-size-sm;
+  color: $error-500;
+  text-align: center;
+}
+
+.login-form__lock {
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.login-form__lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: $radius-lg;
+  background: rgba($warning-50, 0.8);
+  border: 1px solid rgba($warning-200, 0.6);
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $warning-700;
+
+  svg {
+    color: $warning-500;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .dark & {
+    background: rgba($warning-900, 0.2);
+    border-color: $warning-800;
+    color: $warning-300;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.login-form__submit {
+  margin-top: 1.5rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+// ---------------------------------------------------------------------------
+// Form field overrides inside glass card
+// ---------------------------------------------------------------------------
+
+.login-glass .field-label {
+  color: var(--login-label);
+}
+
+.login-glass input {
+  background: var(--login-input-bg);
+  border-color: var(--login-input-border);
+  color: var(--login-input-color);
+  user-select: text;
+
+  &::placeholder {
+    color: var(--login-input-placeholder);
+  }
+
+  &:focus {
+    border-color: rgba($primary-500, 0.6);
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.15);
+  }
+}
+
+.login-glass .checkbox-label,
+.login-glass label {
+  color: var(--login-label);
+}
+
+// ---------------------------------------------------------------------------
+// Animated gradient border
+// ---------------------------------------------------------------------------
+
+@property --login-glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.login-glow-border {
+  position: relative;
+  padding: 1px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 420px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: conic-gradient(
+      from var(--login-glow-angle, 0deg),
+      $primary-500 0%,
+      $secondary-400 25%,
+      $primary-500 50%,
+      $secondary-400 75%,
+      $primary-500 100%
+    );
+    opacity: 0.4;
+    animation: loginGlowSpin 6s linear infinite;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 1px;
+  }
+
+  > .login-glass {
+    border: none;
+    max-width: none;
+  }
+}
+
+@keyframes loginGlowSpin {
+  to { --login-glow-angle: 360deg; }
+}
+
+// ---------------------------------------------------------------------------
+// Responsive
+// ---------------------------------------------------------------------------
+
+@media (max-width: 480px) {
+  .login-glow-border {
+    border-radius: 20px;
+  }
+
+  .login-glass {
+    padding: 32px 24px;
+    border-radius: 20px;
+  }
+}

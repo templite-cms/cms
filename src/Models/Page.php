@@ -40,6 +40,7 @@ class Page extends Model implements Exportable
         'order',
         'publish_at',
         'unpublish_at',
+        'handler',
     ];
 
     protected $casts = [

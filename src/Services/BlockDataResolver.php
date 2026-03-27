@@ -141,6 +141,14 @@ class BlockDataResolver
                 if (is_numeric($value)) {
                     $fileIds[] = (int) $value;
                 }
+            } elseif ($field->type === 'page') {
+                if (is_numeric($value)) {
+                    $pageIds[] = (int) $value;
+                }
+            } elseif ($field->type === 'user') {
+                if (is_numeric($value)) {
+                    $extraIds['user'][] = (int) $value;
+                }
             } elseif (in_array($field->type, ['category', 'product', 'product_option'])) {
                 if (is_numeric($value)) {
                     $extraIds[$field->type][] = (int) $value;
@@ -183,6 +191,10 @@ class BlockDataResolver
 
             if ($field->type === 'img' || $field->type === 'file') {
                 $resolved[$key] = is_numeric($value) ? ($files[$value] ?? null) : null;
+            } elseif ($field->type === 'page') {
+                $resolved[$key] = is_numeric($value) ? ($pages[$value] ?? null) : null;
+            } elseif ($field->type === 'user') {
+                $resolved[$key] = is_numeric($value) ? ($extraEntities['user'][$value] ?? null) : null;
             } elseif (in_array($field->type, ['category', 'product', 'product_option'])) {
                 $type = $field->type;
                 $resolved[$key] = is_numeric($value) ? ($extraEntities[$type][$value] ?? null) : null;
@@ -256,7 +268,7 @@ class BlockDataResolver
             'checkbox'                            => false,
             'number'                              => 0,
             'link'                                => ['url' => '', 'text' => '', 'target' => '_self'],
-            'img', 'file',
+            'img', 'file', 'page', 'user',
             'category', 'product', 'product_option' => null,
             // text, textfield, editor, html, color, date, datetime, select, radio
             default                               => '',

@@ -1,0 +1,76 @@
+// =============================================================================
+// Badge
+// =============================================================================
+
+@use '../variables' as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-sm;
+}
+
+// Variants
+.badge-primary {
+  background-color: $primary-100;
+  color: $primary-700;
+
+  .dark & {
+    background-color: rgba($primary-900, 0.3);
+    color: $primary-300;
+  }
+}
+
+.badge-success {
+  background-color: $success-100;
+  color: $success-700;
+
+  .dark & {
+    background-color: rgba($success-900, 0.3);
+    color: $success-300;
+  }
+}
+
+.badge-warning {
+  background-color: $warning-100;
+  color: $warning-700;
+
+  .dark & {
+    background-color: rgba($warning-900, 0.3);
+    color: $warning-300;
+  }
+}
+
+.badge-error {
+  background-color: $error-100;
+  color: $error-700;
+
+  .dark & {
+    background-color: rgba($error-900, 0.3);
+    color: $error-300;
+  }
+}
+
+.badge-info {
+  background-color: $info-100;
+  color: $info-700;
+
+  .dark & {
+    background-color: rgba($info-900, 0.3);
+    color: $info-300;
+  }
+}
+
+.badge-neutral {
+  background-color: $neutral-100;
+  color: $neutral-600;
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-300;
+  }
+}

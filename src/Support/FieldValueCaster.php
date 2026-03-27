@@ -52,7 +52,7 @@ final class FieldValueCaster
                 ? (str_contains((string) $raw, '.') ? (float) $raw : (int) $raw)
                 : $raw,
 
-            // text, textfield, editor, html, color, date, datetime, radio — строка как есть
+            // text, textfield, editor, tiptap, html, color, date, datetime, radio — строка как есть
             default => $raw,
         };
     }

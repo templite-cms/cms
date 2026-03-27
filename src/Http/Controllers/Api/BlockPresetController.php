@@ -4,8 +4,10 @@ namespace Templite\Cms\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Templite\Cms\Models\Block;
 use Templite\Cms\Models\BlockPreset;
+use Templite\Cms\Models\BlockPresetData;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BlockDataResolver;
 use Templite\Cms\Services\BlockRenderer;
@@ -356,8 +358,18 @@ class BlockPresetController extends Controller
             }
         }
 
-        $allCss = implode("\n", array_filter([$templateCss, $css]));
-        $allJs = implode("\n", array_filter([$templateJs, $js]));
+        // Component styles/scripts from block template content
+        $rawTemplate = $inlineTemplate ?? '';
+        if (!$rawTemplate) {
+            $bPath = $this->blockRenderer->resolveBlockPath($block);
+            if ($bPath && file_exists($bPath . '/template.blade.php')) {
+                $rawTemplate = file_get_contents($bPath . '/template.blade.php');
+            }
+        }
+        $componentAssets = $this->blockRenderer->collectComponentAssets($rawTemplate);
+
+        $allCss = implode("\n", array_filter([$templateCss, $componentAssets['css'], $css]));
+        $allJs = implode("\n", array_filter([$templateJs, $componentAssets['js'], $js]));
 
         $html = $this->blockRenderer->renderPreviewWrapper([
             'cdnCss' => $cdnCssLinks,
@@ -368,6 +380,165 @@ class BlockPresetController extends Controller
         ]);
 
         return $this->success(['html' => $html]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/block-presets/{id}/render",
+     *     summary="Рендер пресета (HTML-страница для iframe)",
+     *     tags={"Block Presets"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="draft", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="template_id", in="query", @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="HTML-страница для iframe")
+     * )
+     */
+    public function render(Request $request, int $id): Response
+    {
+        $preset = BlockPreset::with([
+            'block.fields.children',
+            'block.blockActions.action',
+            'block.libraries',
+        ])->findOrFail($id);
+
+        $block = $preset->block;
+
+        // Load global fields
+        $global = app()->bound('global_fields') ? app('global_fields') : [];
+        view()->share('global', $global);
+
+        // If draft query param — load data from BlockPresetData
+        $draftId = $request->query('draft');
+        if ($draftId) {
+            $draft = BlockPresetData::findOrFail((int) $draftId);
+            abort_if($draft->preset_id !== $preset->id, 403, 'Draft does not belong to this preset.');
+            $rawData = $draft->data ?? [];
+        } else {
+            $rawData = $preset->data ?? [];
+        }
+
+        $resolvedData = $this->blockDataResolver->resolveBlockData($block, $rawData);
+
+        // У пресета нет страницы — actions не выполняем
+        $actions = [];
+
+        $blockHtml = '';
+        $blockPath = $this->blockRenderer->resolveBlockPath($block);
+
+        if ($blockPath) {
+            try {
+                $blockHtml = $this->blockRenderer->render($block, $resolvedData, $actions, null, $global);
+            } catch (\Throwable $e) {
+                $blockHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
+                    . '<strong>Template Error:</strong><br>'
+                    . htmlspecialchars($e->getMessage())
+                    . '</div>';
+            }
+        } else {
+            $blockHtml = '<div style="color:#94a3b8;padding:32px;text-align:center;font-family:sans-serif;font-size:14px">'
+                . 'Код блока не найден. Сохраните код через редактор.'
+                . '</div>';
+        }
+
+        // Block CSS/JS
+        $css = $this->blockRenderer->compileStyles($block) ?? '';
+        $js = '';
+        if ($blockPath && file_exists($blockPath . '/script.js')) {
+            $js = file_get_contents($blockPath . '/script.js');
+        }
+
+        // Template CSS/JS
+        $templateCss = '';
+        $templateJs = '';
+        $cdnCssLinks = '';
+        $cdnJsLinks = '';
+        $templateId = $request->query('template_id');
+        if ($templateId) {
+            $template = TemplatePage::with('libraries')->find($templateId);
+            if ($template) {
+                $templateCss = $this->blockRenderer->compileTemplateStyles($template) ?? '';
+                $templateJs = $this->blockRenderer->getTemplateScript($template) ?? '';
+
+                foreach ($template->libraries->where('active', true)->sortBy('sort_order') as $lib) {
+                    if ($lib->load_strategy === 'cdn') {
+                        if ($lib->css_cdn) $cdnCssLinks .= '<link rel="stylesheet" href="' . e($lib->css_cdn) . '">' . "\n";
+                        if ($lib->js_cdn) $cdnJsLinks .= '<script src="' . e($lib->js_cdn) . '"></script>' . "\n";
+                    } elseif ($lib->load_strategy === 'local') {
+                        if ($lib->css_file) $cdnCssLinks .= '<link rel="stylesheet" href="' . e(asset('storage/' . ltrim($lib->css_file, '/'))) . '">' . "\n";
+                        if ($lib->js_file) $cdnJsLinks .= '<script src="' . e(asset('storage/' . ltrim($lib->js_file, '/'))) . '"></script>' . "\n";
+                    }
+                }
+            }
+        }
+
+        // Block libraries
+        foreach ($block->libraries->where('active', true)->sortBy('sort_order') as $lib) {
+            if ($lib->load_strategy === 'cdn') {
+                if ($lib->css_cdn) $cdnCssLinks .= '<link rel="stylesheet" href="' . e($lib->css_cdn) . '">' . "\n";
+                if ($lib->js_cdn) $cdnJsLinks .= '<script src="' . e($lib->js_cdn) . '"></script>' . "\n";
+            } elseif ($lib->load_strategy === 'local') {
+                if ($lib->css_file) $cdnCssLinks .= '<link rel="stylesheet" href="' . e(asset('storage/' . ltrim($lib->css_file, '/'))) . '">' . "\n";
+                if ($lib->js_file) $cdnJsLinks .= '<script src="' . e(asset('storage/' . ltrim($lib->js_file, '/'))) . '"></script>' . "\n";
+            }
+        }
+
+        // Component styles/scripts from block template content
+        $rawTpl = '';
+        $bPath = $this->blockRenderer->resolveBlockPath($block);
+        if ($bPath && file_exists($bPath . '/template.blade.php')) {
+            $rawTpl = file_get_contents($bPath . '/template.blade.php');
+        }
+        $componentAssets = $this->blockRenderer->collectComponentAssets($rawTpl);
+
+        $allCss = implode("\n", array_filter([$templateCss, $componentAssets['css'], $css]));
+        $allJs = implode("\n", array_filter([$templateJs, $componentAssets['js'], $js]));
+
+        $html = $this->blockRenderer->renderPreviewWrapper([
+            'cdnCss' => $cdnCssLinks,
+            'css' => $allCss,
+            'content' => $blockHtml,
+            'cdnJs' => $cdnJsLinks,
+            'js' => $allJs,
+            'postScript' => "function sendHeight(){window.parent.postMessage({type:'presetHeight',height:document.body.scrollHeight,id:{$preset->id}},'*')}\nnew ResizeObserver(sendHeight).observe(document.body);\nsendHeight();",
+        ]);
+
+        return response($html, 200, ['Content-Type' => 'text/html']);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/block-presets/{id}/draft",
+     *     summary="Создать/обновить черновик данных пресета",
+     *     tags={"Block Presets"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(required=true, @OA\JsonContent(
+     *         @OA\Property(property="data", type="object")
+     *     )),
+     *     @OA\Response(response=200, description="draft_id черновика")
+     * )
+     */
+    public function draft(Request $request, int $id): JsonResponse
+    {
+        $preset = BlockPreset::findOrFail($id);
+        $validated = $request->validate([
+            'data' => 'nullable|array',
+        ]);
+
+        $draft = BlockPresetData::updateOrCreate(
+            [
+                'preset_id' => $preset->id,
+                'user_id' => auth()->id(),
+                'change_type' => 'updating',
+            ],
+            [
+                'block_id' => $preset->block_id,
+                'data' => $validated['data'] ?? $preset->data,
+            ]
+        );
+
+        return $this->success(['draft_id' => $draft->id]);
     }
 
     /**

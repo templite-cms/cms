@@ -40,6 +40,12 @@ use Templite\Cms\Http\Controllers\Api\ExportImportController;
 use Templite\Cms\Http\Controllers\Api\TwoFactorController;
 use Templite\Cms\Http\Controllers\Api\QueueController;
 use Templite\Cms\Http\Controllers\Api\ScheduleController;
+use Templite\Cms\Http\Controllers\Api\GuardController;
+use Templite\Cms\Http\Controllers\Api\UserTypeController;
+use Templite\Cms\Http\Controllers\Api\UserFieldController;
+use Templite\Cms\Http\Controllers\Api\UserController;
+use Templite\Cms\Http\Controllers\Api\UserAuthController;
+use Templite\Cms\Http\Controllers\Api\UserProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +92,24 @@ Route::prefix('api/cms')
         })->where('number', '[0-9]+')->name('cms.api.avatars');
 
         // ---------------------------------------------------------------
+        // User Auth (Public API — ЛК пользователей сайта)
+        // ---------------------------------------------------------------
+        Route::prefix('user-auth/{guard}')->group(function () {
+            Route::post('/login', [UserAuthController::class, 'login'])->middleware('throttle:5,1');
+            Route::post('/register', [UserAuthController::class, 'register'])->middleware('throttle:3,1');
+            Route::post('/logout', [UserAuthController::class, 'logout']);
+            Route::get('/me', [UserAuthController::class, 'me']);
+        });
+
+        Route::prefix('user-profile/{guard}')
+            ->middleware('cms.user_auth')
+            ->group(function () {
+                Route::get('/', [UserProfileController::class, 'show']);
+                Route::put('/', [UserProfileController::class, 'update']);
+                Route::put('/password', [UserProfileController::class, 'updatePassword']);
+            });
+
+        // ---------------------------------------------------------------
         // Защищённые маршруты (Sanctum + CMS Auth)
         // ---------------------------------------------------------------
         Route::middleware(['auth:sanctum', 'cms.auth', 'throttle:cms-api'])->group(function () {
@@ -118,6 +142,7 @@ Route::prefix('api/cms')
             // -----------------------------------------------------------
             Route::get('/pages', [PageController::class, 'index'])->name('cms.api.pages.index');
             Route::get('/pages/tree', [PageController::class, 'tree'])->name('cms.api.pages.tree');
+            Route::get('/pages/handlers', [PageController::class, 'handlers'])->name('cms.api.pages.handlers');
             Route::post('/pages', [PageController::class, 'store'])->name('cms.api.pages.store');
             Route::get('/pages/{id}', [PageController::class, 'show'])->name('cms.api.pages.show');
             Route::put('/pages/{id}', [PageController::class, 'update'])->name('cms.api.pages.update');
@@ -161,12 +186,18 @@ Route::prefix('api/cms')
             Route::delete('/page-blocks/{id}', [PageBlockController::class, 'destroy'])->name('cms.api.page-blocks.destroy');
             Route::put('/pages/{pageId}/blocks/reorder', [PageBlockController::class, 'reorder'])->name('cms.api.page-blocks.reorder');
             Route::post('/page-blocks/{id}/copy', [PageBlockController::class, 'copy'])->name('cms.api.page-blocks.copy');
+            Route::get('/page-block-data/buffer', [PageBlockController::class, 'buffer'])->name('cms.api.page-block-data.buffer');
+            Route::post('/page-block-data/{id}/paste', [PageBlockController::class, 'paste'])->name('cms.api.page-block-data.paste');
+            Route::delete('/page-block-data/{id}', [PageBlockController::class, 'destroyBufferItem'])->name('cms.api.page-block-data.destroy');
             Route::put('/page-blocks/{id}/toggle-cache', [PageBlockController::class, 'toggleCache'])->name('cms.api.page-blocks.toggle-cache');
             Route::post('/page-blocks/{id}/invalidate-cache', [PageBlockController::class, 'invalidateCache'])->name('cms.api.page-blocks.invalidate-cache');
-            Route::match(['get', 'post'], '/page-blocks/{id}/preview', [PageBlockController::class, 'preview'])->middleware('cms.global_fields')->name('cms.api.page-blocks.preview');
+            Route::get('/page-blocks/{id}/render', [PageBlockController::class, 'render'])->middleware('cms.global_fields')->name('cms.api.page-blocks.render');
+            Route::put('/page-blocks/{id}/draft', [PageBlockController::class, 'draft'])->name('cms.api.page-blocks.draft');
             Route::get('/page-blocks/{id}/versions', [PageBlockController::class, 'versions'])->name('cms.api.page-blocks.versions');
             Route::get('/page-blocks/{id}/versions/{versionId}', [PageBlockController::class, 'showVersion'])->name('cms.api.page-blocks.versions.show');
             Route::put('/page-blocks/{id}/version/{versionId}', [PageBlockController::class, 'setActiveVersion'])->name('cms.api.page-blocks.version.set');
+            Route::delete('/page-blocks/{id}/versions/{versionId}', [PageBlockController::class, 'destroyVersion'])->name('cms.api.page-blocks.versions.destroy');
+            Route::delete('/page-blocks/{id}/versions', [PageBlockController::class, 'destroyInactiveVersions'])->name('cms.api.page-blocks.versions.destroy-inactive');
 
             // -----------------------------------------------------------
             // Blocks (Блоки)
@@ -189,6 +220,8 @@ Route::prefix('api/cms')
             Route::put('/block-presets/{id}', [BlockPresetController::class, 'update'])->name('cms.api.block-presets.update');
             Route::delete('/block-presets/{id}', [BlockPresetController::class, 'destroy'])->name('cms.api.block-presets.destroy');
             Route::post('/block-presets/{id}/preview', [BlockPresetController::class, 'preview'])->middleware('cms.global_fields')->name('cms.api.block-presets.preview');
+            Route::get('/block-presets/{id}/render', [BlockPresetController::class, 'render'])->middleware('cms.global_fields')->name('cms.api.block-presets.render');
+            Route::put('/block-presets/{id}/draft', [BlockPresetController::class, 'draft'])->name('cms.api.block-presets.draft');
             Route::get('/blocks/{blockId}/presets', [BlockPresetController::class, 'forBlock'])->name('cms.api.blocks.presets');
 
             // -----------------------------------------------------------
@@ -254,7 +287,7 @@ Route::prefix('api/cms')
             Route::get('/components/{id}', [ComponentController::class, 'show'])->name('cms.api.components.show');
             Route::put('/components/{id}', [ComponentController::class, 'update'])->name('cms.api.components.update');
             Route::delete('/components/{id}', [ComponentController::class, 'destroy'])->name('cms.api.components.destroy');
-            Route::get('/components/{id}/preview', [ComponentController::class, 'preview'])->middleware('cms.global_fields')->name('cms.api.components.preview');
+            Route::match(['get', 'post'], '/components/{id}/preview', [ComponentController::class, 'preview'])->middleware('cms.global_fields')->name('cms.api.components.preview');
 
             // -----------------------------------------------------------
             // Component Code (Код компонентов: template, style, script)
@@ -276,7 +309,7 @@ Route::prefix('api/cms')
             // -----------------------------------------------------------
             Route::get('/templates/{id}/code', [TemplateCodeController::class, 'show'])->name('cms.api.template-code.show');
             Route::put('/templates/{id}/code', [TemplateCodeController::class, 'update'])->middleware(['can:templates.code', 'throttle:10,1'])->name('cms.api.template-code.update');
-            Route::get('/templates/{id}/preview', [TemplateCodeController::class, 'preview'])->middleware('cms.global_fields')->name('cms.api.template-code.preview');
+            Route::match(['get', 'post'], '/templates/{id}/preview', [TemplateCodeController::class, 'preview'])->middleware('cms.global_fields')->name('cms.api.template-code.preview');
 
             // -----------------------------------------------------------
             // Template Fields (Поля шаблонов)
@@ -452,6 +485,40 @@ Route::prefix('api/cms')
                 Route::put('/manager-types/{id}', [ManagerTypeController::class, 'update'])->name('cms.api.manager-types.update');
                 Route::delete('/manager-types/{id}', [ManagerTypeController::class, 'destroy'])->name('cms.api.manager-types.destroy');
             });
+
+            // -----------------------------------------------------------
+            // Guards (Список guard'ов)
+            // -----------------------------------------------------------
+            Route::get('/guards', [GuardController::class, 'index'])->name('cms.api.guards.index');
+            Route::get('/guards/{guard}/permissions', [GuardController::class, 'permissions'])->name('cms.api.guards.permissions');
+
+            // -----------------------------------------------------------
+            // User Types (Типы пользователей сайта)
+            // -----------------------------------------------------------
+            Route::get('/user-types', [UserTypeController::class, 'index'])->name('cms.api.user-types.index');
+            Route::post('/user-types', [UserTypeController::class, 'store'])->name('cms.api.user-types.store');
+            Route::get('/user-types/{id}', [UserTypeController::class, 'show'])->name('cms.api.user-types.show');
+            Route::put('/user-types/{id}', [UserTypeController::class, 'update'])->name('cms.api.user-types.update');
+            Route::delete('/user-types/{id}', [UserTypeController::class, 'destroy'])->name('cms.api.user-types.destroy');
+
+            // -----------------------------------------------------------
+            // User Fields (Поля типов пользователей)
+            // -----------------------------------------------------------
+            Route::get('/user-types/{typeId}/fields', [UserFieldController::class, 'index'])->name('cms.api.user-fields.index');
+            Route::post('/user-types/{typeId}/fields', [UserFieldController::class, 'store'])->name('cms.api.user-fields.store');
+            Route::put('/user-types/{typeId}/fields/reorder', [UserFieldController::class, 'reorder'])->name('cms.api.user-fields.reorder');
+            Route::put('/user-fields/{id}', [UserFieldController::class, 'update'])->name('cms.api.user-fields.update');
+            Route::delete('/user-fields/{id}', [UserFieldController::class, 'destroy'])->name('cms.api.user-fields.destroy');
+
+            // -----------------------------------------------------------
+            // Users (Пользователи сайта)
+            // -----------------------------------------------------------
+            Route::get('/users', [UserController::class, 'index'])->name('cms.api.users.index');
+            Route::post('/users', [UserController::class, 'store'])->name('cms.api.users.store');
+            Route::get('/users/{id}', [UserController::class, 'show'])->name('cms.api.users.show');
+            Route::put('/users/{id}', [UserController::class, 'update'])->name('cms.api.users.update');
+            Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('cms.api.users.destroy');
+            Route::put('/users/{id}/toggle-active', [UserController::class, 'toggleActive'])->name('cms.api.users.toggle-active');
 
             // -----------------------------------------------------------
             // Logs (Логи действий)

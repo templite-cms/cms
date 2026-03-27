@@ -1,0 +1,854 @@
+// =============================================================================
+// Profile — Profile page
+// =============================================================================
+
+@use '../variables' as *;
+
+.profile {
+  padding: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Title
+// -----------------------------------------------------------------------------
+
+.profile__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+  margin-bottom: 1.5rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Grid layout
+// -----------------------------------------------------------------------------
+
+.profile__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  @media (min-width: $breakpoint-lg) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.profile__grid--top {
+  margin-bottom: 2rem;
+}
+
+// -----------------------------------------------------------------------------
+// Card
+// -----------------------------------------------------------------------------
+
+.profile__card {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-xl;
+  padding: 1.5rem;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.profile__card-title {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  margin-bottom: 1rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+
+  &--with-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.profile__card-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.profile__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Avatar
+// -----------------------------------------------------------------------------
+
+.profile__avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.profile__avatar-container {
+  position: relative;
+
+  &:hover .profile__avatar-overlay {
+    opacity: 1;
+  }
+}
+
+.profile__file-input {
+  display: none;
+}
+
+.profile__avatar-img {
+  width: 120px;
+  height: 120px;
+  border-radius: $radius-full;
+  object-fit: cover;
+  border: 2px solid $neutral-200;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.profile__avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: $radius-full;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity $transition-fast;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.profile__avatar-overlay--loading {
+  opacity: 1;
+}
+
+.profile__avatar-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: $radius-full;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-700;
+  border: none;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: #fff;
+  }
+
+  &--danger {
+    color: $error-600;
+  }
+}
+
+.profile__avatar-btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.profile__avatar-spinner {
+  width: 2rem;
+  height: 2rem;
+  color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+// -----------------------------------------------------------------------------
+// Actions row
+// -----------------------------------------------------------------------------
+
+.profile__actions {
+  padding-top: 0.5rem;
+}
+
+.profile__btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.profile__btn-content {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+// -----------------------------------------------------------------------------
+// Password strength
+// -----------------------------------------------------------------------------
+
+.profile__password-strength {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile__strength-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile__strength-track {
+  flex: 1;
+  height: 0.375rem;
+  background-color: $neutral-200;
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.profile__strength-bar {
+  height: 100%;
+  border-radius: $radius-full;
+  transition: all 300ms ease;
+
+  &--weak {
+    background-color: $error-500;
+  }
+
+  &--medium {
+    background-color: $warning-500;
+  }
+
+  &--good {
+    background-color: $primary-500;
+  }
+
+  &--strong {
+    background-color: $success-500;
+  }
+}
+
+.profile__strength-label {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+
+  &--weak {
+    color: $error-600;
+  }
+
+  &--medium {
+    color: $warning-600;
+  }
+
+  &--good {
+    color: $primary-600;
+  }
+
+  &--strong {
+    color: $success-600;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Password rules
+// -----------------------------------------------------------------------------
+
+.profile__password-rules {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.profile__password-rule {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: $neutral-400;
+
+  .dark & {
+    color: $neutral-500;
+  }
+
+  &--passed {
+    color: $success-600;
+
+    .dark & {
+      color: $success-400;
+    }
+  }
+}
+
+.profile__rule-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+}
+
+// -----------------------------------------------------------------------------
+// 2FA Section
+// -----------------------------------------------------------------------------
+
+.profile__2fa-banner {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: $radius-lg;
+  background-color: $warning-50;
+  border: 1px solid $warning-200;
+
+  .dark & {
+    background-color: rgba($warning-900, 0.2);
+    border-color: $warning-800;
+  }
+}
+
+.profile__2fa-banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.profile__2fa-banner-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: $warning-500;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.profile__2fa-banner-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $warning-800;
+
+  .dark & {
+    color: $warning-200;
+  }
+}
+
+.profile__2fa-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile__2fa-icon-wrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: $radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &--enabled {
+    background-color: $success-100;
+
+    .dark & {
+      background-color: rgba($success-900, 0.3);
+    }
+  }
+
+  &--disabled {
+    background-color: $neutral-100;
+
+    .dark & {
+      background-color: $neutral-700;
+    }
+  }
+}
+
+.profile__2fa-status-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+
+  &--enabled {
+    color: $success-600;
+
+    .dark & {
+      color: $success-400;
+    }
+  }
+
+  &--disabled {
+    color: $neutral-400;
+  }
+}
+
+.profile__2fa-status-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.profile__2fa-status-desc {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.profile__2fa-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// API Tokens
+// -----------------------------------------------------------------------------
+
+.profile__tokens-desc {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+  margin-bottom: 1rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+// Token created alert
+.profile__token-alert {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: $success-50;
+  border: 1px solid $success-200;
+  border-radius: $radius-lg;
+
+  .dark & {
+    background-color: rgba($success-900, 0.2);
+    border-color: $success-800;
+  }
+}
+
+.profile__token-alert-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $success-800;
+  margin-bottom: 0.5rem;
+
+  .dark & {
+    color: $success-200;
+  }
+}
+
+.profile__token-alert-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile__token-code {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-family: $font-mono;
+  word-break: break-all;
+
+  .dark & {
+    background-color: $neutral-900;
+    border-color: $neutral-700;
+  }
+}
+
+// Create form
+.profile__token-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile__token-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.profile__token-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.profile__token-field--expiry {
+  width: 12rem;
+  flex: none;
+}
+
+.profile__token-label {
+  display: block;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  margin-bottom: 0.25rem;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.profile__token-select {
+  width: 100%;
+}
+
+// Abilities
+.profile__abilities-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $neutral-900;
+  }
+
+  .dark & {
+    color: $neutral-400;
+
+    &:hover {
+      color: $neutral-200;
+    }
+  }
+}
+
+.profile__abilities-toggle-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.profile__abilities-toggle-label {
+  font-weight: $font-weight-medium;
+}
+
+.profile__abilities-chevron {
+  width: 0.875rem;
+  height: 0.875rem;
+  transition: transform $transition-fast;
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.profile__abilities-panel {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background-color: $neutral-50;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .dark & {
+    background-color: rgba($neutral-900, 0.5);
+    border-color: $neutral-700;
+  }
+}
+
+.profile__presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile__presets-label {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.profile__preset-btn {
+  padding: 0.25rem 0.625rem;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-weight-medium;
+  border: 1px solid $neutral-200;
+  background-color: #fff;
+  color: $neutral-600;
+  cursor: pointer;
+  transition: color $transition-fast, background-color $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    border-color: $neutral-300;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-600;
+    color: $neutral-400;
+  }
+
+  &--active {
+    background-color: $primary-50;
+    border-color: $primary-300;
+    color: $primary-700;
+
+    .dark & {
+      background-color: rgba($primary-900, 0.3);
+      border-color: $primary-700;
+      color: $primary-300;
+    }
+  }
+}
+
+.profile__abilities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.profile__ability-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: $radius;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid $neutral-200;
+  background-color: #fff;
+  color: $neutral-500;
+  transition: color $transition-fast, background-color $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    border-color: $neutral-300;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-400;
+  }
+
+  &--active {
+    background-color: $primary-50;
+    border-color: $primary-300;
+    color: $primary-700;
+
+    .dark & {
+      background-color: rgba($primary-900, 0.3);
+      border-color: $primary-700;
+      color: $primary-300;
+    }
+  }
+}
+
+.profile__abilities-hint {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+// Token list / table
+.profile__tokens-loading {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.profile__tokens-loading-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: $neutral-400;
+  animation: spin 1s linear infinite;
+}
+
+.profile__tokens-empty {
+  text-align: center;
+  padding: 1rem 0;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.profile__tokens-table-wrapper {
+  overflow-x: auto;
+}
+
+.profile__tokens-table {
+  width: 100%;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.profile__tokens-thead-row {
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.profile__tokens-th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-weight: $font-weight-medium;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+
+  &--right {
+    text-align: right;
+  }
+}
+
+.profile__tokens-row {
+  border-bottom: 1px solid $neutral-100;
+
+  .dark & {
+    border-bottom-color: $neutral-800;
+  }
+}
+
+.profile__tokens-td {
+  padding: 0.5rem 0.75rem;
+
+  &--name {
+    font-weight: $font-weight-medium;
+    color: $neutral-900;
+
+    .dark & {
+      color: $neutral-100;
+    }
+  }
+
+  &--muted {
+    color: $neutral-500;
+
+    .dark & {
+      color: $neutral-400;
+    }
+  }
+
+  &--right {
+    text-align: right;
+  }
+}
+
+.profile__token-badge {
+  display: inline-block;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius;
+
+  &--full {
+    background-color: $warning-100;
+    color: $warning-700;
+
+    .dark & {
+      background-color: rgba($warning-900, 0.3);
+      color: $warning-300;
+    }
+  }
+}
+
+.profile__token-abilities-count {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.profile__token-expired {
+  color: $error-600;
+}
+
+.profile__token-revoke-btn {
+  color: $error-600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $error-700;
+  }
+}
+
+.profile__token-revoke-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Screen-reader only
+// -----------------------------------------------------------------------------
+
+.profile__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

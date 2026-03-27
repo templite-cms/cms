@@ -1,0 +1,147 @@
+// =============================================================================
+// Dropdown
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.dropdown__menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 12rem;
+  margin-top: 0.25rem;
+  padding: 0.25rem;
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  z-index: $z-dropdown;
+  max-height: 20rem;
+  overflow-y: auto;
+  @include custom-scrollbar;
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.dropdown__menu--left {
+  right: auto;
+  left: 0;
+}
+
+// For teleported/fixed dropdown menus (e.g. context menus)
+.dropdown__menu--fixed {
+  position: fixed;
+  right: auto;
+  width: max-content;
+}
+
+.dropdown__menu--compact {
+  min-width: 10rem;
+  padding: 0.25rem 0;
+}
+
+.dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: $radius;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: rgb(var(--color-text-primary));
+  cursor: pointer;
+  @include transition-fast(background-color, color);
+  text-align: left;
+  text-decoration: none;
+
+  &:hover {
+    background-color: rgb(var(--color-surface-hover));
+  }
+
+  &:active {
+    background-color: rgb(var(--color-surface-active));
+  }
+}
+
+.dropdown__item--active {
+  background-color: rgb(var(--color-surface-active));
+  color: $primary-600;
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+.dropdown__item--danger {
+  color: $error-600;
+
+  &:hover {
+    background-color: $error-50;
+    color: $error-700;
+
+    .dark & {
+      background-color: rgba($error-900, 0.3);
+      color: $error-400;
+    }
+  }
+}
+
+.dropdown__item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dropdown__divider {
+  height: 1px;
+  margin: 0.25rem 0;
+  background-color: $neutral-200;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.dropdown__label {
+  padding: 0.375rem 0.75rem;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: rgb(var(--color-text-muted));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// Section inside dropdown (e.g. column selector)
+.dropdown__section {
+  padding: 0.5rem 0.75rem;
+}
+
+// Button group inside dropdown
+.dropdown__btn-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.dropdown__btn-group--full {
+  padding: 0.375rem 0.75rem;
+  margin-top: 0;
+}
+
+.dropdown__move-btn {
+  flex: 1;
+}

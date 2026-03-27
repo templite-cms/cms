@@ -32,12 +32,12 @@ abstract class AbstractModule implements TempliteModuleInterface
         return [];
     }
 
-    public function getScripts(): array
+    public function getAssetManifest(): ?string
     {
-        return [];
+        return null;
     }
 
-    public function getStyles(): array
+    public function getGuards(): array
     {
         return [];
     }

@@ -1,0 +1,198 @@
+// =============================================================================
+// ListItem
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  @include transition-fast(background-color, border-color);
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark & {
+    border-color: $neutral-700;
+
+    &:hover {
+      background-color: rgba($neutral-700, 0.5);
+    }
+  }
+}
+
+.list-item__icon {
+  flex-shrink: 0;
+  color: $neutral-400;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+.list-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item__actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  @include transition-fast(opacity);
+
+  .list-item:hover & {
+    opacity: 1;
+  }
+}
+
+// Sub-elements for body content
+.list-item__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.list-item__name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.list-item__badge {
+  font-size: $font-size-xs;
+  font-family: $font-mono;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+.list-item__desc {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  margin-top: 2px;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+// =============================================================================
+// ListItemMin — compact variant for dense lists (variables, references)
+// =============================================================================
+
+.list-item-min {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  @include transition-fast(background-color);
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark &:hover {
+    background-color: rgba($neutral-700, 0.5);
+  }
+
+  &--nested {
+    padding-left: 1.25rem;
+  }
+}
+
+.list-item-min__drag {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  color: $neutral-300;
+  opacity: 0;
+  @include transition-fast(opacity);
+  cursor: grab;
+
+  .list-item-min:hover & {
+    opacity: 1;
+  }
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.list-item-min__code {
+  font-size: 11px;
+  font-family: $font-mono;
+  color: $primary-600;
+  flex-shrink: 0;
+  @include truncate;
+  max-width: 55%;
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+.list-item-min__type {
+  font-size: 10px;
+  padding: 0.125rem 0.25rem;
+  border-radius: $radius-sm;
+  background-color: $neutral-100;
+  color: $neutral-400;
+  flex-shrink: 0;
+
+  .dark & {
+    background-color: $neutral-700;
+    color: $neutral-500;
+  }
+}
+
+.list-item-min__name {
+  font-size: 11px;
+  color: $neutral-400;
+  @include truncate;
+  flex: 1;
+
+  .dark & {
+    color: $neutral-500;
+  }
+}
+
+.list-item-min__action {
+  flex-shrink: 0;
+  padding: 0.125rem;
+  color: $neutral-300;
+  opacity: 0;
+  @include transition-fast(opacity);
+
+  .list-item-min:hover & {
+    opacity: 1;
+  }
+}
+
+.list-item-min__action-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.list-item-min__action-icon--success {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: $success-500;
+}

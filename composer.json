@@ -2,7 +2,7 @@
     "name": "templite/cms",
     "description": "Templite CMS Core - Block-based CMS for Laravel",
     "type": "library",
-    "keywords": ["cms", "laravel", "blocks", "inertia", "vue", "templates"],
+    "keywords": ["cms", "laravel", "blocks", "vue", "templates"],
     "license": "MIT",
     "authors": [
         {
@@ -13,7 +13,6 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.0|^12.0",
-        "inertiajs/inertia-laravel": "^1.0",
         "laravel/sanctum": "^4.0",
         "intervention/image": "^3.0",
         "spatie/laravel-image-optimizer": "^1.8",

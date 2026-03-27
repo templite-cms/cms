@@ -1,0 +1,40 @@
+// =============================================================================
+// Breadcrumbs — Navigation breadcrumb trail
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: $font-size-sm;
+  padding: 1rem 0;
+}
+
+.breadcrumbs__separator {
+  width: 14px;
+  height: 14px;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+.breadcrumbs__link {
+  color: $neutral-500;
+  text-decoration: none;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $primary-500;
+  }
+}
+
+.breadcrumbs__current {
+  color: rgb(var(--color-text-primary));
+  font-weight: $font-weight-medium;
+}
+
+.breadcrumbs__text {
+  color: $neutral-500;
+}

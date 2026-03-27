@@ -1,0 +1,156 @@
+// =============================================================================
+// Number Field — Number input with increment/decrement buttons
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.number-field {
+  display: flex;
+  align-items: center;
+}
+
+.number-field__btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: 1px solid $neutral-300;
+  background: $neutral-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-500;
+  cursor: pointer;
+  @include transition-fast(color, background-color, border-color);
+
+  &:hover:not(:disabled) {
+    background: $neutral-100;
+    color: $neutral-600;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background: $neutral-700;
+    color: $neutral-400;
+
+    &:hover:not(:disabled) {
+      background: $neutral-600;
+      color: $neutral-300;
+    }
+  }
+}
+
+.number-field__btn--decrement {
+  border-right: 0;
+  border-radius: $radius 0 0 $radius;
+}
+
+.number-field__btn--increment {
+  border-left: 0;
+  border-radius: 0 $radius $radius 0;
+}
+
+.number-field__input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.number-field__input {
+  width: 100%;
+  height: 38px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  border: 1px solid $neutral-300;
+  background: #fff;
+  font-family: $font-sans;
+  font-size: $font-size-sm;
+  color: $neutral-900;
+  @include transition-fast(color, background-color, border-color, box-shadow);
+
+  &::placeholder {
+    color: $neutral-400;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+  }
+
+  &:disabled {
+    background: $neutral-100;
+    cursor: not-allowed;
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background: $neutral-900;
+    color: $neutral-50;
+
+    &::placeholder {
+      color: $neutral-500;
+    }
+
+    &:focus {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+    }
+
+    &:disabled {
+      background: $neutral-800;
+    }
+  }
+}
+
+.number-field__input--no-buttons {
+  border-radius: $radius;
+}
+
+.number-field__input--error {
+  border-color: $error-500;
+
+  &:focus {
+    border-color: $error-500;
+    box-shadow: 0 0 0 2px rgba($error-500, 0.2);
+  }
+
+  .dark & {
+    border-color: $error-500;
+
+    &:focus {
+      border-color: $error-500;
+      box-shadow: 0 0 0 2px rgba($error-500, 0.2);
+    }
+  }
+}
+
+.number-field__input--has-prefix {
+  padding-left: 2rem;
+}
+
+.number-field__input--has-suffix {
+  padding-right: 2rem;
+}
+
+.number-field__prefix,
+.number-field__suffix {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: $font-size-sm;
+  color: $neutral-400;
+  pointer-events: none;
+}
+
+.number-field__prefix {
+  left: 0.75rem;
+}
+
+.number-field__suffix {
+  right: 0.75rem;
+}

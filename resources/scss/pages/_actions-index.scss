@@ -1,0 +1,87 @@
+// =============================================================================
+// Actions Index — Page-specific styles
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.actions-index {
+  padding: 1.5rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.actions-index__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.actions-index__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Filters bar
+// -----------------------------------------------------------------------------
+
+.actions-index__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+// -----------------------------------------------------------------------------
+// Search
+// -----------------------------------------------------------------------------
+
+.actions-index__search {
+  position: relative;
+  width: 16rem;
+}
+
+.actions-index__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+}
+
+.actions-index__search-input {
+  padding-left: 2.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Create modal
+// -----------------------------------------------------------------------------
+
+.actions-index__create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.actions-index__modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

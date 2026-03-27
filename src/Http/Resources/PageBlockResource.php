@@ -4,6 +4,7 @@ namespace Templite\Cms\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Templite\Cms\Models\PageBlockData;
 
 class PageBlockResource extends JsonResource
 {
@@ -20,6 +21,10 @@ class PageBlockResource extends JsonResource
             'cache_key' => $this->cache_key,
             'status' => $this->status?->value ?? 'published',
             'active_version_id' => $this->page_block_data_id,
+            'draft_id' => PageBlockData::where('page_block_id', $this->id)
+                ->where('user_id', auth()->id())
+                ->where('change_type', 'updating')
+                ->value('id'),
             'preset_id' => $this->preset_id,
             'field_overrides' => $this->field_overrides,
             'preset' => $this->when(

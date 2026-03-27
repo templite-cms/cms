@@ -1,0 +1,177 @@
+// =============================================================================
+// PageTree — Tree component for page hierarchy
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// -----------------------------------------------------------------------------
+// Tree item
+// -----------------------------------------------------------------------------
+
+.page-tree__item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: $radius;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-700;
+  text-decoration: none;
+  @include transition-fast(background-color, color);
+
+  .dark & {
+    color: $neutral-300;
+  }
+
+  &:hover {
+    background-color: $neutral-50;
+
+    .dark & {
+      background-color: rgba($neutral-700, 0.5);
+    }
+  }
+
+  &--selected {
+    background-color: $primary-50;
+    color: $primary-700;
+
+    .dark & {
+      background-color: rgba($primary-900, 0.3);
+      color: $primary-300;
+    }
+  }
+
+  &--selected &__title {
+    font-weight: $font-weight-medium;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Page icon (type icon colored by status, folder for parents)
+// -----------------------------------------------------------------------------
+
+.page-tree__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+
+  &--published {
+    color: $success-500;
+  }
+
+  &--draft {
+    color: $warning-500;
+  }
+
+  &--disabled {
+    color: $neutral-400;
+  }
+
+  &--folder {
+    cursor: pointer;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Title
+// -----------------------------------------------------------------------------
+
+.page-tree__title {
+  flex: 1;
+  @include truncate;
+  margin-left: 0.25rem;
+}
+
+.page-tree__item--selected .page-tree__title {
+  font-weight: $font-weight-medium;
+}
+
+// -----------------------------------------------------------------------------
+// Type badge
+// -----------------------------------------------------------------------------
+
+.page-tree__type {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-400;
+  flex-shrink: 0;
+  display: none;
+
+  .page-tree__item:hover & {
+    display: inline;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Loading skeleton
+// -----------------------------------------------------------------------------
+
+.page-tree__loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.page-tree__skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.page-tree__skeleton-icon {
+  width: 1rem;
+  height: 1rem;
+  border-radius: $radius-sm;
+  background-color: $neutral-200;
+  animation: page-tree-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+.page-tree__skeleton-text {
+  height: 0.75rem;
+  border-radius: $radius-sm;
+  background-color: $neutral-200;
+  animation: page-tree-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  .dark & {
+    background-color: $neutral-700;
+  }
+}
+
+@keyframes page-tree-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// -----------------------------------------------------------------------------
+// Empty state
+// -----------------------------------------------------------------------------
+
+.page-tree__empty {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.page-tree__empty-icon {
+  width: 3rem;
+  height: 3rem;
+  color: $neutral-300;
+  margin: 0 auto 0.75rem;
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.page-tree__empty-text {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+  margin-bottom: 0.75rem;
+}

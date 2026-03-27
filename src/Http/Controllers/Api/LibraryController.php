@@ -22,10 +22,26 @@ class LibraryController extends Controller
         }
 
         if ($request->has('search') && $request->search !== '') {
-            $query->where('name', 'like', '%' . StringHelper::escapeLike($request->search) . '%');
+            $escaped = StringHelper::escapeLike($request->search);
+            $query->where(function ($q) use ($escaped) {
+                $q->where('name', 'like', "%{$escaped}%")
+                  ->orWhere('slug', 'like', "%{$escaped}%")
+                  ->orWhere('description', 'like', "%{$escaped}%");
+            });
         }
 
-        $libraries = $query->orderBy('sort_order')->orderBy('name')->get();
+        $allowedSortFields = ['name', 'slug', 'version', 'load_strategy', 'active', 'sort_order'];
+        $sortField = in_array($request->input('sort_field'), $allowedSortFields, true)
+            ? $request->input('sort_field')
+            : 'sort_order';
+        $sortOrder = $request->input('sort_order') === 'desc' ? 'desc' : 'asc';
+
+        $query->orderBy($sortField, $sortOrder);
+        if ($sortField !== 'name') {
+            $query->orderBy('name');
+        }
+
+        $libraries = $query->get();
 
         return $this->success(LibraryResource::collection($libraries));
     }
@@ -115,18 +131,20 @@ class LibraryController extends Controller
     /**
      * Допустимые MIME-типы для файлов библиотек.
      */
-    private const JS_ALLOWED_MIMES = ['application/javascript', 'text/javascript', 'application/x-javascript'];
-    private const CSS_ALLOWED_MIMES = ['text/css'];
+    private const JS_ALLOWED_MIMES = ['application/javascript', 'text/javascript', 'application/x-javascript', 'text/plain'];
+    private const CSS_ALLOWED_MIMES = ['text/css', 'text/plain'];
 
     /** @OA\Post(path="/libraries/{id}/upload", summary="Загрузить JS/CSS файлы библиотеки", tags={"Libraries"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data", @OA\Schema(@OA\Property(property="js_file", type="string", format="binary"), @OA\Property(property="css_file", type="string", format="binary")))), @OA\Response(response=200, description="Файлы загружены"), @OA\Response(response=422, description="Ошибка валидации")) */
     public function upload(Request $request, int $id): JsonResponse
     {
         $library = Library::findOrFail($id);
 
-        // Валидация расширений и MIME-типов (H-04)
+        // Валидация: только проверяем что это файл и размер.
+        // Расширение и MIME проверяются ниже вручную (defense in depth),
+        // т.к. Laravel mimes/mimetypes не надёжны для .js/.css (часто text/plain).
         $request->validate([
-            'js_file' => 'nullable|file|max:5120|mimes:js|mimetypes:application/javascript,text/javascript,application/x-javascript',
-            'css_file' => 'nullable|file|max:5120|mimes:css|mimetypes:text/css',
+            'js_file' => 'nullable|file|max:5120',
+            'css_file' => 'nullable|file|max:5120',
         ]);
 
         $dir = 'cms/libraries/' . basename($library->slug);

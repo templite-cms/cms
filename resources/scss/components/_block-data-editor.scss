@@ -1,0 +1,1132 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// =============================================================================
+// Block Data Editor — field editing panel for page blocks
+// =============================================================================
+
+.block-data-editor {
+
+  // ---------------------------------------------------------------------------
+  // Loading skeleton
+  // ---------------------------------------------------------------------------
+
+  &__skeleton {
+    padding: 1rem;
+
+    > * + * {
+      margin-top: 1rem;
+    }
+  }
+
+  &__skeleton-line {
+    background-color: $neutral-200;
+    border-radius: $radius;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+    .dark & {
+      background-color: $neutral-700;
+    }
+
+    &--header {
+      height: 2rem;
+      width: 33%;
+    }
+
+    &--label {
+      height: 0.75rem;
+      width: 6rem;
+    }
+
+    &--input {
+      height: 2.25rem;
+    }
+  }
+
+  &__skeleton-group {
+    > * + * {
+      margin-top: 0.75rem;
+    }
+  }
+
+  &__skeleton-field {
+    > * + * {
+      margin-top: 0.375rem;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Empty state
+  // ---------------------------------------------------------------------------
+
+  &__empty {
+    padding: 3rem 0;
+    text-align: center;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    color: $neutral-500;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main tabs bar
+  // ---------------------------------------------------------------------------
+
+  &__tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-bottom: 1px solid $neutral-200;
+    margin-bottom: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #fff;
+
+    .dark & {
+      border-bottom-color: $neutral-700;
+      background-color: $neutral-800;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tab (shared between main tabs and field tabs)
+  // ---------------------------------------------------------------------------
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1rem;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    @include transition-fast(color, border-color);
+    cursor: pointer;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+
+    &--active {
+      color: $primary-600;
+      border-bottom-color: $primary-500;
+
+      .dark & {
+        color: $primary-400;
+      }
+    }
+
+    &--inactive {
+      color: $neutral-500;
+      border-bottom-color: transparent;
+
+      &:hover {
+        color: $neutral-700;
+        border-bottom-color: $neutral-300;
+      }
+
+      .dark &:hover {
+        color: $neutral-300;
+        border-bottom-color: $neutral-600;
+      }
+    }
+  }
+
+  &__tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: $font-weight-medium;
+    padding: 0.125rem 0.375rem;
+    border-radius: $radius-full;
+    background-color: $primary-100;
+    color: $primary-600;
+
+    .dark & {
+      background-color: rgba($primary-900, 0.4);
+      color: $primary-400;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Field tabs (block_tabs inside Fields content)
+  // ---------------------------------------------------------------------------
+
+  &__field-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-bottom: 1px solid $neutral-200;
+    margin-bottom: 1rem;
+
+    .dark & {
+      border-bottom-color: $neutral-700;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Override toggle
+  // ---------------------------------------------------------------------------
+
+  &__override-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+
+  &__override-label {
+    font-size: 10px;
+    color: $neutral-400;
+  }
+
+  &__override-btn {
+    font-size: 10px;
+    padding: 0.125rem 0.375rem;
+    border-radius: $radius;
+    border: none;
+    background: none;
+    cursor: pointer;
+    @include transition-fast(color, background-color);
+
+    &--reset {
+      color: $warning-600;
+
+      &:hover {
+        background-color: $warning-50;
+      }
+
+      .dark & {
+        color: $warning-400;
+
+        &:hover {
+          background-color: rgba($warning-900, 0.2);
+        }
+      }
+    }
+
+    &--override {
+      color: $primary-600;
+
+      &:hover {
+        background-color: $primary-50;
+      }
+
+      .dark & {
+        color: $primary-400;
+
+        &:hover {
+          background-color: rgba($primary-900, 0.2);
+        }
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Disabled / locked field
+  // ---------------------------------------------------------------------------
+
+  &__field--locked {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Section header
+  // ---------------------------------------------------------------------------
+
+  &__section-title {
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-semibold;
+    color: $neutral-900;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid $neutral-100;
+
+    .dark & {
+      color: $neutral-50;
+      border-bottom-color: $neutral-700;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Field stack (vertical spacing between fields)
+  // ---------------------------------------------------------------------------
+
+  &__field-stack {
+    > * + * {
+      margin-top: 1rem;
+    }
+
+    &--sm {
+      > * + * {
+        margin-top: 0.5rem;
+      }
+    }
+
+    &--md {
+      > * + * {
+        margin-top: 0.75rem;
+      }
+    }
+
+    &__section {
+      margin-bottom: 1.5rem;
+    }
+
+    &--lg {
+      > * + * {
+        margin-top: 1.5rem;
+      }
+    }
+  }
+
+  &__untabbed-fields {
+    margin-bottom: 1.5rem;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Actions tab
+  // ---------------------------------------------------------------------------
+
+  &__actions-hint {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    color: $neutral-500;
+    margin-bottom: 1rem;
+  }
+
+  &__action-card {
+    border: 1px solid $neutral-200;
+    border-radius: $radius-lg;
+
+    .dark & {
+      border-color: $neutral-700;
+    }
+  }
+
+  &__action-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background-color: $neutral-50;
+    border-radius: $radius-lg $radius-lg 0 0;
+    border-bottom: 1px solid $neutral-200;
+
+    .dark & {
+      background-color: $neutral-800;
+      border-bottom-color: $neutral-700;
+    }
+  }
+
+  &__action-icon {
+    color: $primary-500;
+    flex-shrink: 0;
+  }
+
+  &__action-name {
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__action-slug {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    font-family: $font-mono;
+    color: $neutral-400;
+    margin-left: auto;
+  }
+
+  &__action-body {
+    padding: 0.75rem;
+
+    > * + * {
+      margin-top: 0.75rem;
+    }
+  }
+
+  &__param-label {
+    display: block;
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    font-weight: $font-weight-medium;
+    color: $neutral-600;
+    margin-bottom: 0.25rem;
+
+    .dark & {
+      color: $neutral-300;
+    }
+  }
+
+  &__param-type {
+    color: $neutral-400;
+    font-weight: $font-weight-normal;
+  }
+
+  &__param-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    color: $neutral-600;
+
+    .dark & {
+      color: $neutral-300;
+    }
+  }
+
+  &__param-checkbox {
+    border-radius: $radius-sm;
+    border: 1px solid $neutral-300;
+    accent-color: $primary-500;
+
+    .dark & {
+      border-color: $neutral-600;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba($primary-500, 0.3);
+    }
+  }
+
+  &__param-input {
+    width: 100%;
+    padding: 0.375rem 0.625rem;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    border: 1px solid $neutral-200;
+    border-radius: $radius;
+    background-color: #fff;
+    color: $neutral-700;
+    outline: none;
+    @include transition-fast(border-color, box-shadow);
+
+    &::placeholder {
+      color: $neutral-400;
+    }
+
+    &:focus {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 1px $primary-500;
+    }
+
+    .dark & {
+      border-color: $neutral-600;
+      background-color: $neutral-900;
+      color: $neutral-200;
+
+      &:focus {
+        border-color: $primary-500;
+        box-shadow: 0 0 0 1px $primary-500;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // General tab
+  // ---------------------------------------------------------------------------
+
+  &__status-label {
+    display: block;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+    margin-bottom: 0.75rem;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__status-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__status-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: $radius-lg;
+    border: 1px solid;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    background: none;
+    @include transition-fast(color, background-color, border-color, box-shadow);
+
+    &--active {
+      border-color: $primary-300;
+      background-color: $primary-50;
+      color: $primary-700;
+
+      .dark & {
+        border-color: $primary-600;
+        background-color: rgba($primary-900, 0.2);
+        color: $primary-300;
+      }
+    }
+
+    &--active-published {
+      ring: 2px;
+      box-shadow: 0 0 0 2px rgba($success-500, 0.3);
+    }
+
+    &--active-draft {
+      box-shadow: 0 0 0 2px rgba($warning-500, 0.3);
+    }
+
+    &--active-hidden {
+      box-shadow: 0 0 0 2px rgba($neutral-400, 0.3);
+    }
+
+    &--inactive {
+      border-color: $neutral-200;
+      color: $neutral-600;
+
+      &:hover {
+        border-color: $neutral-300;
+      }
+
+      .dark & {
+        border-color: $neutral-700;
+        color: $neutral-300;
+
+        &:hover {
+          border-color: $neutral-600;
+        }
+      }
+    }
+  }
+
+  &__status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: $radius-full;
+
+    &--published {
+      background-color: $success-500;
+    }
+
+    &--draft {
+      background-color: $warning-500;
+    }
+
+    &--hidden {
+      background-color: $neutral-400;
+    }
+  }
+
+  &__switch {
+    position: relative;
+    display: inline-flex;
+    height: 1.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+    border-radius: $radius-full;
+    border: 2px solid transparent;
+    cursor: pointer;
+    @include transition-fast(background-color);
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px $primary-500, 0 0 0 4px rgba($primary-500, 0.3);
+    }
+
+    &--on {
+      background-color: $primary-500;
+    }
+
+    &--off {
+      background-color: $neutral-300;
+
+      .dark & {
+        background-color: $neutral-600;
+      }
+    }
+  }
+
+  &__switch-thumb {
+    pointer-events: none;
+    display: inline-block;
+    height: 1rem;
+    width: 1rem;
+    border-radius: $radius-full;
+    background-color: #fff;
+    box-shadow: $shadow-sm;
+    @include transition-fast(transform);
+
+    &--on {
+      transform: translateX(1rem);
+    }
+
+    &--off {
+      transform: translateX(0);
+    }
+  }
+
+  &__cache-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    color: $neutral-700;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__invalidate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $error-600;
+    border: 1px solid $error-200;
+    border-radius: $radius-lg;
+    background: none;
+    cursor: pointer;
+    @include transition-fast(background-color);
+
+    &:hover {
+      background-color: $error-50;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .dark & {
+      color: $error-400;
+      border-color: $error-800;
+
+      &:hover {
+        background-color: rgba($error-900, 0.2);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Versions tab
+  // ---------------------------------------------------------------------------
+
+  &__versions-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+    color: $neutral-400;
+  }
+
+  &__versions-empty {
+    padding: 2rem 0;
+    text-align: center;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    color: $neutral-500;
+  }
+
+  &__version-card {
+    border: 1px solid;
+    border-radius: $radius-lg;
+    padding: 0.75rem;
+    cursor: pointer;
+    @include transition-fast(border-color, background-color);
+
+    &--active {
+      border-color: $primary-400;
+      background-color: rgba($primary-50, 0.5);
+
+      .dark & {
+        border-color: $primary-500;
+        background-color: rgba($primary-900, 0.1);
+      }
+    }
+
+    &--previewing {
+      border-color: $info-300;
+      background-color: rgba($info-50, 0.5);
+
+      .dark & {
+        border-color: $info-600;
+        background-color: rgba($info-900, 0.1);
+      }
+    }
+
+    &--default {
+      border-color: $neutral-200;
+
+      &:hover {
+        border-color: $neutral-300;
+      }
+
+      .dark & {
+        border-color: $neutral-700;
+
+        &:hover {
+          border-color: $neutral-600;
+        }
+      }
+    }
+  }
+
+  &__version-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__version-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  &__version-user {
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+    @include truncate;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__version-badge {
+    font-size: 10px;
+    font-weight: $font-weight-medium;
+    padding: 0.125rem 0.375rem;
+    border-radius: $radius;
+    flex-shrink: 0;
+
+    &--mcp {
+      background-color: $info-100;
+      color: $info-600;
+
+      .dark & {
+        background-color: rgba($info-900, 0.4);
+        color: $info-400;
+      }
+    }
+
+    &--active {
+      background-color: $success-100;
+      color: $success-600;
+
+      .dark & {
+        background-color: rgba($success-900, 0.4);
+        color: $success-400;
+      }
+    }
+
+    &--draft {
+      background-color: $warning-100;
+      color: $warning-700;
+
+      .dark & {
+        background-color: rgba($warning-900, 0.4);
+        color: $warning-400;
+      }
+    }
+  }
+
+  &__version-activate-btn {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    font-weight: $font-weight-medium;
+    color: $primary-600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: $primary-700;
+    }
+
+    .dark & {
+      color: $primary-400;
+
+      &:hover {
+        color: $primary-300;
+      }
+    }
+  }
+
+  &__version-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  &__version-delete-btn {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius;
+    color: $neutral-400;
+    background: none;
+    border: none;
+    cursor: pointer;
+    @include transition-fast(color, background-color);
+
+    &:hover {
+      color: $error-500;
+      background-color: $error-50;
+    }
+
+    .dark &:hover {
+      background-color: rgba($error-900, 0.2);
+    }
+  }
+
+  &__version-date {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    color: $neutral-400;
+    margin-top: 0.25rem;
+  }
+
+  &__versions-delete-all {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $error-500;
+    border: 1px solid $error-200;
+    border-radius: $radius-lg;
+    background: none;
+    cursor: pointer;
+    @include transition-fast(color, background-color, border-color);
+
+    &:hover {
+      background-color: $error-50;
+      border-color: $error-300;
+    }
+
+    .dark & {
+      border-color: rgba($error-800, 0.5);
+
+      &:hover {
+        background-color: rgba($error-900, 0.2);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Presets tab
+  // ---------------------------------------------------------------------------
+
+  &__presets-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &__save-preset-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $primary-600;
+    border: 1px solid $primary-200;
+    border-radius: $radius-lg;
+    background: none;
+    cursor: pointer;
+    flex: 1;
+    @include transition-fast(background-color);
+
+    &:hover {
+      background-color: $primary-50;
+    }
+
+    .dark & {
+      color: $primary-400;
+      border-color: $primary-800;
+
+      &:hover {
+        background-color: rgba($primary-900, 0.2);
+      }
+    }
+  }
+
+  &__edit-block-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-600;
+    border: 1px solid $neutral-200;
+    border-radius: $radius-lg;
+    text-decoration: none;
+    @include transition-fast(background-color);
+
+    &:hover {
+      background-color: $neutral-50;
+    }
+
+    .dark & {
+      color: $neutral-400;
+      border-color: $neutral-700;
+
+      &:hover {
+        background-color: $neutral-800;
+      }
+    }
+  }
+
+  &__preset-banner {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border-radius: $radius-lg;
+    border: 1px solid;
+
+    &--global {
+      background-color: $info-50;
+      border-color: $info-200;
+
+      .dark & {
+        background-color: rgba($info-900, 0.1);
+        border-color: $info-800;
+      }
+    }
+
+    &--local {
+      background-color: $success-50;
+      border-color: $success-200;
+
+      .dark & {
+        background-color: rgba($success-900, 0.1);
+        border-color: $success-800;
+      }
+    }
+  }
+
+  &__preset-banner-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__preset-banner-title {
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__preset-banner-desc {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    color: $neutral-500;
+    margin-top: 0.125rem;
+  }
+
+  &__unlink-btn {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    font-weight: $font-weight-medium;
+    color: $error-500;
+    padding: 0.25rem 0.5rem;
+    border-radius: $radius;
+    background: none;
+    border: none;
+    cursor: pointer;
+    @include transition-fast(color, background-color);
+
+    &:hover {
+      color: $error-600;
+      background-color: $error-50;
+    }
+
+    .dark &:hover {
+      background-color: rgba($error-900, 0.2);
+    }
+  }
+
+  &__presets-hint {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    color: $neutral-500;
+    margin-bottom: 0.75rem;
+  }
+
+  &__preset-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem;
+    border: 1px solid;
+    border-radius: $radius-lg;
+    cursor: pointer;
+    @include transition-fast(border-color, background-color);
+
+    &--active {
+      border-color: $primary-400;
+      background-color: rgba($primary-50, 0.5);
+
+      .dark & {
+        border-color: $primary-500;
+        background-color: rgba($primary-900, 0.1);
+      }
+    }
+
+    &--inactive {
+      border-color: $neutral-200;
+
+      &:hover {
+        border-color: $neutral-300;
+      }
+
+      .dark & {
+        border-color: $neutral-700;
+
+        &:hover {
+          border-color: $neutral-600;
+        }
+      }
+    }
+  }
+
+  &__preset-thumb {
+    width: 3rem;
+    height: 2rem;
+    flex-shrink: 0;
+    background-color: $neutral-100;
+    border-radius: $radius;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .dark & {
+      background-color: $neutral-800;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__preset-thumb-icon {
+    color: $neutral-300;
+  }
+
+  &__preset-name {
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+    @include truncate;
+    flex: 1;
+    min-width: 0;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__preset-type-badge {
+    font-size: 10px;
+    font-weight: $font-weight-medium;
+    padding: 0.125rem 0.375rem;
+    border-radius: $radius;
+    flex-shrink: 0;
+
+    &--global {
+      background-color: $info-100;
+      color: $info-600;
+
+      .dark & {
+        background-color: rgba($info-900, 0.4);
+        color: $info-400;
+      }
+    }
+
+    &--local {
+      background-color: $success-100;
+      color: $success-600;
+
+      .dark & {
+        background-color: rgba($success-900, 0.4);
+        color: $success-400;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Modal footer
+  // ---------------------------------------------------------------------------
+
+  &__modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Modal form
+  // ---------------------------------------------------------------------------
+
+  &__modal-form {
+    > * + * {
+      margin-top: 1rem;
+    }
+  }
+
+  &__modal-hint {
+    font-size: $font-size-xs;
+    line-height: $line-height-xs;
+    color: $neutral-500;
+  }
+}

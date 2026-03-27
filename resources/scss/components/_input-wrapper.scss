@@ -1,0 +1,92 @@
+// =============================================================================
+// Input Wrapper — Input with icon prefix/suffix and clear button
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-wrapper__icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $neutral-400;
+  pointer-events: none;
+  display: flex;
+}
+
+.input-wrapper__suffix {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $neutral-400;
+  pointer-events: none;
+  display: flex;
+}
+
+.input-wrapper__clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $neutral-600;
+    background: $neutral-100;
+  }
+
+  .dark &:hover {
+    background: $neutral-700;
+  }
+}
+
+// When input has prefix icon, add left padding
+.input--has-icon {
+  padding-left: 2.5rem;
+}
+
+// Date field variant
+.input-wrapper--date {
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper__date-icon {
+  flex-shrink: 0;
+  padding: 0 0.75rem;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  background: $neutral-50;
+  border: 1px solid $neutral-300;
+  border-right: 0;
+  border-radius: $radius 0 0 $radius;
+  color: $neutral-400;
+
+  .dark & {
+    background: $neutral-800;
+    border-color: $neutral-600;
+  }
+}
+
+.input-wrapper__date-icon--error {
+  border-color: $error-500;
+}
+
+.input-wrapper__date-picker {
+  flex: 1;
+}

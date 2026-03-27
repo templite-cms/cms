@@ -16,6 +16,7 @@ use Templite\Cms\Services\FileService;
 use Templite\Cms\Services\ImageProcessor;
 use Templite\Cms\Helpers\StringHelper;
 use Templite\Cms\Services\CacheManager;
+use Templite\Cms\Services\HandlerRegistry;
 use Templite\Cms\Services\UrlGenerator;
 
 class PageController extends Controller
@@ -27,6 +28,7 @@ class PageController extends Controller
         protected FileService $fileService,
         protected ImageProcessor $imageProcessor,
         protected CacheManager $cacheManager,
+        protected HandlerRegistry $handlerRegistry,
     ) {}
 
     /**
@@ -79,7 +81,7 @@ class PageController extends Controller
      */
     public function tree(): JsonResponse
     {
-        $pages = Page::with('image')
+        $pages = Page::with(['image', 'pageType:id,name,icon'])
             ->orderBy('parent_id')
             ->orderBy('order')
             ->get(['id', 'title', 'url', 'alias', 'parent_id', 'type_id', 'status', 'order', 'img']);
@@ -125,6 +127,7 @@ class PageController extends Controller
             'template_data' => 'nullable|array',
             'status' => 'integer|in:0,1',
             'city_scope' => 'string|in:global,city_source',
+            'handler' => 'nullable|string|max:50',
             'display_tree' => 'boolean',
             'img' => 'nullable|integer|exists:files,id',
             'order' => 'integer',
@@ -194,6 +197,7 @@ class PageController extends Controller
             'template_data' => 'nullable|array',
             'status' => 'integer|in:0,1',
             'city_scope' => 'string|in:global,city_source',
+            'handler' => 'nullable|string|max:50',
             'display_tree' => 'boolean',
             'img' => 'nullable|integer|exists:files,id',
             'screen' => 'nullable|integer|exists:files,id',
@@ -219,6 +223,29 @@ class PageController extends Controller
         // Обновляем URL дочерних страниц
         if (isset($data['alias']) || isset($data['parent_id'])) {
             $this->urlGenerator->updateUrlTree($page->fresh());
+        }
+
+        // Promote all updating drafts for this page's blocks
+        $pageBlockIds = $page->pageBlocks()->pluck('id');
+        if ($pageBlockIds->isNotEmpty()) {
+            $updatingDrafts = \Templite\Cms\Models\PageBlockData::whereIn('page_block_id', $pageBlockIds)
+                ->where('user_id', auth()->id())
+                ->where('change_type', 'updating')
+                ->get();
+
+            foreach ($updatingDrafts as $draft) {
+                $draft->update(['change_type' => 'native']);
+
+                // Set as active version + sync data into page_block
+                $pb = \Templite\Cms\Models\PageBlock::find($draft->page_block_id);
+                if ($pb) {
+                    $pb->update([
+                        'page_block_data_id' => $draft->id,
+                        'data' => $draft->data,
+                        'action_params' => $draft->action_params,
+                    ]);
+                }
+            }
         }
 
         $this->cacheManager->invalidatePage($page);
@@ -469,6 +496,32 @@ class PageController extends Controller
             }
         }
 
+        // Component styles/scripts from block and template Blade content
+        $bladeContents = [];
+        foreach ($pageBlocks as $pb) {
+            if ($pb->block) {
+                $blockPath = $this->blockRenderer->resolveBlockPath($pb->block);
+                if ($blockPath && file_exists($blockPath . '/template.blade.php')) {
+                    $bladeContents[] = file_get_contents($blockPath . '/template.blade.php');
+                }
+            }
+        }
+        if ($template) {
+            $tplFile = storage_path('cms/templates/' . basename($template->slug) . '/template.blade.php');
+            if (file_exists($tplFile)) {
+                $bladeContents[] = file_get_contents($tplFile);
+            }
+        }
+        if ($bladeContents) {
+            $componentAssets = $this->blockRenderer->collectComponentAssets(...$bladeContents);
+            if ($componentAssets['css']) {
+                $cssAll[] = $componentAssets['css'];
+            }
+            if ($componentAssets['js']) {
+                $jsAll[] = $componentAssets['js'];
+            }
+        }
+
         // Вставляем локальные библиотеки в начало
         if ($localLibCss) {
             array_unshift($cssAll, implode("\n", $localLibCss));
@@ -552,6 +605,14 @@ class PageController extends Controller
     }
 
     /**
+     * Получить список доступных handler'ов.
+     */
+    public function handlers(): JsonResponse
+    {
+        return $this->success($this->handlerRegistry->all());
+    }
+
+    /**
      * Построить дерево из плоского списка.
      */
     protected function buildTree($pages, ?int $parentId = null): array
@@ -561,6 +622,12 @@ class PageController extends Controller
         foreach ($pages as $page) {
             if ($page->parent_id === $parentId) {
                 $node = $page->toArray();
+                if ($page->pageType) {
+                    $node['type'] = [
+                        'name' => $page->pageType->name,
+                        'icon' => $page->pageType->icon,
+                    ];
+                }
                 $node['children'] = $this->buildTree($pages, $page->id);
                 $tree[] = $node;
             }

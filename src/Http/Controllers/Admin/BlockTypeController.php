@@ -2,9 +2,9 @@
 
 namespace Templite\Cms\Http\Controllers\Admin;
 
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\BlockType;
 
 class BlockTypeController extends Controller
@@ -13,11 +13,11 @@ class BlockTypeController extends Controller
      * Список типов блоков.
      * Экран: BlockTypes/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('BlockTypes/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/block-types-index.js', [
             'blockTypes' => BlockType::withCount('blocks')->orderBy('name')->get(),
-        ]);
+        ], ['title' => 'Типы блоков']);
     }
 
     /**
@@ -26,9 +26,9 @@ class BlockTypeController extends Controller
      */
     public function edit(int $id): Response
     {
-        return Inertia::render('BlockTypes/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/block-types-edit.js', [
             'blockType' => BlockType::withCount('blocks')->findOrFail($id),
-        ]);
+        ], ['title' => 'Редактирование типа блока']);
     }
 
     /**
@@ -37,8 +37,8 @@ class BlockTypeController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('BlockTypes/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/block-types-edit.js', [
             'blockType' => null,
-        ]);
+        ], ['title' => 'Новый тип блока']);
     }
 }

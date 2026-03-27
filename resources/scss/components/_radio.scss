@@ -1,0 +1,73 @@
+// =============================================================================
+// Radio — Radio button input with label
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.radio {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  cursor: pointer;
+  user-select: none;
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.radio__circle {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: $radius-full;
+  border: 2px solid $neutral-300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  margin-top: 1px;
+  @include transition-fast(border-color, background-color);
+
+  .dark & {
+    background: $neutral-900;
+    border-color: $neutral-600;
+  }
+}
+
+.radio__circle--checked {
+  border-color: $primary-500;
+
+  &::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: $radius-full;
+    background: $primary-500;
+  }
+}
+
+.radio__circle--error {
+  border-color: $error-500;
+}
+
+.radio__label {
+  font-size: $font-size-sm;
+  color: rgb(var(--color-text-primary));
+}
+
+// Radio group layout
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radio-group--horizontal {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}

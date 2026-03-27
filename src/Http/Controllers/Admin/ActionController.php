@@ -3,8 +3,8 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
+
 use Templite\Cms\Models\Action;
 use Templite\Cms\Models\GlobalField;
 use Templite\Cms\Services\ActionRegistry;
@@ -17,21 +17,21 @@ class ActionController extends Controller
      * Список actions.
      * Экран: Actions/Index
      */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('Actions/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/actions-index.js', [
             'actions' => Action::with('screenshot')->withCount('blockActions')->orderBy('name')->get()->map(fn($a) => array_merge($a->toArray(), [
                 'screenshot_url' => $a->screenshot?->url(),
             ])),
             'registryActions' => $this->actionRegistry->all(),
-        ]);
+        ], ['title' => 'Действия']);
     }
 
     /**
      * Редактирование action.
      * Экран: Actions/Edit
      */
-    public function edit(int $id): Response
+    public function edit(int $id)
     {
         $action = Action::with(['blockActions.block', 'screenshot'])->findOrFail($id);
 
@@ -48,7 +48,7 @@ class ActionController extends Controller
             $props['defaultCode'] = $this->getDefaultActionCode();
         }
 
-        return Inertia::render('Actions/Edit', $props);
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/actions-edit.js', $props, ['title' => $action->name]);
     }
 
     /**
@@ -85,13 +85,13 @@ class ActionController extends Controller
      * Создание нового action.
      * Экран: Actions/Edit (пустая форма с дефолтным кодом-примером)
      */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('Actions/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/actions-edit.js', [
             'action' => null,
             'defaultCode' => $this->getDefaultActionCode(),
             'globalFieldDefinitions' => GlobalField::select('key', 'type', 'name')->whereNull('parent_id')->get(),
-        ]);
+        ], ['title' => 'Новый экшн']);
     }
 
     /**

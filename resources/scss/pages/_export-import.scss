@@ -1,0 +1,657 @@
+// =============================================================================
+// Export/Import Index — Import & Export page
+// =============================================================================
+
+@use '../variables' as *;
+
+.export-import {
+  padding: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.export-import__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.export-import__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Tabs
+// -----------------------------------------------------------------------------
+
+.export-import__tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid $neutral-200;
+  margin-bottom: 1.5rem;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.export-import__tab {
+  padding: 0.625rem 1rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color $transition-fast, border-color $transition-fast;
+  color: $neutral-500;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    color: $neutral-700;
+    border-bottom-color: $neutral-300;
+  }
+
+  .dark &:hover {
+    color: $neutral-300;
+    border-bottom-color: $neutral-600;
+  }
+
+  &--active {
+    color: $primary-600;
+    border-bottom-color: $primary-500;
+
+    .dark & {
+      color: $primary-400;
+    }
+  }
+}
+
+.export-import__tab-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// Tab content
+// -----------------------------------------------------------------------------
+
+.export-import__tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Search
+// -----------------------------------------------------------------------------
+
+.export-import__search {
+  position: relative;
+  max-width: 28rem;
+}
+
+.export-import__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+}
+
+.export-import__search-input {
+  padding-left: 2.5rem;
+  width: 100%;
+}
+
+// -----------------------------------------------------------------------------
+// Entity groups
+// -----------------------------------------------------------------------------
+
+.export-import__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.export-import__group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-800;
+  }
+}
+
+.export-import__group-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-import__group-chevron {
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+}
+
+.export-import__group-label {
+  font-weight: $font-weight-medium;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.export-import__group-count {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-400;
+}
+
+.export-import__group-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-import__group-action {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $primary-600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.export-import__group-deselect {
+  color: $neutral-500;
+}
+
+.export-import__group-body {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.export-import__group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+
+  @media (min-width: $breakpoint-sm) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (min-width: $breakpoint-md) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.export-import__entity-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: $radius;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $neutral-50;
+  }
+
+  .dark &:hover {
+    background-color: $neutral-800;
+  }
+}
+
+.export-import__entity-checkbox {
+  border-radius: $radius-sm;
+  border-color: $neutral-300;
+}
+
+.export-import__entity-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.export-import__group-empty {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-400;
+  padding: 0.5rem 0;
+}
+
+// -----------------------------------------------------------------------------
+// Action buttons
+// -----------------------------------------------------------------------------
+
+.export-import__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.export-import__btn-content {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.export-import__btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.export-import__btn-icon--spin {
+  animation: spin 1s linear infinite;
+}
+
+// -----------------------------------------------------------------------------
+// Preview card
+// -----------------------------------------------------------------------------
+
+.export-import__preview-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  margin-bottom: 0.5rem;
+}
+
+.export-import__preview-body {
+  padding: 1rem;
+}
+
+.export-import__preview-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Drop zone (Import)
+// -----------------------------------------------------------------------------
+
+.export-import__dropzone {
+  border: 2px dashed $neutral-300;
+  border-radius: $radius-lg;
+  padding: 3rem;
+  text-align: center;
+  transition: border-color $transition-fast, background-color $transition-fast;
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+
+  &--active {
+    border-color: $primary-500;
+    background-color: $primary-50;
+
+    .dark & {
+      background-color: rgba($primary-900, 0.2);
+    }
+  }
+}
+
+.export-import__dropzone-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  color: $neutral-400;
+}
+
+.export-import__dropzone-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+  margin-bottom: 0.75rem;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.export-import__dropzone-label {
+  cursor: pointer;
+}
+
+.export-import__file-input {
+  display: none;
+}
+
+// -----------------------------------------------------------------------------
+// Uploading state
+// -----------------------------------------------------------------------------
+
+.export-import__uploading {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.export-import__uploading-icon {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto 0.75rem;
+  color: $primary-500;
+  animation: spin 1s linear infinite;
+}
+
+.export-import__uploading-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+}
+
+// -----------------------------------------------------------------------------
+// Manifest (import result)
+// -----------------------------------------------------------------------------
+
+.export-import__manifest {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.export-import__manifest-card {
+  padding: 1rem;
+}
+
+.export-import__manifest-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  margin-bottom: 0.5rem;
+}
+
+.export-import__manifest-summary {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-400;
+  }
+}
+
+.export-import__manifest-meta {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-400;
+  margin-top: 0.25rem;
+}
+
+// -----------------------------------------------------------------------------
+// Conflicts card
+// -----------------------------------------------------------------------------
+
+.export-import__conflicts {
+  padding: 1rem;
+  border-color: $warning-300;
+
+  .dark & {
+    border-color: $warning-700;
+  }
+}
+
+.export-import__conflicts-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.export-import__conflicts-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: $warning-500;
+}
+
+.export-import__conflicts-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+}
+
+.export-import__conflicts-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.export-import__conflict-action {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $primary-600;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.export-import__conflicts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.export-import__conflict-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: $neutral-50;
+  border-radius: $radius;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+
+  .dark & {
+    background-color: $neutral-800;
+  }
+}
+
+.export-import__conflict-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.export-import__conflict-badge {
+  margin-right: 0.5rem;
+}
+
+.export-import__conflict-existing {
+  color: $neutral-400;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  margin-left: 0.25rem;
+}
+
+.export-import__conflict-select {
+  width: 10rem;
+}
+
+// -----------------------------------------------------------------------------
+// Entities list
+// -----------------------------------------------------------------------------
+
+.export-import__entities-card {
+  padding: 1rem;
+}
+
+.export-import__entities-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  margin-bottom: 0.5rem;
+}
+
+.export-import__entities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.export-import__entity-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.export-import__entity-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+
+  &--success {
+    color: $success-500;
+  }
+
+  &--warning {
+    color: $warning-500;
+  }
+}
+
+.export-import__entity-type-badge {
+  flex-shrink: 0;
+}
+
+.export-import__entity-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// -----------------------------------------------------------------------------
+// Import actions
+// -----------------------------------------------------------------------------
+
+.export-import__import-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.export-import__unresolved-hint {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $warning-600;
+}
+
+// -----------------------------------------------------------------------------
+// Logs section
+// -----------------------------------------------------------------------------
+
+.export-import__logs {
+  margin-top: 2rem;
+}
+
+.export-import__logs-title {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  margin-bottom: 1rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.export-import__log-summary {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}
+
+.export-import__log-link {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $primary-600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.export-import__log-filename {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}
+
+.export-import__log-date {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}
+
+// -----------------------------------------------------------------------------
+// Empty state
+// -----------------------------------------------------------------------------
+
+.export-import__empty {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.export-import__empty-icon {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto 0.5rem;
+  color: $neutral-300;
+}
+
+.export-import__empty-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}

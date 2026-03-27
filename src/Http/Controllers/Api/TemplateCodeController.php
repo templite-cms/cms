@@ -96,7 +96,7 @@ class TemplateCodeController extends Controller
     }
 
     /** @OA\Get(path="/templates/{id}/preview", summary="Превью шаблона", tags={"Template Code"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="HTML превью")) */
-    public function preview(int $id): JsonResponse
+    public function preview(Request $request, int $id): JsonResponse
     {
         $template = TemplatePage::with(['fields.children', 'libraries'])->findOrFail($id);
         $path = storage_path('cms/templates/' . basename($template->slug));
@@ -105,38 +105,54 @@ class TemplateCodeController extends Controller
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
 
+        // Inline-код из запроса (для live preview без сохранения)
+        $inlineTemplate = $request->input('template_code');
+        $inlineStyle = $request->input('style_code');
+        $inlineScript = $request->input('script_code');
+
         $templateHtml = '';
 
-        if (is_dir($path)) {
+        // Собираем default-данные из определений полей
+        $fields = [];
+        foreach ($template->fields as $field) {
+            if ($field->parent_id) continue;
+
+            if ($field->type === 'array') {
+                $children = $template->fields->where('parent_id', $field->id);
+                $row = [];
+                foreach ($children as $child) {
+                    $row[$child->key] = $child->default_value ?? $this->mockValue($child);
+                }
+                $fields[$field->key] = [$row];
+            } else {
+                $fields[$field->key] = $field->default_value ?? $this->mockValue($field);
+            }
+        }
+
+        $renderVars = [
+            'fields' => $fields,
+            'page' => null,
+            'global' => $global,
+        ];
+
+        // Template: inline или с диска
+        if ($inlineTemplate !== null) {
+            try {
+                \Templite\Cms\Services\BladeSecurityValidator::assertSafe($inlineTemplate);
+                $templateHtml = Blade::render($inlineTemplate, $renderVars);
+            } catch (\Throwable $e) {
+                $templateHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
+                    . '<strong>Template Error:</strong><br>'
+                    . htmlspecialchars($e->getMessage())
+                    . '</div>';
+            }
+        } elseif (is_dir($path)) {
             $templateFile = $path . '/template.blade.php';
             if (file_exists($templateFile)) {
                 try {
-                    $fields = [];
-                    foreach ($template->fields as $field) {
-                        if ($field->parent_id) continue;
-
-                        if ($field->type === 'array') {
-                            $children = $template->fields->where('parent_id', $field->id);
-                            $row = [];
-                            foreach ($children as $child) {
-                                $row[$child->key] = $child->default_value ?? $this->mockValue($child);
-                            }
-                            $fields[$field->key] = [$row];
-                        } else {
-                            $fields[$field->key] = $field->default_value ?? $this->mockValue($field);
-                        }
-                    }
-
                     $bladeContent = file_get_contents($templateFile);
-
-                    // Валидация шаблона при рендере (защита от подмены файлов)
                     \Templite\Cms\Services\BladeSecurityValidator::assertSafe($bladeContent);
-
-                    $templateHtml = Blade::render($bladeContent, [
-                        'fields' => $fields,
-                        'page' => null,
-                        'global' => $global,
-                    ]);
+                    $templateHtml = Blade::render($bladeContent, $renderVars);
                 } catch (\Throwable $e) {
                     $templateHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
                         . '<strong>Template Error:</strong><br>'
@@ -146,9 +162,24 @@ class TemplateCodeController extends Controller
             }
         }
 
-        // Compile SCSS and get JS via BlockRenderer
-        $css = $this->blockRenderer->compileTemplateStyles($template) ?? '';
-        $js = $this->blockRenderer->getTemplateScript($template) ?? '';
+        // Style: inline или с диска
+        if ($inlineStyle !== null) {
+            try {
+                $compiler = new \ScssPhp\ScssPhp\Compiler();
+                $css = $compiler->compileString($inlineStyle)->getCss();
+            } catch (\Throwable $e) {
+                $css = "/* SCSS Error: " . addslashes($e->getMessage()) . " */";
+            }
+        } else {
+            $css = $this->blockRenderer->compileTemplateStyles($template) ?? '';
+        }
+
+        // Script: inline или с диска
+        if ($inlineScript !== null) {
+            $js = $inlineScript;
+        } else {
+            $js = $this->blockRenderer->getTemplateScript($template) ?? '';
+        }
 
         // Load template libraries (CDN and local)
         $cdnCssLinks = '';
@@ -180,8 +211,18 @@ class TemplateCodeController extends Controller
             }
         }
 
-        $allCss = $localLibCss . ($css ? "{$css}\n" : '');
-        $allJs = $localLibJs . ($js ? "{$js}\n" : '');
+        // Component styles/scripts from template content
+        $rawTemplate = $inlineTemplate ?? '';
+        if (!$rawTemplate) {
+            $tplFile = $path . '/template.blade.php';
+            if (file_exists($tplFile)) {
+                $rawTemplate = file_get_contents($tplFile);
+            }
+        }
+        $componentAssets = $this->blockRenderer->collectComponentAssets($rawTemplate);
+
+        $allCss = $localLibCss . ($css ? "{$css}\n" : '') . $componentAssets['css'];
+        $allJs = $localLibJs . ($js ? "{$js}\n" : '') . $componentAssets['js'];
 
         $html = $this->blockRenderer->renderPreviewWrapper([
             'cdnCss' => $cdnCssLinks,

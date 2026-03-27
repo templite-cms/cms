@@ -1,0 +1,112 @@
+// =============================================================================
+// Confirm Dialog
+// =============================================================================
+
+@use '../variables' as *;
+
+.confirm {
+  position: relative;
+  background: rgb(var(--color-surface-card));
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  max-width: 24rem;
+  width: 100%;
+  padding: 1.5rem;
+}
+
+.confirm__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.confirm__icon-wrap {
+  width: 3rem;
+  height: 3rem;
+  border-radius: $radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.confirm__icon-wrap--danger {
+  background: rgba($error-500, 0.1);
+  color: $error-500;
+
+  .dark & {
+    background: rgba($error-500, 0.15);
+  }
+}
+
+.confirm__icon-wrap--warning {
+  background: rgba($warning-500, 0.1);
+  color: $warning-500;
+
+  .dark & {
+    background: rgba($warning-500, 0.15);
+  }
+}
+
+.confirm__icon-wrap--info {
+  background: rgba($info-500, 0.1);
+  color: $info-500;
+
+  .dark & {
+    background: rgba($info-500, 0.15);
+  }
+}
+
+.confirm__title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: rgb(var(--color-text-primary));
+  margin-bottom: 0.5rem;
+}
+
+.confirm__message {
+  font-size: $font-size-sm;
+  color: rgb(var(--color-text-secondary));
+  margin-bottom: 1.5rem;
+}
+
+.confirm__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.confirm__btn {
+  flex: 1;
+}
+
+.confirm__btn--warning {
+  background: $warning-500;
+  color: #fff;
+
+  &:hover { background: $warning-600; }
+  &:active { background: $warning-700; }
+}
+
+// Modal overlay (shared with Modal component)
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba($neutral-900, 0.5);
+
+  .dark & {
+    background: rgba($neutral-900, 0.7);
+  }
+}

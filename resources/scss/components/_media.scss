@@ -1,0 +1,2244 @@
+// =============================================================================
+// Media Components — MediaPicker, MediaManager, ImageUpload, FileUpload, FolderTree
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// =============================================================================
+// MEDIA PICKER
+// =============================================================================
+
+.media-picker {
+  &__label {
+    display: block;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+    margin-bottom: 0.375rem;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__error {
+    margin-top: 0.25rem;
+    font-size: $font-size-xs;
+    color: $error-500;
+  }
+}
+
+// --- Empty / Drop zone ---
+.media-picker__dropzone {
+  border: 2px dashed $neutral-300;
+  border-radius: $radius-lg;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  @include transition-fast(border-color, background-color);
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+
+  &:hover {
+    border-color: $primary-400;
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  &--uploading,
+  &--dragover {
+    border-color: $primary-500;
+    background: $primary-50;
+
+    .dark & {
+      background: rgba($primary-900, 0.2);
+    }
+  }
+
+  &--uploading {
+    border-color: $primary-400;
+    cursor: default;
+  }
+
+  &--error {
+    border-color: $error-500;
+  }
+}
+
+.media-picker__dropzone-icon {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto 0.5rem;
+  color: $neutral-400;
+
+  &--primary {
+    color: $primary-500;
+  }
+}
+
+.media-picker__dropzone-text {
+  font-size: $font-size-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+
+  &--primary {
+    color: $primary-600;
+    font-weight: $font-weight-medium;
+
+    .dark & {
+      color: $primary-400;
+    }
+  }
+}
+
+.media-picker__dropzone-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: $font-size-xs;
+  color: $primary-600;
+  font-weight: $font-weight-medium;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+.media-picker__dropzone-error {
+  margin-top: 0.5rem;
+  font-size: $font-size-xs;
+  color: $error-500;
+}
+
+// --- Single file preview ---
+.media-picker__preview {
+  position: relative;
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+  overflow: hidden;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+
+  &--error {
+    border-color: $error-500;
+  }
+}
+
+.media-picker__image-wrap {
+  position: relative;
+
+  &:hover .media-picker__image-overlay {
+    opacity: 1;
+  }
+}
+
+.media-picker__image {
+  width: 100%;
+  max-height: 12rem;
+  object-fit: cover;
+}
+
+.media-picker__image-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  @include transition-fast(opacity);
+}
+
+.media-picker__overlay-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: $radius-full;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $neutral-700;
+  @include transition-fast(background-color);
+
+  &:hover {
+    background: #fff;
+  }
+
+  &--danger {
+    color: $error-600;
+  }
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+// --- File preview (non-image) ---
+.media-picker__file {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.media-picker__file-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: $radius;
+  background: $neutral-100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .dark & {
+    background: $neutral-800;
+  }
+
+  .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: $neutral-400;
+  }
+}
+
+.media-picker__file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.media-picker__file-name {
+  font-size: $font-size-sm;
+  color: $neutral-700;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.media-picker__file-size {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+}
+
+.media-picker__file-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.media-picker__file-action {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  &:hover {
+    color: $primary-500;
+    background: $primary-50;
+  }
+
+  &--danger:hover {
+    color: $error-500;
+    background: $error-50;
+  }
+}
+
+// --- Multiple files preview ---
+.media-picker__multi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.media-picker__multi-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.media-picker__multi-thumb {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius;
+  background: $neutral-100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  .dark & {
+    background: $neutral-800;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    color: $neutral-400;
+  }
+}
+
+.media-picker__multi-name {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $neutral-700;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.media-picker__multi-remove {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color);
+
+  .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  &:hover {
+    color: $error-500;
+  }
+}
+
+// --- Loading skeleton ---
+.media-picker__skeleton {
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+  padding: 1rem;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.media-picker__skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.media-picker__skeleton-thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: $radius;
+  background: $neutral-200;
+  flex-shrink: 0;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  .dark & {
+    background: $neutral-700;
+  }
+}
+
+.media-picker__skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.media-picker__skeleton-line {
+  height: 0.75rem;
+  border-radius: $radius;
+  background: $neutral-200;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  .dark & {
+    background: $neutral-700;
+  }
+
+  &--short {
+    width: 5rem;
+    height: 0.5rem;
+  }
+
+  &--medium {
+    width: 8rem;
+  }
+}
+
+// --- Fallback ---
+.media-picker__fallback {
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+
+  &--error {
+    border-color: $error-500;
+  }
+}
+
+.media-picker__fallback-text {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+.media-picker__fallback-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.media-picker__fallback-link {
+  font-size: $font-size-xs;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &--primary {
+    color: $primary-600;
+  }
+
+  &--danger {
+    color: $error-600;
+    margin-left: 0.5rem;
+  }
+}
+
+// --- Drawer content ---
+.media-picker__drawer {
+  height: 100%;
+}
+
+
+// =============================================================================
+// MEDIA MANAGER
+// =============================================================================
+
+.media-manager {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+// --- Folder sidebar ---
+.media-manager__sidebar {
+  width: 15rem;
+  flex-shrink: 0;
+  border-right: 1px solid $neutral-200;
+  overflow-y: auto;
+  padding: 0.75rem;
+  @include custom-scrollbar;
+
+  .dark & {
+    border-right-color: $neutral-700;
+  }
+}
+
+// --- Center content ---
+.media-manager__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+// --- Toolbar ---
+.media-manager__toolbar {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid $neutral-200;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.media-manager__search {
+  position: relative;
+  flex: 1;
+  max-width: 16rem;
+}
+
+.media-manager__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+}
+
+.media-manager__search-input {
+  padding-left: 2.5rem;
+}
+
+// --- Type filter ---
+.media-manager__type-select {
+  position: relative;
+}
+
+.media-manager__type-select-chevron {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.875rem;
+  height: 0.875rem;
+  color: $neutral-400;
+  pointer-events: none;
+}
+
+.media-manager__type-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.media-manager__type-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  font-size: $font-size-xs;
+  border-radius: $radius;
+  border: none;
+  background: none;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-400;
+  }
+
+  &:hover {
+    background: $neutral-100;
+
+    .dark & {
+      background: $neutral-700;
+    }
+  }
+
+  &--active {
+    background: $primary-100;
+    color: $primary-700;
+
+    .dark & {
+      background: rgba($primary-900, 0.3);
+      color: $primary-300;
+    }
+
+    &:hover {
+      background: $primary-100;
+
+      .dark & {
+        background: rgba($primary-900, 0.3);
+      }
+    }
+  }
+
+  .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+.media-manager__spacer {
+  flex: 1;
+}
+
+// --- View toggle ---
+.media-manager__view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid $neutral-200;
+  border-radius: $radius;
+  padding: 2px;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.media-manager__view-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $neutral-400;
+  @include transition-fast(color, background-color);
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &--active {
+    background: $neutral-100;
+    color: $neutral-900;
+
+    .dark & {
+      background: $neutral-700;
+      color: #fff;
+    }
+  }
+}
+
+// --- Upload zone ---
+.media-manager__upload-zone {
+  flex-shrink: 0;
+  padding: 1rem;
+  border-bottom: 1px solid $neutral-200;
+  background: $neutral-50;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+    background: rgba($neutral-800, 0.5);
+  }
+}
+
+// --- Files area ---
+.media-manager__files {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  @include custom-scrollbar;
+}
+
+// --- Grid ---
+.media-manager__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @include sm {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @include md {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  &--full {
+    @include lg {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+}
+
+// --- Grid card ---
+.media-manager__card {
+  position: relative;
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+  overflow: hidden;
+  cursor: grab;
+  @include transition-fast(border-color, box-shadow);
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+
+  &:hover {
+    border-color: $neutral-300;
+    box-shadow: $shadow-sm;
+
+    .dark & {
+      border-color: $neutral-600;
+    }
+  }
+
+  &--selected {
+    border-color: $primary-500;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+  }
+
+  &--active {
+    border-color: $primary-400;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.media-manager__card-thumb {
+  aspect-ratio: 1;
+  background: $neutral-100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  .dark & {
+    background: $neutral-800;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.media-manager__card-placeholder {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: $neutral-300;
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.media-manager__card-info {
+  padding: 0.5rem;
+}
+
+.media-manager__card-name {
+  font-size: $font-size-xs;
+  color: $neutral-700;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.media-manager__card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.media-manager__card-size {
+  font-size: 10px;
+  color: $neutral-400;
+}
+
+.media-manager__card-dot {
+  font-size: 10px;
+  color: $neutral-400;
+}
+
+.media-manager__card-folder {
+  font-size: 10px;
+  color: rgba($primary-500, 0.7);
+  @include truncate;
+}
+
+.media-manager__card-check {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: $radius-full;
+  background: $primary-500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .icon {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: #fff;
+  }
+}
+
+// --- List view ---
+.media-manager__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.media-manager__list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: $radius-lg;
+  cursor: grab;
+  @include transition-fast(background-color);
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    background: $neutral-50;
+
+    .dark & {
+      background: rgba($neutral-700, 0.5);
+    }
+  }
+
+  &--selected {
+    background: $primary-50;
+
+    .dark & {
+      background: rgba($primary-900, 0.3);
+    }
+  }
+
+  &--active {
+    background: $neutral-50;
+
+    .dark & {
+      background: rgba($neutral-700, 0.5);
+    }
+  }
+}
+
+.media-manager__list-thumb {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius;
+  background: $neutral-100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  .dark & {
+    background: $neutral-800;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    color: $neutral-400;
+  }
+}
+
+.media-manager__list-name {
+  flex: 1;
+  min-width: 0;
+  font-size: $font-size-sm;
+  color: $neutral-700;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.media-manager__list-folder {
+  font-size: $font-size-xs;
+  color: rgba($primary-500, 0.7);
+  flex-shrink: 0;
+}
+
+.media-manager__list-size,
+.media-manager__list-date {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+// --- Skeleton ---
+.media-manager__skeleton-grid {
+  @extend .media-manager__grid;
+}
+
+.media-manager__skeleton-item {
+  border-radius: $radius-lg;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: $neutral-200;
+
+  .dark & {
+    background: $neutral-700;
+  }
+
+  &--square {
+    aspect-ratio: 1;
+  }
+
+  &--bar {
+    height: 3rem;
+    border-radius: $radius;
+  }
+}
+
+// --- Empty ---
+.media-manager__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.media-manager__empty-icon {
+  width: 3rem;
+  height: 3rem;
+  color: $neutral-300;
+  margin-bottom: 0.75rem;
+
+  .dark & {
+    color: $neutral-600;
+  }
+}
+
+.media-manager__empty-text {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+// --- Pagination ---
+.media-manager__pagination {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.media-manager__pagination-info {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+}
+
+.media-manager__pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.media-manager__pagination-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius;
+  border: none;
+  background: none;
+  font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-400;
+  }
+
+  &:hover {
+    background: $neutral-100;
+
+    .dark & {
+      background: $neutral-700;
+    }
+  }
+
+  &--active {
+    background: $primary-500;
+    color: #fff;
+
+    &:hover {
+      background: $primary-500;
+    }
+  }
+
+  &--disabled {
+    color: $neutral-300;
+    cursor: not-allowed;
+
+    .dark & {
+      color: $neutral-600;
+    }
+
+    &:hover {
+      background: none;
+    }
+  }
+}
+
+.media-manager__pagination-ellipsis {
+  width: 1.5rem;
+  text-align: center;
+  color: $neutral-400;
+  font-size: $font-size-xs;
+  user-select: none;
+}
+
+// --- Selection bar ---
+.media-manager__selection-bar {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid $neutral-200;
+  background: $neutral-50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .dark & {
+    border-top-color: $neutral-700;
+    background: $neutral-800;
+  }
+}
+
+.media-manager__selection-count {
+  font-size: $font-size-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+// --- Info panel ---
+.media-manager__info-panel {
+  width: 20rem;
+  flex-shrink: 0;
+  border-left: 1px solid $neutral-200;
+  overflow-y: auto;
+  @include custom-scrollbar;
+
+  .dark & {
+    border-left-color: $neutral-700;
+  }
+}
+
+.media-manager__info-content {
+  padding: 1rem;
+}
+
+.media-manager__info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.media-manager__info-title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.media-manager__info-close {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color);
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover {
+    color: $neutral-600;
+  }
+}
+
+// --- Info preview ---
+.media-manager__info-preview {
+  margin-bottom: 1rem;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background: $neutral-100;
+
+  .dark & {
+    background: $neutral-800;
+  }
+
+  img {
+    width: 100%;
+  }
+}
+
+.media-manager__info-preview-placeholder {
+  padding: 2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .icon {
+    width: 3rem;
+    height: 3rem;
+    color: $neutral-300;
+
+    .dark & {
+      color: $neutral-600;
+    }
+  }
+}
+
+// --- Info meta ---
+.media-manager__info-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: $font-size-sm;
+}
+
+.media-manager__info-meta-label {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+}
+
+.media-manager__info-meta-value {
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+
+  &--xs {
+    font-size: $font-size-xs;
+  }
+
+  &--break {
+    word-break: break-all;
+  }
+
+  &--muted {
+    color: $neutral-700;
+    font-size: $font-size-xs;
+
+    .dark & {
+      color: $neutral-300;
+    }
+  }
+
+  &--upper {
+    text-transform: uppercase;
+    font-size: $font-size-xs;
+  }
+}
+
+.media-manager__info-meta-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.media-manager__info-meta-col {
+  flex: 1;
+}
+
+.media-manager__info-storage-label {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  .icon {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+}
+
+.media-manager__info-path {
+  font-size: 10px;
+  color: $neutral-400;
+  word-break: break-all;
+  margin-top: 0.125rem;
+}
+
+.media-manager__info-folder-sep {
+  color: $neutral-400;
+  margin: 0 2px;
+}
+
+// --- Image sizes ---
+.media-manager__sizes {
+  margin-top: 1.25rem;
+}
+
+.media-manager__sizes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.media-manager__sizes-title {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+
+  .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+.media-manager__sizes-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.media-manager__sizes-action-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: $radius;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+  color: $neutral-400;
+
+  .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  &:hover {
+    color: $primary-500;
+    background: $primary-50;
+
+    .dark & {
+      background: rgba($primary-900, 0.2);
+    }
+  }
+
+  &--spinning {
+    color: $primary-500;
+    animation: spin 1s linear infinite;
+  }
+
+  &--active {
+    color: $primary-500;
+    background: $primary-50;
+
+    .dark & {
+      background: rgba($primary-900, 0.2);
+    }
+  }
+}
+
+.media-manager__sizes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.media-manager__size-item {
+  border-radius: $radius-lg;
+  border: 1px solid $neutral-200;
+  padding: 0.5rem;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.media-manager__size-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.media-manager__size-name {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.media-manager__size-dims {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.media-manager__size-dim-text {
+  font-size: 10px;
+  color: $neutral-400;
+}
+
+.media-manager__size-delete {
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-300;
+  cursor: pointer;
+  @include transition-fast(color);
+
+  .icon {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  &:hover {
+    color: $error-500;
+  }
+}
+
+.media-manager__size-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.media-manager__size-format-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius;
+  font-size: 10px;
+  text-decoration: none;
+  background: $neutral-100;
+  color: $neutral-600;
+  @include transition-fast(background-color, color);
+
+  .dark & {
+    background: $neutral-700;
+    color: $neutral-300;
+  }
+
+  &:hover {
+    background: $primary-100;
+    color: $primary-600;
+
+    .dark & {
+      background: rgba($primary-900, 0.3);
+      color: $primary-300;
+    }
+  }
+}
+
+.media-manager__size-format-name {
+  text-transform: uppercase;
+  font-weight: $font-weight-medium;
+}
+
+.media-manager__size-format-size {
+  color: $neutral-400;
+}
+
+.media-manager__sizes-empty {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  margin-bottom: 0.75rem;
+}
+
+// --- Add size form ---
+.media-manager__add-size-form {
+  border-radius: $radius-lg;
+  border: 1px solid $primary-200;
+  background: rgba($primary-50, 0.5);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .dark & {
+    border-color: $primary-800;
+    background: rgba($primary-900, 0.1);
+  }
+}
+
+.media-manager__add-size-label {
+  display: block;
+  font-size: 10px;
+  color: $neutral-500;
+  margin-bottom: 0.125rem;
+}
+
+.media-manager__add-size-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.media-manager__add-size-col {
+  flex: 1;
+}
+
+.media-manager__add-size-formats {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.media-manager__add-size-format-btn {
+  padding: 0.25rem 0.5rem;
+  border-radius: $radius;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid $neutral-200;
+  background: #fff;
+  color: $neutral-500;
+  @include transition-fast(background-color, color, border-color);
+
+  .dark & {
+    background: $neutral-800;
+    border-color: $neutral-600;
+  }
+
+  &:hover {
+    border-color: $primary-300;
+  }
+
+  &--active {
+    background: $primary-500;
+    color: #fff;
+    border-color: $primary-500;
+
+    .dark & {
+      background: $primary-500;
+      border-color: $primary-500;
+    }
+  }
+}
+
+.media-manager__add-size-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+// --- Info actions ---
+.media-manager__info-actions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.media-manager__info-delete-btn {
+  color: $error-600;
+  border-color: $error-300;
+
+  &:hover {
+    background: $error-50;
+  }
+}
+
+
+// =============================================================================
+// IMAGE UPLOAD
+// =============================================================================
+
+.image-upload {
+  &__label {
+    display: block;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-700;
+    margin-bottom: 0.375rem;
+
+    .dark & {
+      color: $neutral-200;
+    }
+  }
+
+  &__error {
+    margin-top: 0.25rem;
+    font-size: $font-size-xs;
+    color: $error-500;
+  }
+}
+
+.image-upload__zone {
+  position: relative;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  @include transition-fast(border-color, background-color);
+
+  &--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  &--empty {
+    border: 2px dashed $neutral-300;
+
+    .dark & {
+      border-color: $neutral-600;
+    }
+
+    &:hover {
+      border-color: $neutral-400;
+    }
+  }
+
+  &--dragover {
+    border: 2px dashed $primary-500;
+    background: $primary-50;
+
+    .dark & {
+      background: rgba($primary-900, 0.2);
+    }
+  }
+
+  &--error {
+    border: 2px dashed $error-500;
+  }
+
+  &--filled {
+    border: 1px solid $neutral-200;
+
+    .dark & {
+      border-color: $neutral-700;
+    }
+  }
+}
+
+.image-upload__input {
+  display: none;
+}
+
+.image-upload__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.image-upload__empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: $neutral-400;
+  margin-bottom: 0.5rem;
+}
+
+.image-upload__empty-text {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+.image-upload__empty-hint {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  margin-top: 0.125rem;
+}
+
+.image-upload__preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-upload__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  @include transition-fast(opacity);
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.image-upload__overlay-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: $radius-full;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $neutral-700;
+  @include transition-fast(background-color);
+
+  &:hover {
+    background: #fff;
+  }
+
+  &--danger {
+    color: $error-600;
+  }
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+.image-upload__progress {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+
+  .dark & {
+    background: rgba($neutral-900, 0.8);
+  }
+}
+
+.image-upload__progress-spinner {
+  width: 2rem;
+  height: 2rem;
+  color: $primary-500;
+  margin-bottom: 0.5rem;
+}
+
+.image-upload__progress-bar {
+  width: 75%;
+  height: 0.375rem;
+  background: $neutral-200;
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  .dark & {
+    background: $neutral-700;
+  }
+}
+
+.image-upload__progress-fill {
+  height: 100%;
+  background: $primary-500;
+  border-radius: $radius-full;
+  @include transition-slow(width);
+}
+
+.image-upload__progress-text {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+  margin-top: 0.25rem;
+}
+
+
+// =============================================================================
+// FILE UPLOAD
+// =============================================================================
+
+.file-upload__dropzone {
+  position: relative;
+  border: 2px dashed $neutral-300;
+  border-radius: $radius-lg;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  @include transition-fast(border-color, background-color);
+
+  .dark & {
+    border-color: $neutral-600;
+  }
+
+  &:hover {
+    border-color: $neutral-400;
+
+    .dark & {
+      border-color: $neutral-500;
+    }
+  }
+
+  &--dragover {
+    border-color: $primary-500;
+    background: $primary-50;
+
+    .dark & {
+      background: rgba($primary-900, 0.2);
+    }
+  }
+}
+
+.file-upload__input {
+  display: none;
+}
+
+.file-upload__icon {
+  width: 2rem;
+  height: 2rem;
+  color: $neutral-400;
+  margin: 0 auto 0.5rem;
+}
+
+.file-upload__text {
+  font-size: $font-size-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+.file-upload__text-accent {
+  color: $primary-600;
+  font-weight: $font-weight-medium;
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+.file-upload__hint {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  margin-top: 0.25rem;
+}
+
+// --- Upload queue ---
+.file-upload__queue {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-upload__queue-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgb(var(--color-surface-card));
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.file-upload__queue-status {
+  flex-shrink: 0;
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &--uploading .icon {
+    color: $primary-500;
+  }
+
+  &--complete .icon {
+    color: $success-500;
+  }
+
+  &--error .icon {
+    color: $error-500;
+  }
+
+  &--pending .icon {
+    color: $neutral-400;
+  }
+}
+
+.file-upload__queue-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-upload__queue-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-upload__queue-name {
+  font-size: $font-size-sm;
+  color: $neutral-700;
+  @include truncate;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.file-upload__queue-size {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  flex-shrink: 0;
+}
+
+.file-upload__queue-progress {
+  margin-top: 0.25rem;
+  height: 0.25rem;
+  background: $neutral-200;
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  .dark & {
+    background: $neutral-700;
+  }
+}
+
+.file-upload__queue-progress-fill {
+  height: 100%;
+  background: $primary-500;
+  border-radius: $radius-full;
+  @include transition-slow(width);
+}
+
+.file-upload__queue-error {
+  font-size: $font-size-xs;
+  color: $error-500;
+  margin-top: 0.125rem;
+}
+
+.file-upload__queue-remove {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color);
+
+  .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  &:hover {
+    color: $neutral-600;
+  }
+}
+
+.file-upload__clear-link {
+  font-size: $font-size-xs;
+  color: $primary-600;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+
+// =============================================================================
+// FOLDER TREE
+// =============================================================================
+
+.folder-tree {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+
+  &__title {
+    font-size: 10px;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $neutral-400;
+  }
+
+  &__add-btn {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $neutral-400;
+    border-radius: $radius;
+    cursor: pointer;
+    @include transition-fast(color);
+
+    .icon {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+
+    &:hover {
+      color: $primary-500;
+    }
+  }
+}
+
+// --- Folder item (shared between root and recursive nodes) ---
+.folder-tree__item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: $radius;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  @include transition-fast(color, background-color, box-shadow);
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-300;
+  }
+
+  &:hover {
+    background: $neutral-50;
+
+    .dark & {
+      background: rgba($neutral-700, 0.5);
+    }
+  }
+
+  &--root {
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+  }
+
+  &--selected {
+    background: $primary-50;
+    color: $primary-700;
+
+    .dark & {
+      background: rgba($primary-900, 0.3);
+      color: $primary-300;
+    }
+  }
+
+  &--dragover {
+    background: $primary-100;
+    box-shadow: inset 0 0 0 2px $primary-400;
+
+    .dark & {
+      background: rgba($primary-900, 0.5);
+    }
+  }
+}
+
+.folder-tree__item-chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $neutral-400;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+
+  .icon {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+}
+
+.folder-tree__item-spacer {
+  width: 1rem;
+  flex-shrink: 0;
+}
+
+.folder-tree__item-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: $neutral-400;
+
+  .folder-tree__item--selected & {
+    color: $primary-500;
+  }
+}
+
+.folder-tree__item-name {
+  @include truncate;
+  flex: 1;
+}
+
+.folder-tree__item-count {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: $neutral-400;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+// --- Inline input (create / rename) ---
+.folder-tree__inline-input {
+  flex: 1;
+  padding: 0 0.375rem;
+  font-size: $font-size-sm;
+  border: 1px solid $primary-500;
+  border-radius: $radius;
+  background: #fff;
+  min-width: 0;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px $primary-500;
+  }
+
+  .dark & {
+    background: $neutral-900;
+  }
+}
+
+.folder-tree__inline-create {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.125rem;
+}
+
+.folder-tree__inline-create-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: $primary-400;
+}
+
+// --- Loading ---
+.folder-tree__loading {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.folder-tree__loading-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+}
+
+.folder-tree__loading-icon {
+  width: 1rem;
+  height: 1rem;
+  border-radius: $radius;
+  background: $neutral-200;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  .dark & {
+    background: $neutral-700;
+  }
+}
+
+.folder-tree__loading-text {
+  height: 0.75rem;
+  border-radius: $radius;
+  background: $neutral-200;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  .dark & {
+    background: $neutral-700;
+  }
+}
+
+// --- Empty ---
+.folder-tree__empty {
+  margin-top: 0.5rem;
+  padding: 0 0.5rem;
+  font-size: $font-size-xs;
+  color: $neutral-400;
+}
+
+// --- Context menu ---
+.folder-tree__ctx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-dropdown;
+}
+
+.folder-tree__ctx-menu {
+  position: absolute;
+  background: rgb(var(--color-surface-card));
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  padding: 0.25rem 0;
+  min-width: 10rem;
+  z-index: $z-dropdown;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.folder-tree__ctx-item {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: $font-size-sm;
+  text-align: left;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: $neutral-700;
+  @include transition-fast(background-color);
+
+  .dark & {
+    color: $neutral-300;
+  }
+
+  .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  &:hover {
+    background: $neutral-50;
+
+    .dark & {
+      background: $neutral-700;
+    }
+  }
+
+  &--danger {
+    color: $error-600;
+
+    &:hover {
+      background: $error-50;
+
+      .dark & {
+        background: rgba($error-900, 0.3);
+      }
+    }
+  }
+}
+
+.folder-tree__ctx-divider {
+  border-top: 1px solid $neutral-200;
+  margin: 0.25rem 0;
+
+  .dark & {
+    border-top-color: $neutral-700;
+  }
+}
+
+// =============================================================================
+// Keyframes
+// =============================================================================
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

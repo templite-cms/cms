@@ -1,0 +1,340 @@
+// =============================================================================
+// Page Types Index — Page-specific styles
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.page-types-index {
+  padding: 1.5rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.page-types-index__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.page-types-index__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Filters bar
+// -----------------------------------------------------------------------------
+
+.page-types-index__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+// -----------------------------------------------------------------------------
+// Search
+// -----------------------------------------------------------------------------
+
+.page-types-index__search {
+  position: relative;
+  width: 16rem;
+}
+
+.page-types-index__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: $neutral-400;
+}
+
+.page-types-index__search-input {
+  padding-left: 2.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Table cell helpers
+// -----------------------------------------------------------------------------
+
+.page-types-index__slug {
+  font-family: $font-mono;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Empty state
+// -----------------------------------------------------------------------------
+
+.page-types-index__empty {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.page-types-index__empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: $neutral-300;
+  margin: 0 auto 0.5rem;
+}
+
+.page-types-index__empty-text {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Skeleton
+// -----------------------------------------------------------------------------
+
+.page-types-index__skeleton {
+  height: 2.5rem;
+  background: $neutral-200;
+  border-radius: $radius;
+  animation: page-types-pulse 1.5s ease-in-out infinite;
+
+  .dark & {
+    background: $neutral-700;
+  }
+}
+
+@keyframes page-types-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// -----------------------------------------------------------------------------
+// Attributes section (in drawer)
+// -----------------------------------------------------------------------------
+
+.page-types-index__attrs-section {
+  border-top: 1px solid $neutral-200;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.page-types-index__attrs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.page-types-index__attrs-title {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.page-types-index__attrs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.page-types-index__attr-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+
+  .dark & {
+    background: $neutral-800;
+    border-color: $neutral-700;
+  }
+
+  &:hover .page-types-index__attr-actions {
+    opacity: 1;
+  }
+}
+
+.page-types-index__attr-grip {
+  color: $neutral-400;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.page-types-index__attr-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.page-types-index__attr-key {
+  font-family: $font-mono;
+  font-size: 10px;
+  color: $neutral-500;
+  flex-shrink: 0;
+}
+
+.page-types-index__attr-type {
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.page-types-index__attr-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.page-types-index__attr-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $neutral-400;
+  transition: color 0.15s, background-color 0.15s;
+
+  &--edit:hover {
+    color: $primary-500;
+    background: $primary-50;
+  }
+
+  &--delete:hover {
+    color: $error-500;
+    background: $error-50;
+  }
+}
+
+.page-types-index__attr-add,
+.page-types-index__attr-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.page-types-index__attr-select {
+  max-width: 8rem;
+}
+
+.page-types-index__attrs-empty {
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Icon picker (in drawer)
+// -----------------------------------------------------------------------------
+
+.page-types-index__icon-picker {
+  margin-bottom: 1rem;
+}
+
+.page-types-index__icon-label {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  margin-bottom: 0.5rem;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.page-types-index__icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.page-types-index__icon-option {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  color: $neutral-500;
+  @include transition-fast(color, background-color, border-color);
+
+  .dark & {
+    color: $neutral-400;
+  }
+
+  &:hover {
+    color: $neutral-700;
+    background: $neutral-100;
+
+    .dark & {
+      color: $neutral-200;
+      background: $neutral-700;
+    }
+  }
+
+  &--selected {
+    color: $primary-600;
+    background: $primary-50;
+    border-color: $primary-300;
+
+    .dark & {
+      color: $primary-400;
+      background: rgba($primary-900, 0.3);
+      border-color: $primary-700;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Spinner
+// -----------------------------------------------------------------------------
+
+.page-types-index__spin {
+  animation: page-types-spin 1s linear infinite;
+}
+
+@keyframes page-types-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

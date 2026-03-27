@@ -1,0 +1,200 @@
+// =============================================================================
+// Tabs
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// Base tabs container
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid rgb(var(--color-border-light));
+  overflow-x: auto;
+  @include custom-scrollbar;
+}
+
+// Base tab item (underline style)
+.tabs__item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-sm;
+  color: rgb(var(--color-text-secondary));
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-decoration: none;
+  @include transition-fast(color, border-color);
+
+  &:hover {
+    color: rgb(var(--color-text-primary));
+  }
+}
+
+.tabs__item--active {
+  color: $primary-600;
+  border-bottom-color: $primary-500;
+
+  .dark & {
+    color: $primary-400;
+    border-bottom-color: $primary-400;
+  }
+}
+
+.tabs__item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+// ---------------------------------------------------------------------------
+// Filter variant (pill buttons — for block types, categories, etc.)
+// ---------------------------------------------------------------------------
+
+.tabs--filter {
+  border-bottom: none;
+  gap: 0.375rem;
+  flex-wrap: nowrap;
+  padding: 0.25rem 0;
+}
+
+.tabs--filter .tabs__item {
+  padding: 0.375rem 0.75rem;
+  border-radius: $radius;
+  border: 1px solid $neutral-200;
+  background: #fff;
+  margin-bottom: 0;
+  border-bottom: none;
+  color: $neutral-600;
+
+  &:hover {
+    color: $neutral-800;
+    background: $neutral-50;
+    border-color: $neutral-300;
+  }
+
+  .dark & {
+    background: $neutral-800;
+    border-color: $neutral-700;
+    color: $neutral-400;
+
+    &:hover {
+      color: $neutral-200;
+      background: $neutral-700;
+    }
+  }
+}
+
+.tabs--filter .tabs__item--active {
+  color: $primary-600;
+  background: rgba($primary-500, 0.08);
+  border-color: $primary-300;
+  box-shadow: 0 0 0 1px rgba($primary-500, 0.1);
+
+  &:hover {
+    background: rgba($primary-500, 0.12);
+  }
+
+  .dark & {
+    color: $primary-400;
+    background: rgba($primary-500, 0.15);
+    border-color: rgba($primary-500, 0.3);
+  }
+}
+
+// Tab item sub-elements
+.tabs__item-label {
+  @include truncate;
+  flex: 1;
+}
+
+.tabs__item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+// ---------------------------------------------------------------------------
+// Size variants
+// ---------------------------------------------------------------------------
+
+.tabs--sm {
+  gap: 0.25rem;
+
+  .tabs__item {
+    padding: 0.25rem 0.625rem;
+    font-size: $font-size-xs;
+  }
+}
+
+.tabs--sm.tabs--filter .tabs__item {
+  padding: 0.25rem 0.625rem;
+  font-size: $font-size-xs;
+}
+
+.tabs--lg .tabs__item {
+  padding: 0.625rem 1.25rem;
+  font-size: $font-size-base;
+}
+
+// ---------------------------------------------------------------------------
+// Pills variant (segmented control)
+// ---------------------------------------------------------------------------
+
+.tabs--pills {
+  border-bottom: none;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background-color: rgb(var(--color-surface-muted));
+  border-radius: $radius-lg;
+
+  .tabs__item {
+    border-bottom: none;
+    border-radius: $radius;
+    margin-bottom: 0;
+    padding: 0.375rem 0.75rem;
+
+    &:hover {
+      background-color: rgb(var(--color-surface-hover));
+    }
+  }
+
+  .tabs__item--active {
+    background-color: rgb(var(--color-surface-card));
+    box-shadow: $shadow-sm;
+    color: rgb(var(--color-text-primary));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Vertical tabs
+// ---------------------------------------------------------------------------
+
+.tabs--vertical {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: 1px solid rgb(var(--color-border-light));
+
+  .tabs__item {
+    border-bottom: none;
+    border-right: 2px solid transparent;
+    margin-bottom: 0;
+    margin-right: -1px;
+  }
+
+  .tabs__item--active {
+    border-right-color: $primary-500;
+
+    .dark & {
+      border-right-color: $primary-400;
+    }
+  }
+}

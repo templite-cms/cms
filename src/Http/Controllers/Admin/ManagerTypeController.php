@@ -3,47 +3,33 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\ManagerType;
 
 class ManagerTypeController extends Controller
 {
-    /**
-     * Список типов менеджеров.
-     * Экран: ManagerTypes/Index
-     */
-    public function index(): Response
+    public function index()
     {
-        return Inertia::render('ManagerTypes/Index', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/managers-index.js', [
             'managerTypes' => ManagerType::withCount('managers')->orderBy('name')->get(),
-        ]);
+        ], ['title' => 'Типы менеджеров']);
     }
 
-    /**
-     * Редактирование типа менеджера.
-     * Экран: ManagerTypes/Edit
-     */
-    public function edit(int $id): Response
+    public function edit(int $id)
     {
         $type = ManagerType::withCount('managers')->findOrFail($id);
 
-        return Inertia::render('ManagerTypes/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/managers-index.js', [
             'managerType' => $type,
             'availablePermissions' => ManagerType::getAvailablePermissions(),
-        ]);
+        ], ['title' => $type->name]);
     }
 
-    /**
-     * Создание нового типа менеджера.
-     * Экран: ManagerTypes/Edit (пустая форма)
-     */
-    public function create(): Response
+    public function create()
     {
-        return Inertia::render('ManagerTypes/Edit', [
+        return CmsResponse::page('packages/templite/cms/resources/js/entries/managers-index.js', [
             'managerType' => null,
             'availablePermissions' => ManagerType::getAvailablePermissions(),
-        ]);
+        ], ['title' => 'Новый тип менеджера']);
     }
-
 }

@@ -361,6 +361,48 @@ class BlockRenderer implements BlockRendererInterface
     }
 
     /**
+     * Parse Blade content for <x-cms::slug> component references.
+     */
+    public function parseComponentReferences(string $content): array
+    {
+        if (preg_match_all('/<x-cms::([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)[\s\/>]/i', $content, $matches)) {
+            return $matches[1];
+        }
+
+        return [];
+    }
+
+    /**
+     * Collect compiled CSS and JS for components referenced in Blade content.
+     *
+     * @return array{css: string, js: string}
+     */
+    public function collectComponentAssets(string ...$bladeContents): array
+    {
+        $slugs = [];
+        foreach ($bladeContents as $content) {
+            $slugs = array_merge($slugs, $this->parseComponentReferences($content));
+        }
+        $slugs = array_unique($slugs);
+
+        $css = '';
+        $js = '';
+
+        foreach ($slugs as $slug) {
+            $compCss = $this->compileComponentStyles($slug);
+            if ($compCss) {
+                $css .= "/* Component: {$slug} */\n{$compCss}\n";
+            }
+            $compJs = $this->getComponentScript($slug);
+            if ($compJs && trim($compJs) !== '') {
+                $js .= "/* Component: {$slug} */\n(function() {\n{$compJs}\n})();\n";
+            }
+        }
+
+        return ['css' => $css, 'js' => $js];
+    }
+
+    /**
      * Получить SCSS-компилятор (lazy init).
      */
     protected function getScssCompiler(): ScssCompiler

@@ -1,0 +1,179 @@
+// =============================================================================
+// Select — Custom dropdown select
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.select {
+  position: relative;
+}
+
+.select__trigger {
+  width: 100%;
+  border-radius: $radius;
+  border: 1px solid $neutral-300;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  color: $neutral-900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: left;
+  @include transition-fast(border-color, box-shadow);
+
+  &:disabled {
+    background: $neutral-100;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background: $neutral-900;
+    color: $neutral-50;
+  }
+}
+
+.select__trigger--open {
+  border-color: $primary-500;
+  box-shadow: 0 0 0 2px rgba($primary-500, 0.2);
+}
+
+.select__placeholder {
+  color: $neutral-400;
+}
+
+.select__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: $z-dropdown;
+  background: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius;
+  box-shadow: $shadow-lg;
+  max-height: 15rem;
+  overflow-y: auto;
+  @include custom-scrollbar;
+
+  .dark & {
+    background: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.select__search {
+  padding: 0.5rem;
+  border-bottom: 1px solid $neutral-200;
+
+  .dark & {
+    border-bottom-color: $neutral-700;
+  }
+}
+
+.select__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: $font-size-sm;
+  color: $neutral-700;
+  cursor: pointer;
+  @include transition-fast(background-color, color);
+
+  &:hover {
+    background: $neutral-50;
+    color: $neutral-900;
+  }
+
+  .dark & {
+    color: $neutral-300;
+
+    &:hover {
+      background: $neutral-700;
+      color: $neutral-50;
+    }
+  }
+}
+
+.select__option--selected {
+  background: rgba($primary-500, 0.08);
+  color: $primary-600;
+
+  .dark & {
+    background: rgba($primary-500, 0.15);
+    color: $primary-400;
+  }
+}
+
+.select__option--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select__empty {
+  padding: 1rem;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-400;
+}
+
+.select__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.select__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: $font-size-xs;
+  background: $primary-100;
+  color: $primary-700;
+  border-radius: $radius-sm;
+
+  .dark & {
+    background: rgba($primary-500, 0.2);
+    color: $primary-300;
+  }
+}
+
+.select__tag-remove {
+  cursor: pointer;
+  opacity: 0.6;
+  background: none;
+  border: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.select__trigger-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  color: $neutral-400;
+}
+
+.select__chevron--open {
+  transform: rotate(180deg);
+}
