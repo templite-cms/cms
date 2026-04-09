@@ -1,0 +1,134 @@
+<?php
+
+/**
+ * Действие (Action) — модуль бизнес-логики, привязываемый к блокам.
+ *
+ * Действие получает параметры и контекст, выполняет логику
+ * (запросы к БД, обработку данных) и возвращает массив данных,
+ * которые становятся доступны в Blade-шаблоне блока.
+ *
+ * Класс ОБЯЗАН реализовать интерфейс BlockActionInterface
+ * с тремя методами: params(), returns(), handle().
+ */
+
+namespace App\Actions;
+
+use Templite\Cms\Contracts\ActionContext;
+use Templite\Cms\Contracts\BlockActionInterface;
+use Templite\Cms\Models\Page;
+
+class MyAction implements BlockActionInterface
+{
+    /**
+     * Входные параметры действия.
+     *
+     * Определяют, какие настройки появятся в админке
+     * при привязке действия к блоку.
+     *
+     * Доступные типы полей:
+     *   - 'text'     — текстовое поле
+     *   - 'number'   — числовое поле
+     *   - 'select'   — выпадающий список (options — массив или имя источника)
+     *   - 'checkbox'  — чекбокс (true/false)
+     *   - 'textarea' — многострочное текстовое поле
+     *
+     * Каждый параметр — массив с ключами:
+     *   'type'     — тип поля (обязательный)
+     *   'label'    — название для отображения в админке
+     *   'default'  — значение по умолчанию
+     *   'required' — обязательность (true/false)
+     *   'options'  — варианты для select (массив или строка-источник: 'page_types', 'languages')
+     *
+     * @return array<string, array>
+     */
+    public function params(): array
+    {
+        return [
+            // Пример: выбор типа страницы
+            // 'page_type' => [
+            //     'type' => 'select',
+            //     'label' => 'Тип страницы',
+            //     'options' => 'page_types',
+            //     'required' => true,
+            // ],
+
+            // Пример: количество элементов
+            // 'limit' => [
+            //     'type' => 'number',
+            //     'label' => 'Количество',
+            //     'default' => 10,
+            // ],
+        ];
+    }
+
+    /**
+     * Описание возвращаемых данных.
+     *
+     * Используется для:
+     *   — подсказок переменных в редакторе кода блока
+     *   — документации в MCP-протоколе
+     *   — автодополнения в CodeMirror
+     *
+     * Каждый ключ — имя переменной, доступной в шаблоне блока.
+     *
+     * @return array<string, array{type: string, description: string}>
+     */
+    public function returns(): array
+    {
+        return [
+            // Пример:
+            // 'items' => [
+            //     'type' => 'array',
+            //     'description' => 'Список элементов',
+            // ],
+            // 'total' => [
+            //     'type' => 'int',
+            //     'description' => 'Общее количество',
+            // ],
+        ];
+    }
+
+    /**
+     * Основная логика действия.
+     *
+     * @param  array         $params   Параметры из params(), настроенные при привязке к блоку
+     * @param  ActionContext  $context  Контекст выполнения:
+     *                                   $context->page     — текущая страница (Page)
+     *                                   $context->request   — HTTP-запрос (для query-параметров, пагинации)
+     *                                   $context->global    — глобальные поля сайта (ассоц. массив key => value)
+     *                                   $context->blockData — данные текущего блока (значения полей)
+     *
+     * @return array Данные, доступные в Blade-шаблоне блока.
+     *               Например: return ['items' => $items] → в шаблоне: $actions['my-action']['items']
+     */
+    /**
+     * CSRF-проверка при HTTP-вызове (/action/{slug}).
+     *
+     * true  — POST-запросы требуют _token (формы на своём сайте)
+     * false — без CSRF (внешние вызовы, webhook, fetch с другого домена)
+     *
+     * При отключении действует throttle + honeypot.
+     */
+    public function csrfEnabled(): bool
+    {
+        return true;
+    }
+
+    public function handle(array $params, ActionContext $context): array
+    {
+        // Получение параметров с дефолтами
+        // $limit = $params['limit'] ?? 10;
+
+        // Запрос к БД через Eloquent
+        // $items = Page::where('is_published', true)
+        //     ->orderBy('created_at', 'desc')
+        //     ->limit($limit)
+        //     ->get();
+
+        // Использование контекста
+        // $currentPage = $context->page;
+        // $locale = $context->global['locale'] ?? 'ru';
+
+        return [];
+    }
+}
