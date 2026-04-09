@@ -139,6 +139,7 @@ class CmsServiceProvider extends ServiceProvider
                 Console\Commands\CleanupExpired2faDevicesCommand::class,
                 Console\Commands\CleanupScheduleHistoryCommand::class,
                 Console\Commands\RunActionCommand::class,
+                Console\Commands\ResetManagerPasswordCommand::class,
             ]);
         }
 

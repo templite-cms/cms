@@ -69,6 +69,8 @@ class ComponentController extends Controller
                     'type' => $attr->type,
                     'page_type_name' => $attr->pageType->name ?? 'Без типа',
                 ]),
+            'componentDefinitions' => Component::orderBy('name')
+                ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ], ['title' => $component->name]);
     }
@@ -93,6 +95,8 @@ class ComponentController extends Controller
                     'type' => $attr->type,
                     'page_type_name' => $attr->pageType->name ?? 'Без типа',
                 ]),
+            'componentDefinitions' => Component::orderBy('name')
+                ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),
         ], ['title' => 'Новый компонент']);
     }
