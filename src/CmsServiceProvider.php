@@ -30,6 +30,9 @@ class CmsServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // 0. Глобальные хелперы шаблонов (cms_file, cms_file_url)
+        require_once __DIR__ . '/Helpers/functions.php';
+
         // 1. Конфигурация
         $this->mergeConfigFrom(__DIR__ . '/../config/cms.php', 'cms');
 

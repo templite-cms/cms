@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Templite\Cms\Concerns\HasExportable;
 use Templite\Cms\Contracts\Exportable;
 use Templite\Cms\Enums\PageBlockStatus;
+use Templite\Cms\Services\BlockDataResolver;
 use Templite\Cms\Services\ImportExport\ImportContext;
 use Templite\Cms\Services\ImportExport\MediaFieldScanner;
 use Templite\Cms\Traits\HasAttributes;
@@ -207,6 +208,42 @@ class Page extends Model implements Exportable
     public function getFullUrlAttribute(): string
     {
         return '/' . ltrim($this->url, '/');
+    }
+
+    /**
+     * template_data с резолвом полей шаблона в объекты (img → File, page → Page и т.д.).
+     *
+     * Сырое template_data хранит только ID. Этот аксессор подставляет
+     * модели, чтобы значения можно было выводить в Blade напрямую,
+     * например передать обложку в <x-cms::image>:
+     *   <x-cms::image :file="$project->resolved_template_data['cover']" />
+     *
+     * Резолвится один уровень: вложенные page-поля становятся Page-моделями,
+     * но их собственный template_data не резолвится (защита от рекурсии).
+     *
+     * Внимание: при итерации по множеству страниц возможен N+1 —
+     * заранее грузите связь templatePage.fields.children.
+     */
+    public function getResolvedTemplateDataAttribute(): array
+    {
+        if ($this->cachedResolvedTemplateData !== null) {
+            return $this->cachedResolvedTemplateData;
+        }
+
+        $data = $this->template_data;
+        if (!is_array($data) || empty($data)) {
+            return $this->cachedResolvedTemplateData = [];
+        }
+
+        $template = $this->templatePage;
+        if (!$template) {
+            return $this->cachedResolvedTemplateData = $data;
+        }
+
+        $fields = $template->fields()->with('children')->get();
+
+        return $this->cachedResolvedTemplateData = app(BlockDataResolver::class)
+            ->resolveFieldData($fields, $data);
     }
 
     public function isCitySource(): bool
@@ -462,6 +499,9 @@ class Page extends Model implements Exportable
 
     /** @var int[]|null Кэш собранных file ID */
     protected ?array $cachedMediaFileIds = null;
+
+    /** @var array|null Кэш резолвнутого template_data */
+    protected ?array $cachedResolvedTemplateData = null;
 
     /**
      * Получить поля блока с кэшированием для текущего запроса.

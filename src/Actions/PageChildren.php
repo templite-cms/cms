@@ -39,7 +39,7 @@ class PageChildren implements BlockActionInterface
         $depth = $params['depth'] ?? 1;
 
         $query = Page::where('parent_id', $parentId)
-            ->where('is_published', true)
+            ->published()
             ->orderBy($orderBy);
 
         if ($limit > 0) {
@@ -67,7 +67,7 @@ class PageChildren implements BlockActionInterface
         foreach ($pages as $page) {
             $page->setRelation('children',
                 $this->loadRecursive(
-                    $page->children()->where('is_published', true)->orderBy($orderBy)->get(),
+                    $page->children()->published()->orderBy($orderBy)->get(),
                     $remainingDepth - 1,
                     $orderBy
                 )

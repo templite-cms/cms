@@ -45,7 +45,7 @@ class FilteredPages implements BlockActionInterface
         $orderDir = $params['order_dir'] ?? 'desc';
 
         $query = Page::with(['pageType', 'attributeValues'])
-            ->where('is_published', true);
+            ->published();
 
         // Фильтр по типу страницы
         if (!empty($params['page_type_id'])) {

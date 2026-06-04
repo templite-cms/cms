@@ -55,7 +55,7 @@ class SearchResults implements BlockActionInterface
         $searchIn = $params['search_in'] ?? ['title', 'content'];
         $searchTerm = '%' . $searchQuery . '%';
 
-        $query = Page::where('is_published', true);
+        $query = Page::published();
 
         // Фильтр по типам страниц
         if (!empty($params['page_type_ids'])) {

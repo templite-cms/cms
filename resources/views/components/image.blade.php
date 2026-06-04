@@ -1,8 +1,13 @@
 {{-- Компонент: <x-cms::image>
      Автоматический <picture> с AVIF -> WebP -> Original fallback.
-     Параметры: file (File model), size (string|null), class (string), loading (lazy|eager) --}}
+     Принимает file (модель File ЛИБО id файла) или id (id файла).
+     Это позволяет выводить и блочные img-поля (модель File),
+     и глобальные/шаблонные img-поля (хранят id).
+     Параметры: file, id, size (string|null), class (string), loading (lazy|eager) --}}
 
-@props(['file', 'size' => null, 'class' => '', 'loading' => 'lazy'])
+@props(['file' => null, 'id' => null, 'size' => null, 'class' => '', 'loading' => 'lazy'])
+
+@php($file = $file instanceof \Templite\Cms\Models\File ? $file : cms_file($id ?? $file))
 
 @if($file)
 <picture>

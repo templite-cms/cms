@@ -41,7 +41,7 @@ class RelatedPages implements BlockActionInterface
         // 1. Из связей page_to_page
         if ($useRelations && $context->page->id) {
             $pages = $context->page->relatedPages()
-                ->where('is_published', true)
+                ->published()
                 ->limit($limit)
                 ->get();
         }
@@ -51,7 +51,7 @@ class RelatedPages implements BlockActionInterface
             $existing = $pages->pluck('id')->push($context->page->id);
 
             $additional = Page::where('type_id', $context->page->type_id)
-                ->where('is_published', true)
+                ->published()
                 ->whereNotIn('id', $existing)
                 ->inRandomOrder()
                 ->limit($limit - $pages->count())

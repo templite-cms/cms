@@ -34,7 +34,7 @@ return [
     'default_image_quality' => 85,
 
     // Максимальный размер загрузки (MB)
-    'max_upload_size' => 20,
+    'max_upload_size' => env('CMS_MAX_UPLOAD_SIZE', 50),
 
     // Санитизация SVG при загрузке (удаление скриптов, event-handler'ов)
     'sanitize_svg' => env('CMS_SANITIZE_SVG', true),

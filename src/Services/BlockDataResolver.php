@@ -85,8 +85,19 @@ class BlockDataResolver
      */
     public function resolveBlockData(Block $block, array $data): array
     {
-        $fields = $block->fields ?? collect();
+        return $this->resolveFieldData($block->fields ?? collect(), $data);
+    }
 
+    /**
+     * Резолвить произвольный набор данных по коллекции определений полей.
+     *
+     * Используется для блоков, а также для template_data страницы
+     * (поля шаблона — те же BlockField через morphMany).
+     *
+     * @param Collection $fields Корневые определения полей с загруженными children.
+     */
+    public function resolveFieldData(Collection $fields, array $data): array
+    {
         // Собираем ID
         $fileIds = [];
         $pageIds = [];

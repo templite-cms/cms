@@ -215,10 +215,12 @@ class FileManagerController extends Controller
      */
     public function upload(Request $request): JsonResponse
     {
+        $maxKb = (int) config('cms.max_upload_size', 50) * 1024;
+
         $request->validate([
             'path' => 'nullable|string',
             'files' => 'required|array|min:1',
-            'files.*' => 'required|file|max:10240', // 10 MB
+            'files.*' => 'required|file|max:' . $maxKb,
             'paths' => 'nullable|array',
             'paths.*' => 'nullable|string|max:500',
         ]);

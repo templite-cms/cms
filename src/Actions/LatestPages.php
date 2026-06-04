@@ -38,7 +38,7 @@ class LatestPages implements BlockActionInterface
         $orderBy = $params['order_by'] ?? 'created_at';
 
         $query = Page::with(['pageType', 'attributeValues'])
-            ->where('is_published', true);
+            ->published();
 
         // Фильтр по типу страницы
         if (!empty($params['page_type_id'])) {
