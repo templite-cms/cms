@@ -170,10 +170,22 @@ class ActionRegistry implements RegistryInterface
             return null;
         }
 
+        $declaredBefore = get_declared_classes();
         $class = require $path;
 
+        // Формат 1: файл возвращает экземпляр (return new class implements ... {})
         if ($class instanceof BlockActionInterface) {
             return $class;
+        }
+
+        // Формат 2: файл объявляет именованный класс (как в stubs/action.stub:
+        // namespace App\Actions; class MyAction implements BlockActionInterface {}).
+        // require такого файла возвращает int(1), поэтому ищем класс,
+        // объявленный этим файлом, и инстанцируем его через контейнер.
+        foreach (array_diff(get_declared_classes(), $declaredBefore) as $declared) {
+            if (is_subclass_of($declared, BlockActionInterface::class)) {
+                return app($declared);
+            }
         }
 
         return null;

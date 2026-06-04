@@ -183,6 +183,20 @@ class BlockController extends Controller
         }
         $fields = $this->blockDataResolver->resolveBlockData($block, $rawData);
 
+        // Выполняем привязанные actions, чтобы $actions был доступен в превью
+        // (как на реальной странице). Контекст-страница — реальная страница
+        // с этим блоком, иначе пустой Page. Ошибки не ломают превью.
+        $previewPage = \Templite\Cms\Models\Page::whereHas(
+            'pageBlocks', fn ($q) => $q->where('block_id', $block->id)
+        )->first() ?? new \Templite\Cms\Models\Page();
+
+        try {
+            $actions = app(\Templite\Cms\Services\ActionRunner::class)
+                ->run($block, $fields, $previewPage, $request, $global, []);
+        } catch (\Throwable $e) {
+            $actions = [];
+        }
+
         // Template: inline или с диска
         if ($inlineTemplate !== null) {
             try {
@@ -191,7 +205,7 @@ class BlockController extends Controller
 
                 $html = \Illuminate\Support\Facades\Blade::render($inlineTemplate, [
                     'fields'  => \Templite\Cms\Support\FieldsBag::wrap($fields),
-                    'actions' => [],
+                    'actions' => $actions,
                     'page'    => null,
                     'global'  => $global,
                     'block'   => $block,
@@ -213,7 +227,7 @@ class BlockController extends Controller
             $templateFile = $path . '/template.blade.php';
             if (file_exists($templateFile)) {
                 try {
-                    $blockHtml = $this->blockRenderer->render($block, $fields, [], null, $global);
+                    $blockHtml = $this->blockRenderer->render($block, $fields, $actions, null, $global);
                 } catch (\Throwable $e) {
                     $blockHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
                         . '<strong>Template Error:</strong><br>'
