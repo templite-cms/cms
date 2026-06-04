@@ -104,6 +104,10 @@ class CmsServiceProvider extends ServiceProvider
         // 3.2. Scan component registry (app, storage, vendor)
         app(ComponentRegistry::class)->scan();
 
+        // 3.3. Scan action registry (app, storage) — иначе файловые
+        // кастомные actions не резолвятся и тихо пропускаются ($actions = [])
+        app(ActionRegistry::class)->scan();
+
         // 4. Middleware
         $this->registerMiddleware();
 
