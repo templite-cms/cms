@@ -90,8 +90,8 @@
       "_x-CuOWXDIc.js"
     ]
   },
-  "_Dashboard-DVUFzSNx.js": {
-    "file": "assets/Dashboard-DVUFzSNx.js",
+  "_Dashboard-Ca-Rn_BL.js": {
+    "file": "assets/Dashboard-Ca-Rn_BL.js",
     "name": "Dashboard",
     "imports": [
       "_vuedraggable.umd-CzP4DQGM.js",
@@ -143,27 +143,8 @@
       "_x-CuOWXDIc.js"
     ]
   },
-  "_Edit-BZ3kvT-d.js": {
-    "file": "assets/Edit-BZ3kvT-d.js",
-    "name": "Edit",
-    "imports": [
-      "_x-CuOWXDIc.js",
-      "_TextField-BlXlwWsx.js",
-      "_SelectField-C3wTUOeW.js",
-      "_CheckboxField-CNnfM1sD.js",
-      "_SlugField-BpBJsMXI.js",
-      "_Modal-DFk22f1Y.js",
-      "_useApi-C0u-srqq.js",
-      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_useCmsUrl-BMH6Mdh_.js",
-      "_save-BiBE8Men.js",
-      "_trash-2-z3Bhtg-8.js",
-      "_ruler-IYY3v2Di.js",
-      "_lucide-vue-next-DqYmV2Wg.js"
-    ]
-  },
-  "_Edit-BnqUzrsN.js": {
-    "file": "assets/Edit-BnqUzrsN.js",
+  "_Edit-B0CbvOKp.js": {
+    "file": "assets/Edit-B0CbvOKp.js",
     "name": "Edit",
     "imports": [
       "_EditSidePanel-BFTZCgtG.js",
@@ -196,6 +177,25 @@
       "_package-Cz92QJ9g.js",
       "_check-D7sgkfv8.js",
       "_useUnsavedChanges-BW4Wkrng.js"
+    ]
+  },
+  "_Edit-BZ3kvT-d.js": {
+    "file": "assets/Edit-BZ3kvT-d.js",
+    "name": "Edit",
+    "imports": [
+      "_x-CuOWXDIc.js",
+      "_TextField-BlXlwWsx.js",
+      "_SelectField-C3wTUOeW.js",
+      "_CheckboxField-CNnfM1sD.js",
+      "_SlugField-BpBJsMXI.js",
+      "_Modal-DFk22f1Y.js",
+      "_useApi-C0u-srqq.js",
+      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
+      "_useCmsUrl-BMH6Mdh_.js",
+      "_save-BiBE8Men.js",
+      "_trash-2-z3Bhtg-8.js",
+      "_ruler-IYY3v2Di.js",
+      "_lucide-vue-next-DqYmV2Wg.js"
     ]
   },
   "_Edit-BwyTfC-B.js": {
@@ -448,6 +448,31 @@
       "_chevron-down-pL4huxTV.js"
     ]
   },
+  "_Index-Babuz9-E.js": {
+    "file": "assets/Index-Babuz9-E.js",
+    "name": "Index",
+    "imports": [
+      "_x-CuOWXDIc.js",
+      "_SelectField-C3wTUOeW.js",
+      "_image-BrU8DlLG.js",
+      "_ruler-IYY3v2Di.js",
+      "_lucide-vue-next-DqYmV2Wg.js",
+      "_zap-Dlr53vCB.js",
+      "_package-Cz92QJ9g.js",
+      "_file-text-CoeT_eaW.js",
+      "_ItemCard-AiAfmmeY.js",
+      "_Modal-DFk22f1Y.js",
+      "_Drawer-C1MZiAdN.js",
+      "_TextField-BlXlwWsx.js",
+      "_SlugField-BpBJsMXI.js",
+      "_useApi-C0u-srqq.js",
+      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
+      "_useCmsUrl-BMH6Mdh_.js",
+      "_search-ITz7hQUi.js",
+      "_save-BiBE8Men.js",
+      "_trash-2-z3Bhtg-8.js"
+    ]
+  },
   "_Index-BcGb3388.js": {
     "file": "assets/Index-BcGb3388.js",
     "name": "Index",
@@ -620,31 +645,6 @@
       "_image-BrU8DlLG.js",
       "_package-Cz92QJ9g.js",
       "_check-D7sgkfv8.js",
-      "_trash-2-z3Bhtg-8.js"
-    ]
-  },
-  "_Index-CvKtlStt.js": {
-    "file": "assets/Index-CvKtlStt.js",
-    "name": "Index",
-    "imports": [
-      "_x-CuOWXDIc.js",
-      "_SelectField-C3wTUOeW.js",
-      "_image-BrU8DlLG.js",
-      "_ruler-IYY3v2Di.js",
-      "_lucide-vue-next-DqYmV2Wg.js",
-      "_zap-Dlr53vCB.js",
-      "_package-Cz92QJ9g.js",
-      "_file-text-CoeT_eaW.js",
-      "_ItemCard-AiAfmmeY.js",
-      "_Modal-DFk22f1Y.js",
-      "_Drawer-C1MZiAdN.js",
-      "_TextField-BlXlwWsx.js",
-      "_SlugField-BpBJsMXI.js",
-      "_useApi-C0u-srqq.js",
-      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_useCmsUrl-BMH6Mdh_.js",
-      "_search-ITz7hQUi.js",
-      "_save-BiBE8Men.js",
       "_trash-2-z3Bhtg-8.js"
     ]
   },
@@ -1778,13 +1778,13 @@
     ]
   },
   "packages/templite/cms/resources/js/entries/dashboard.js": {
-    "file": "assets/dashboard-UxI5v4Nx.js",
+    "file": "assets/dashboard-BzCmGE0Z.js",
     "name": "dashboard",
     "src": "packages/templite/cms/resources/js/entries/dashboard.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Dashboard-DVUFzSNx.js",
+      "_Dashboard-Ca-Rn_BL.js",
       "_x-CuOWXDIc.js",
       "_vuedraggable.umd-CzP4DQGM.js",
       "_lucide-vue-next-DqYmV2Wg.js",
@@ -2133,13 +2133,13 @@
     ]
   },
   "packages/templite/cms/resources/js/entries/pages-edit.js": {
-    "file": "assets/pages-edit-C9Qs-hUd.js",
+    "file": "assets/pages-edit-Bys9Z9TT.js",
     "name": "pages-edit",
     "src": "packages/templite/cms/resources/js/entries/pages-edit.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Edit-BnqUzrsN.js",
+      "_Edit-B0CbvOKp.js",
       "_x-CuOWXDIc.js",
       "_EditSidePanel-BFTZCgtG.js",
       "_save-BiBE8Men.js",
@@ -2183,13 +2183,13 @@
     ]
   },
   "packages/templite/cms/resources/js/entries/pages-index.js": {
-    "file": "assets/pages-index-DQ4Vo0GQ.js",
+    "file": "assets/pages-index-Dr8r45a9.js",
     "name": "pages-index",
     "src": "packages/templite/cms/resources/js/entries/pages-index.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Index-CvKtlStt.js",
+      "_Index-Babuz9-E.js",
       "_x-CuOWXDIc.js",
       "_SelectField-C3wTUOeW.js",
       "_chevron-down-pL4huxTV.js",
@@ -2975,13 +2975,13 @@
     ]
   },
   "vendor/templite/cms/resources/js/entries/dashboard.js": {
-    "file": "assets/dashboard-RbNhEtPd.js",
+    "file": "assets/dashboard-CG3_hiqz.js",
     "name": "dashboard",
     "src": "vendor/templite/cms/resources/js/entries/dashboard.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Dashboard-DVUFzSNx.js",
+      "_Dashboard-Ca-Rn_BL.js",
       "_x-CuOWXDIc.js",
       "_vuedraggable.umd-CzP4DQGM.js",
       "_lucide-vue-next-DqYmV2Wg.js",
@@ -3330,13 +3330,13 @@
     ]
   },
   "vendor/templite/cms/resources/js/entries/pages-edit.js": {
-    "file": "assets/pages-edit-TV7ImMUy.js",
+    "file": "assets/pages-edit-wttM3_QQ.js",
     "name": "pages-edit",
     "src": "vendor/templite/cms/resources/js/entries/pages-edit.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Edit-BnqUzrsN.js",
+      "_Edit-B0CbvOKp.js",
       "_x-CuOWXDIc.js",
       "_EditSidePanel-BFTZCgtG.js",
       "_save-BiBE8Men.js",
@@ -3380,13 +3380,13 @@
     ]
   },
   "vendor/templite/cms/resources/js/entries/pages-index.js": {
-    "file": "assets/pages-index-CLNo0ghs.js",
+    "file": "assets/pages-index-CygPwQfJ.js",
     "name": "pages-index",
     "src": "vendor/templite/cms/resources/js/entries/pages-index.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Index-CvKtlStt.js",
+      "_Index-Babuz9-E.js",
       "_x-CuOWXDIc.js",
       "_SelectField-C3wTUOeW.js",
       "_chevron-down-pL4huxTV.js",
