@@ -448,31 +448,6 @@
       "_chevron-down-pL4huxTV.js"
     ]
   },
-  "_Index-Babuz9-E.js": {
-    "file": "assets/Index-Babuz9-E.js",
-    "name": "Index",
-    "imports": [
-      "_x-CuOWXDIc.js",
-      "_SelectField-C3wTUOeW.js",
-      "_image-BrU8DlLG.js",
-      "_ruler-IYY3v2Di.js",
-      "_lucide-vue-next-DqYmV2Wg.js",
-      "_zap-Dlr53vCB.js",
-      "_package-Cz92QJ9g.js",
-      "_file-text-CoeT_eaW.js",
-      "_ItemCard-AiAfmmeY.js",
-      "_Modal-DFk22f1Y.js",
-      "_Drawer-C1MZiAdN.js",
-      "_TextField-BlXlwWsx.js",
-      "_SlugField-BpBJsMXI.js",
-      "_useApi-C0u-srqq.js",
-      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_useCmsUrl-BMH6Mdh_.js",
-      "_search-ITz7hQUi.js",
-      "_save-BiBE8Men.js",
-      "_trash-2-z3Bhtg-8.js"
-    ]
-  },
   "_Index-BcGb3388.js": {
     "file": "assets/Index-BcGb3388.js",
     "name": "Index",
@@ -689,6 +664,31 @@
       "_ruler-IYY3v2Di.js",
       "_search-ITz7hQUi.js",
       "_zap-Dlr53vCB.js"
+    ]
+  },
+  "_Index-DNB7_QV2.js": {
+    "file": "assets/Index-DNB7_QV2.js",
+    "name": "Index",
+    "imports": [
+      "_x-CuOWXDIc.js",
+      "_SelectField-C3wTUOeW.js",
+      "_image-BrU8DlLG.js",
+      "_ruler-IYY3v2Di.js",
+      "_lucide-vue-next-DqYmV2Wg.js",
+      "_zap-Dlr53vCB.js",
+      "_package-Cz92QJ9g.js",
+      "_file-text-CoeT_eaW.js",
+      "_ItemCard-AiAfmmeY.js",
+      "_Modal-DFk22f1Y.js",
+      "_Drawer-C1MZiAdN.js",
+      "_TextField-BlXlwWsx.js",
+      "_SlugField-BpBJsMXI.js",
+      "_useApi-C0u-srqq.js",
+      "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
+      "_useCmsUrl-BMH6Mdh_.js",
+      "_search-ITz7hQUi.js",
+      "_save-BiBE8Men.js",
+      "_trash-2-z3Bhtg-8.js"
     ]
   },
   "_Index-Da4gh_h3.js": {
@@ -2183,13 +2183,13 @@
     ]
   },
   "packages/templite/cms/resources/js/entries/pages-index.js": {
-    "file": "assets/pages-index-Dr8r45a9.js",
+    "file": "assets/pages-index-Cv7nohdv.js",
     "name": "pages-index",
     "src": "packages/templite/cms/resources/js/entries/pages-index.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Index-Babuz9-E.js",
+      "_Index-DNB7_QV2.js",
       "_x-CuOWXDIc.js",
       "_SelectField-C3wTUOeW.js",
       "_chevron-down-pL4huxTV.js",
@@ -3380,13 +3380,13 @@
     ]
   },
   "vendor/templite/cms/resources/js/entries/pages-index.js": {
-    "file": "assets/pages-index-CygPwQfJ.js",
+    "file": "assets/pages-index-DrtTbvY7.js",
     "name": "pages-index",
     "src": "vendor/templite/cms/resources/js/entries/pages-index.js",
     "isEntry": true,
     "imports": [
       "_DateField.vue_vue_type_style_index_0_lang-BFhdkW_K.js",
-      "_Index-Babuz9-E.js",
+      "_Index-DNB7_QV2.js",
       "_x-CuOWXDIc.js",
       "_SelectField-C3wTUOeW.js",
       "_chevron-down-pL4huxTV.js",
