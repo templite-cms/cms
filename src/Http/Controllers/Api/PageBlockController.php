@@ -317,6 +317,13 @@ class PageBlockController extends Controller
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
 
+        // На реальных страницах $city приходит из CityResolver middleware, в превью — нет.
+        // Шарим дефолтный город, чтобы блоки с $city не падали.
+        $city = \Templite\Cms\Models\City::getDefault();
+        if ($city) {
+            view()->share('city', $city);
+        }
+
         // If draft query param — load data from PageBlockData; otherwise use PageBlock.data
         $draftId = $request->query('draft');
         if ($draftId) {

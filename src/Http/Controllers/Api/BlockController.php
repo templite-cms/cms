@@ -156,6 +156,13 @@ class BlockController extends Controller
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
 
+        // На реальных страницах $city приходит из CityResolver middleware, в превью — нет.
+        // Шарим дефолтный город, чтобы блоки/компоненты с $city не падали.
+        $city = \Templite\Cms\Models\City::getDefault();
+        if ($city) {
+            view()->share('city', $city);
+        }
+
         // Inline-код из запроса (для live preview без сохранения)
         $inlineTemplate = $request->input('template');
         $inlineStyle = $request->input('style');

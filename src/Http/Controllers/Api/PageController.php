@@ -390,6 +390,13 @@ class PageController extends Controller
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
 
+        // На реальных страницах $city приходит из CityResolver middleware, в превью — нет.
+        // Шарим дефолтный город, чтобы блоки с $city не падали.
+        $city = \Templite\Cms\Models\City::getDefault();
+        if ($city) {
+            view()->share('city', $city);
+        }
+
         // Резолвим данные всех блоков (batch-загрузка file_id -> File, и т.п.)
         $this->blockDataResolver->resolvePageBlocks($pageBlocks);
 
