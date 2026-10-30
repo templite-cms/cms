@@ -18,7 +18,7 @@
         "spatie/laravel-image-optimizer": "^1.8",
         "darkaonline/l5-swagger": "^8.5",
         "scssphp/scssphp": "^1.12",
-        "enshrined/svg-sanitize": "^0.22",
+        "enshrined/svg-sanitize": "^1.1.1",
         "pragmarx/google2fa-laravel": "^2.0",
         "bacon/bacon-qr-code": "^3.0"
     },
