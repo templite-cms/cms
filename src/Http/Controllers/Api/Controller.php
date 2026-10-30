@@ -7,6 +7,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Log;
 use Templite\Cms\Models\ManagerLog;
+use Templite\Cms\Services\ActionChannel;
 
 /**
  * @OA\Info(
@@ -81,19 +82,37 @@ class Controller extends BaseController
         ], $code);
     }
 
-    protected function logAction(string $action, string $entityType, ?int $entityId = null, ?array $data = null): void
+    // Видимость public: инструменты ассистента, которые пишут в глобальные
+    // настройки напрямую через Eloquent (минуя маршрут), зовут этот же метод,
+    // чтобы их правки попадали в тот же журнал теми же action/entity — вместо
+    // того чтобы завести свою копию записи в ManagerLog.
+    public function logAction(string $action, string $entityType, ?int $entityId = null, ?array $data = null): void
     {
         $manager = auth()->user();
         if (!$manager) {
             return;
         }
 
+        // Правки ассистента и MCP отличимы в журнале от ручных: лента дашборда
+        // показывает канал. У ручных правок метки нет — как и в старых записях.
+        // Канал зависит от сущности: правка ассистента из открытого редактора
+        // метит только записи о той сущности, на которую была нацелена.
+        $channel = app(ActionChannel::class)->forEntity($entityType, $entityId, $data);
+        $meta = $channel['via'] === ActionChannel::ADMIN
+            ? []
+            : array_filter([
+                'via' => $channel['via'],
+                'run_id' => $channel['run_id'],
+                // Ассистент предложил правку открытому редактору, сохранил человек
+                'via_editor' => $channel['via_editor'] ?: null,
+            ], fn ($v) => $v !== null);
+
         $logEntry = [
             'manager_id'  => $manager->id,
             'action'      => $action,
             'entity_type' => $entityType,
             'entity_id'   => $entityId,
-            'data'        => $data,
+            'data'        => $meta === [] ? $data : $meta + ($data ?? []),
             'ip'          => request()->ip(),
         ];
 

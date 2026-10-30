@@ -101,6 +101,48 @@
   &:focus { box-shadow: 0 0 0 3px rgba($error-500, 0.3); }
 }
 
+// Опасное действие второго плана: удалить, отозвать, отключить
+.btn-danger-outline {
+  background-color: #fff;
+  color: $error-600;
+  border: 1px solid $error-300;
+
+  &:hover { background-color: $error-50; border-color: $error-400; }
+  &:active { background-color: rgba($error-500, 0.12); }
+  &:focus { box-shadow: 0 0 0 3px rgba($error-500, 0.3); }
+
+  .dark & {
+    background-color: transparent;
+    color: $error-400;
+    border-color: rgba($error-500, 0.5);
+
+    &:hover { background-color: rgba($error-500, 0.12); border-color: $error-500; }
+    &:active { background-color: rgba($error-500, 0.2); }
+  }
+}
+
+// Опасное действие без рамки — в строках списков и тулбарах
+.btn-danger-ghost {
+  background-color: transparent;
+  color: $error-600;
+
+  &:hover { background-color: $error-50; }
+  &:active { background-color: rgba($error-500, 0.12); }
+  &:focus { box-shadow: 0 0 0 3px rgba($error-500, 0.3); }
+
+  .dark & {
+    color: $error-400;
+
+    &:hover { background-color: rgba($error-500, 0.12); }
+    &:active { background-color: rgba($error-500, 0.2); }
+  }
+}
+
+// Нейтральная кнопка с рамкой — то же, что .btn-secondary (имя из диалогов 2FA)
+.btn-neutral-outline {
+  @extend .btn-secondary;
+}
+
 // Icon-only button
 .btn-icon {
   padding: 0.5rem;

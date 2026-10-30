@@ -8,11 +8,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Routing\Router;
 use Templite\Cms\Http\Middleware\AddSecurityHeaders;
 use Templite\Cms\Http\Middleware\AuthManager;
-use Templite\Cms\Http\Middleware\AuthUser;
-use Templite\Cms\Http\Middleware\CityResolver;
 use Templite\Cms\Http\Middleware\GlobalFieldsMiddleware;
 use Templite\Cms\Http\Middleware\HoneypotProtection;
-use Templite\Cms\Http\Middleware\LocaleResolver;
 use Templite\Cms\Http\Middleware\OptimizeImages;
 use Templite\Cms\Http\Middleware\Timezone;
 use Templite\Cms\Services\ActionRegistry;
@@ -50,7 +47,11 @@ class CmsServiceProvider extends ServiceProvider
         $this->app->singleton(\Templite\Cms\Services\TwoFactorService::class);
         $this->app->singleton(\Templite\Cms\Services\AssetResolver::class);
         $this->app->singleton(\Templite\Cms\Services\TiptapHtmlProcessor::class);
-        $this->app->singleton(\Templite\Cms\Services\GuardRegistry::class);
+        $this->app->singleton(\Templite\Cms\Dashboard\DashboardWidgetRegistry::class);
+
+        // scoped: очередь сбрасывает экземпляр между заданиями — канал хода
+        // ассистента не достанется следующему заданию воркера
+        $this->app->scoped(\Templite\Cms\Services\ActionChannel::class);
     }
 
     /**
@@ -63,8 +64,6 @@ class CmsServiceProvider extends ServiceProvider
             'block' => \Templite\Cms\Models\Block::class,
             'template_page' => \Templite\Cms\Models\TemplatePage::class,
             'manager' => \Templite\Cms\Models\Manager::class,
-            'site_user' => \Templite\Cms\Models\User::class,
-            'site_user_type' => \Templite\Cms\Models\UserType::class,
         ]);
 
         // 0. Force HTTPS if APP_URL uses https
@@ -74,11 +73,6 @@ class CmsServiceProvider extends ServiceProvider
 
         // 0. Auth guard & provider для менеджеров CMS
         $this->configureAuth();
-
-        // 0. Регистрация resolver'а для типа поля "user"
-        app(\Templite\Cms\Services\BlockDataResolver::class)->registerType('user', function (int $id) {
-            return \Templite\Cms\Models\User::find($id);
-        });
 
         // 1. Миграции
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
@@ -145,6 +139,7 @@ class CmsServiceProvider extends ServiceProvider
                 Console\Commands\CleanupExpiredSessionsCommand::class,
                 Console\Commands\CleanupExpired2faDevicesCommand::class,
                 Console\Commands\CleanupScheduleHistoryCommand::class,
+                Console\Commands\PruneManagerLogCommand::class,
                 Console\Commands\RunActionCommand::class,
                 Console\Commands\ResetManagerPasswordCommand::class,
             ]);
@@ -160,6 +155,13 @@ class CmsServiceProvider extends ServiceProvider
         $this->app['queue']->looping(function () {
             return !\Illuminate\Support\Facades\Cache::get('cms:queue:paused', false);
         });
+
+        // 6.1. Аргументы MCP-инструментов доходят как прислал клиент: пустая
+        // строка в коде шаблона значит «удалить файл», а не null, и отступы
+        // кода нельзя обрезать. Ассистент передаёт их мимо HTTP — так же.
+        $isMcp = fn (\Illuminate\Http\Request $request) => $request->is('api/cms/mcp/*');
+        \Illuminate\Foundation\Http\Middleware\TrimStrings::skipWhen($isMcp);
+        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::skipWhen($isMcp);
 
         // 6.2. Dynamic API rate limiter from CMS settings
         \Illuminate\Support\Facades\RateLimiter::for('cms-api', function (\Illuminate\Http\Request $request) {
@@ -203,37 +205,6 @@ class CmsServiceProvider extends ServiceProvider
                 $config->set('sanctum.stateful', $stateful);
             }
         }
-
-        // Кастомный auth provider driver для пользователей сайта
-        \Illuminate\Support\Facades\Auth::provider('cms_users', function ($app, array $config) {
-            $provider = new \Templite\Cms\Auth\ScopedUserProvider(
-                $app['hash'], $config['model']
-            );
-            if (isset($config['guard'])) {
-                $provider->setGuardName($config['guard']);
-            }
-            return $provider;
-        });
-
-        // Собираем guard'ы из всех модулей и регистрируем
-        $guardRegistry = app(\Templite\Cms\Services\GuardRegistry::class);
-        $moduleRegistry = app(\Templite\Cms\Services\ModuleRegistry::class);
-        foreach ($moduleRegistry->getModules() as $module) {
-            foreach ($module->getGuards() as $guard) {
-                $guardRegistry->register($guard);
-            }
-        }
-        $guardRegistry->configureAuthGuards();
-
-        // Автосоздание UserType для зарегистрированных guard'ов
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('cms_user_types')) {
-                $guardRegistry->ensureUserTypes();
-            }
-        } catch (\Throwable $e) {
-            // Fresh install before migrations — silently skip
-            \Illuminate\Support\Facades\Log::debug('CMS guard ensureUserTypes skipped: ' . $e->getMessage());
-        }
     }
 
     /**
@@ -246,14 +217,11 @@ class CmsServiceProvider extends ServiceProvider
 
         // Middleware-алиасы
         $router->aliasMiddleware('cms.auth', AuthManager::class);
-        $router->aliasMiddleware('cms.locale', LocaleResolver::class);
-        $router->aliasMiddleware('cms.city_resolver', CityResolver::class);
         $router->aliasMiddleware('cms.global_fields', GlobalFieldsMiddleware::class);
         $router->aliasMiddleware('cms.optimize_images', OptimizeImages::class);
         $router->aliasMiddleware('cms.timezone', Timezone::class);
         $router->aliasMiddleware('cms.honeypot', HoneypotProtection::class);
         $router->aliasMiddleware('cms.security_headers', AddSecurityHeaders::class);
-        $router->aliasMiddleware('cms.user_auth', AuthUser::class);
     }
 
     /**

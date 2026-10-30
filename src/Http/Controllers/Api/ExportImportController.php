@@ -4,7 +4,7 @@ namespace Templite\Cms\Http\Controllers\Api;
 
 use Templite\Cms\Services\ImportExport\{ExportService, ImportService};
 use Templite\Cms\Models\{Block, BlockType, TemplatePage, Component, Action, Library,
-    BlockPreset, Page, PageType, GlobalFieldPage, CmsConfig, City, Language, ExportImportLog};
+    BlockPreset, Page, PageType, GlobalFieldPage, CmsConfig, ExportImportLog};
 use Illuminate\Http\{JsonResponse, Request};
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -31,8 +31,6 @@ class ExportImportController extends Controller
         'page_types' => PageType::class,
         'global_field_pages' => GlobalFieldPage::class,
         'cms_config' => CmsConfig::class,
-        'cities' => City::class,
-        'languages' => Language::class,
     ];
 
     public function __construct(
@@ -74,10 +72,6 @@ class ExportImportController extends Controller
             'global_field_pages' => GlobalFieldPage::select('id', 'name')
                 ->orderBy('order')->get(),
             'block_types' => BlockType::select('id', 'name', 'slug')
-                ->orderBy('order')->get(),
-            'cities' => City::select('id', 'name', 'slug')
-                ->orderBy('sort_order')->get(),
-            'languages' => Language::select('id', 'name', 'code')
                 ->orderBy('order')->get(),
         ]);
     }
@@ -333,7 +327,6 @@ class ExportImportController extends Controller
             $field = match ($typeKey) {
                 'pages' => 'url',
                 'cms_config' => 'key',
-                'languages' => 'code',
                 'global_field_pages' => 'name',
                 default => 'slug',
             };

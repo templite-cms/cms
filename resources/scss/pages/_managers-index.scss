@@ -772,3 +772,36 @@
   line-height: $line-height-sm;
   color: $neutral-500;
 }
+
+// -----------------------------------------------------------------------------
+// Редактор раскладки дашборда (drawer типа менеджера)
+// -----------------------------------------------------------------------------
+
+.dashboard-layout-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-layout-editor__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  > button.list-item {
+    width: 100%;
+    text-align: left;
+    background: none;
+    font: inherit;
+    color: inherit;
+  }
+}
+
+.dashboard-layout-editor__drag {
+  cursor: grab;
+}
+
+.dashboard-layout-editor__hint {
+  font-size: $font-size-sm;
+  color: $neutral-500;
+}

@@ -111,6 +111,11 @@
   .dark & { background: rgba($primary-500, 0.15); }
 }
 
+// Кнопка, замыкающая строку (UrlField — замок без кнопки генерации)
+.slug-field__btn--last {
+  border-radius: 0 $radius $radius 0;
+}
+
 .slug-field__btn--regen {
   border-radius: 0 $radius $radius 0;
   background: $neutral-50;

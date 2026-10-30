@@ -4,7 +4,7 @@ namespace Templite\Cms\Services\ImportExport;
 
 use Templite\Cms\Models\ExportImportLog;
 use Templite\Cms\Models\{Block, BlockType, TemplatePage, Component, Action, Library,
-    BlockPreset, Page, PageType, GlobalFieldPage, CmsConfig, City, Language,
+    BlockPreset, Page, PageType, GlobalFieldPage, CmsConfig,
     FileFolder, File};
 use Illuminate\Support\Facades\{Auth, DB};
 use ZipArchive;
@@ -27,11 +27,11 @@ class ImportService
      * @var string[]
      */
     protected array $importOrder = [
-        'language', 'block_type', 'cms_config', 'file_folder', 'file',
+        'block_type', 'cms_config', 'file_folder', 'file',
         'library', 'action', 'component',
         'block', 'preset', 'template',
         'page_type', 'global_field_page',
-        'page', 'city',
+        'page',
     ];
 
     /**
@@ -40,7 +40,6 @@ class ImportService
      * @var array<string, class-string>
      */
     protected array $modelMap = [
-        'language' => Language::class,
         'block_type' => BlockType::class,
         'cms_config' => CmsConfig::class,
         'file_folder' => FileFolder::class,
@@ -54,7 +53,6 @@ class ImportService
         'page_type' => PageType::class,
         'global_field_page' => GlobalFieldPage::class,
         'page' => Page::class,
-        'city' => City::class,
     ];
 
     /**
@@ -73,8 +71,6 @@ class ImportService
         'page' => 'url',
         'page_type' => 'slug',
         'cms_config' => 'key',
-        'city' => 'slug',
-        'language' => 'code',
         'file' => 'path',
         'file_folder' => 'name',
         'global_field_page' => 'name',
@@ -316,8 +312,6 @@ class ImportService
         $collectiveMap = [
             'settings/cms_config.json' => ['type' => 'cms_config', 'id_field' => 'key'],
             'global_fields/global_fields.json' => ['type' => 'global_field_page', 'id_field' => 'name'],
-            'cities/cities.json' => ['type' => 'city', 'id_field' => 'slug'],
-            'languages/languages.json' => ['type' => 'language', 'id_field' => 'code'],
             'media/files.json' => ['type' => 'file', 'id_field' => 'path'],
             'media/folders.json' => ['type' => 'file_folder', 'id_field' => 'name'],
         ];

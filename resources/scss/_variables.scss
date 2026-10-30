@@ -208,7 +208,12 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
 // -----------------------------------------------------------------------------
 
 $spacing-header: 3.5rem;
-$spacing-subheader: 3rem;
+// SubMenu редакторов: строка с заголовком и кнопками + строка вкладок под ней
+$spacing-submenu-bar: 3rem;
+$spacing-submenu-tabs: 2.5rem;
+// Фактическая высота: вкладки уходят на вторую строку, только если не влезают
+// (SubMenu.vue выставляет --cms-submenu-height). Использовать внутри calc().
+$spacing-subheader: var(--cms-submenu-height, #{$spacing-submenu-bar});
 $spacing-drawer: 30rem;
 
 // -----------------------------------------------------------------------------

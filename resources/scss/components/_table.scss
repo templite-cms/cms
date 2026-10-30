@@ -79,19 +79,24 @@
   }
 }
 
-.data-table__row--selected {
-  background-color: rgb(var(--color-surface-selected));
-
-  &:hover {
-    background-color: rgb(var(--color-surface-selected));
-  }
-}
-
 .data-table__row--striped:nth-child(even) {
   background-color: $neutral-50;
 
   .dark & {
     background-color: rgba($neutral-800, 0.5);
+  }
+}
+
+// Выделение перекрывает зебру: :nth-child(even) поднимает специфичность
+// до уровня правила зебры (в т.ч. в тёмной теме), а порядок решает в пользу выделения
+.data-table__row--selected {
+  &,
+  &:nth-child(even),
+  &:hover,
+  .dark &,
+  .dark &:nth-child(even),
+  .dark &:hover {
+    background-color: rgb(var(--color-surface-selected));
   }
 }
 
@@ -136,6 +141,12 @@
 
 .data-table__pagination-info {
   color: rgb(var(--color-text-muted));
+}
+
+.data-table__pagination-end {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .data-table__pagination-buttons {

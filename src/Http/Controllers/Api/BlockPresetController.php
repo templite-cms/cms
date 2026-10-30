@@ -4,16 +4,23 @@ namespace Templite\Cms\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Templite\Cms\Models\Block;
 use Templite\Cms\Models\BlockPreset;
-use Templite\Cms\Models\BlockPresetData;
+use Templite\Cms\Models\PageBlock;
+use Templite\Cms\Services\CacheManager;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BlockDataResolver;
 use Templite\Cms\Services\BlockRenderer;
+use Templite\Cms\Services\LibraryAssetBuilder;
 
 class BlockPresetController extends Controller
 {
+    /**
+     * Глобальный пресет связывает блок с собой, и каждый новый экземпляр
+     * менялся бы вместе с пресетом — стартовым контентом служит только локальный.
+     */
+    private const DEFAULT_MUST_BE_LOCAL = 'Пресетом по умолчанию может быть только локальный пресет.';
+
     public function __construct(
         protected BlockRenderer $blockRenderer,
         protected BlockDataResolver $blockDataResolver,
@@ -69,6 +76,7 @@ class BlockPresetController extends Controller
      *         @OA\Property(property="slug", type="string"),
      *         @OA\Property(property="block_id", type="integer"),
      *         @OA\Property(property="type", type="string", enum={"global","local"}),
+     *         @OA\Property(property="is_default", type="boolean", description="Пресет по умолчанию для блока (только local)"),
      *         @OA\Property(property="data", type="object"),
      *         @OA\Property(property="screen", type="integer"),
      *         @OA\Property(property="description", type="string"),
@@ -84,17 +92,23 @@ class BlockPresetController extends Controller
             'slug' => 'required|string|max:255|unique:block_presets',
             'block_id' => 'required|integer|exists:blocks,id',
             'type' => 'required|string|in:global,local',
+            'is_default' => 'boolean',
             'data' => 'nullable|array',
             'screen' => 'nullable|integer|exists:files,id',
             'description' => 'nullable|string|max:1000',
             'order' => 'nullable|integer',
         ]);
 
+        if (($data['is_default'] ?? false) && $data['type'] !== 'local') {
+            return $this->error(self::DEFAULT_MUST_BE_LOCAL, 422);
+        }
+
         $preset = BlockPreset::create($data);
 
         $this->logAction('create', 'block_preset', $preset->id, [
             'block_id' => $data['block_id'],
             'type' => $data['type'],
+            'name' => $preset->name,
         ]);
 
         return $this->success(
@@ -120,8 +134,6 @@ class BlockPresetController extends Controller
             'block.rootFields' => fn($q) => $q->orderBy('order'),
             'block.rootFields.children' => fn($q) => $q->orderBy('order'),
             'block.rootFields.children.children' => fn($q) => $q->orderBy('order'),
-            'block.tabs' => fn($q) => $q->orderBy('order'),
-            'block.sections' => fn($q) => $q->orderBy('order'),
             'screenFile',
         ])->findOrFail($id);
 
@@ -139,6 +151,7 @@ class BlockPresetController extends Controller
      *         @OA\Property(property="name", type="string"),
      *         @OA\Property(property="slug", type="string"),
      *         @OA\Property(property="description", type="string"),
+     *         @OA\Property(property="is_default", type="boolean", description="Пресет по умолчанию для блока (только local)"),
      *         @OA\Property(property="data", type="object"),
      *         @OA\Property(property="screen", type="integer"),
      *         @OA\Property(property="order", type="integer")
@@ -154,14 +167,25 @@ class BlockPresetController extends Controller
             'name' => 'sometimes|string|max:255',
             'slug' => 'sometimes|string|max:255|unique:block_presets,slug,' . $id,
             'description' => 'nullable|string|max:1000',
+            'is_default' => 'boolean',
             'data' => 'nullable|array',
             'screen' => 'nullable|integer|exists:files,id',
             'order' => 'nullable|integer',
         ]);
 
+        if (($data['is_default'] ?? false) && $preset->type !== 'local') {
+            return $this->error(self::DEFAULT_MUST_BE_LOCAL, 422);
+        }
+
         $preset->update($data);
 
-        $this->logAction('update', 'block_preset', $preset->id);
+        // Связанные с глобальным пресетом блоки выводят его данные — их HTML устарел
+        if ($preset->type === 'global') {
+            $cache = app(CacheManager::class);
+            $preset->pageBlocks()->get()->each(fn (PageBlock $pb) => $cache->invalidateBlock($pb));
+        }
+
+        $this->logAction('update', 'block_preset', $preset->id, ['name' => $preset->name]);
 
         return $this->success(
             $preset->fresh(['block:id,name,slug,block_type_id', 'screenFile']),
@@ -194,9 +218,10 @@ class BlockPresetController extends Controller
             }
         }
 
+        $name = $preset->name;
         $preset->delete();
 
-        $this->logAction('delete', 'block_preset', $id);
+        $this->logAction('delete', 'block_preset', $id, ['name' => $name]);
 
         return $this->success(null, 'Пресет удалён.');
     }
@@ -218,9 +243,9 @@ class BlockPresetController extends Controller
     public function preview(Request $request, int $id): JsonResponse
     {
         $preset = BlockPreset::with([
-            'block.fields.children',
+            'block.fields',
             'block.blockActions.action',
-            'block.libraries',
+            'block.libraries.files',
         ])->findOrFail($id);
 
         $block = $preset->block;
@@ -263,12 +288,7 @@ class BlockPresetController extends Controller
                     'block'   => $block,
                 ]);
 
-                if ($block->no_wrapper) {
-                    $blockHtml = $html;
-                } else {
-                    $blockId = uniqid($block->slug . '-');
-                    $blockHtml = "<div class=\"cms-block cms-block--{$block->slug}\" data-block=\"{$block->slug}\" data-block-id=\"{$blockId}\">\n{$html}\n</div>";
-                }
+                $blockHtml = $this->blockRenderer->applyMarker($html, $block);
             } catch (\Throwable $e) {
                 $blockHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
                     . '<strong>Template Error:</strong><br>'
@@ -292,7 +312,7 @@ class BlockPresetController extends Controller
 
         // Style: inline или с диска
         if ($inlineStyle !== null) {
-            $css = $this->blockRenderer->compileStylesFromString($inlineStyle, $block->slug, (bool) $block->no_wrapper) ?? '';
+            $css = $this->blockRenderer->compileStylesFromString($inlineStyle, $block->slug) ?? '';
         } elseif ($blockPath) {
             $css = $this->blockRenderer->compileStyles($block) ?? '';
         }
@@ -310,53 +330,28 @@ class BlockPresetController extends Controller
         // Template CSS/JS
         $templateCss = '';
         $templateJs = '';
-        $cdnCssLinks = '';
-        $cdnJsLinks = '';
+        $previewLibraries = collect();
         $templateId = $request->input('template_id');
         if ($templateId) {
-            $template = TemplatePage::with('libraries')->find($templateId);
+            $template = TemplatePage::with('libraries.files')->find($templateId);
             if ($template) {
                 $templateCss = $this->blockRenderer->compileTemplateStyles($template) ?? '';
                 $templateJs = $this->blockRenderer->getTemplateScript($template) ?? '';
 
-                foreach ($template->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-                    if ($lib->load_strategy === 'cdn') {
-                        if ($lib->css_cdn) {
-                            $cdnCssLinks .= '<link rel="stylesheet" href="' . e($lib->css_cdn) . '">' . "\n";
-                        }
-                        if ($lib->js_cdn) {
-                            $cdnJsLinks .= '<script src="' . e($lib->js_cdn) . '"></script>' . "\n";
-                        }
-                    } elseif ($lib->load_strategy === 'local') {
-                        if ($lib->css_file) {
-                            $cdnCssLinks .= '<link rel="stylesheet" href="' . e(asset('storage/' . ltrim($lib->css_file, '/'))) . '">' . "\n";
-                        }
-                        if ($lib->js_file) {
-                            $cdnJsLinks .= '<script src="' . e(asset('storage/' . ltrim($lib->js_file, '/'))) . '"></script>' . "\n";
-                        }
-                    }
-                }
+                $previewLibraries = $previewLibraries->merge($template->libraries);
             }
         }
 
-        // Block libraries
-        foreach ($block->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-            if ($lib->load_strategy === 'cdn') {
-                if ($lib->css_cdn) {
-                    $cdnCssLinks .= '<link rel="stylesheet" href="' . e($lib->css_cdn) . '">' . "\n";
-                }
-                if ($lib->js_cdn) {
-                    $cdnJsLinks .= '<script src="' . e($lib->js_cdn) . '"></script>' . "\n";
-                }
-            } elseif ($lib->load_strategy === 'local') {
-                if ($lib->css_file) {
-                    $cdnCssLinks .= '<link rel="stylesheet" href="' . e(asset('storage/' . ltrim($lib->css_file, '/'))) . '">' . "\n";
-                }
-                if ($lib->js_file) {
-                    $cdnJsLinks .= '<script src="' . e(asset('storage/' . ltrim($lib->js_file, '/'))) . '"></script>' . "\n";
-                }
-            }
-        }
+        // Библиотеки блока — в ту же коллекцию: билдер дедуплицирует,
+        // и общая с шаблоном библиотека подключится один раз.
+        // loadMissing здесь подстраховочный: связь обязана быть поднята
+        // в with('block.libraries.files') выше.
+        $block->loadMissing('libraries.files');
+        $previewLibraries = $previewLibraries->merge($block->libraries);
+
+        $libraryHtml = app(LibraryAssetBuilder::class)->htmlFor($previewLibraries);
+        $cdnCssLinks = $libraryHtml['head'];
+        $cdnJsLinks = $libraryHtml['body'];
 
         // Component styles/scripts from block template content
         $rawTemplate = $inlineTemplate ?? '';
@@ -369,130 +364,11 @@ class BlockPresetController extends Controller
         $componentAssets = $this->blockRenderer->collectComponentAssets($rawTemplate);
 
         $allCss = implode("\n", array_filter([$templateCss, $componentAssets['css'], $css]));
-        $allJs = implode("\n", array_filter([$templateJs, $componentAssets['js'], $js]));
-
-        $html = $this->blockRenderer->renderPreviewWrapper([
-            'cdnCss' => $cdnCssLinks,
-            'css' => $allCss,
-            'content' => $blockHtml,
-            'cdnJs' => $cdnJsLinks,
-            'js' => $allJs,
-        ]);
-
-        return $this->success(['html' => $html]);
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/block-presets/{id}/render",
-     *     summary="Рендер пресета (HTML-страница для iframe)",
-     *     tags={"Block Presets"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Parameter(name="draft", in="query", @OA\Schema(type="integer")),
-     *     @OA\Parameter(name="template_id", in="query", @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="HTML-страница для iframe")
-     * )
-     */
-    public function render(Request $request, int $id): Response
-    {
-        $preset = BlockPreset::with([
-            'block.fields.children',
-            'block.blockActions.action',
-            'block.libraries',
-        ])->findOrFail($id);
-
-        $block = $preset->block;
-
-        // Load global fields
-        $global = app()->bound('global_fields') ? app('global_fields') : [];
-        view()->share('global', $global);
-
-        // If draft query param — load data from BlockPresetData
-        $draftId = $request->query('draft');
-        if ($draftId) {
-            $draft = BlockPresetData::findOrFail((int) $draftId);
-            abort_if($draft->preset_id !== $preset->id, 403, 'Draft does not belong to this preset.');
-            $rawData = $draft->data ?? [];
-        } else {
-            $rawData = $preset->data ?? [];
-        }
-
-        $resolvedData = $this->blockDataResolver->resolveBlockData($block, $rawData);
-
-        // У пресета нет страницы — actions не выполняем
-        $actions = [];
-
-        $blockHtml = '';
-        $blockPath = $this->blockRenderer->resolveBlockPath($block);
-
-        if ($blockPath) {
-            try {
-                $blockHtml = $this->blockRenderer->render($block, $resolvedData, $actions, null, $global);
-            } catch (\Throwable $e) {
-                $blockHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
-                    . '<strong>Template Error:</strong><br>'
-                    . htmlspecialchars($e->getMessage())
-                    . '</div>';
-            }
-        } else {
-            $blockHtml = '<div style="color:#94a3b8;padding:32px;text-align:center;font-family:sans-serif;font-size:14px">'
-                . 'Код блока не найден. Сохраните код через редактор.'
-                . '</div>';
-        }
-
-        // Block CSS/JS
-        $css = $this->blockRenderer->compileStyles($block) ?? '';
-        $js = '';
-        if ($blockPath && file_exists($blockPath . '/script.js')) {
-            $js = file_get_contents($blockPath . '/script.js');
-        }
-
-        // Template CSS/JS
-        $templateCss = '';
-        $templateJs = '';
-        $cdnCssLinks = '';
-        $cdnJsLinks = '';
-        $templateId = $request->query('template_id');
-        if ($templateId) {
-            $template = TemplatePage::with('libraries')->find($templateId);
-            if ($template) {
-                $templateCss = $this->blockRenderer->compileTemplateStyles($template) ?? '';
-                $templateJs = $this->blockRenderer->getTemplateScript($template) ?? '';
-
-                foreach ($template->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-                    if ($lib->load_strategy === 'cdn') {
-                        if ($lib->css_cdn) $cdnCssLinks .= '<link rel="stylesheet" href="' . e($lib->css_cdn) . '">' . "\n";
-                        if ($lib->js_cdn) $cdnJsLinks .= '<script src="' . e($lib->js_cdn) . '"></script>' . "\n";
-                    } elseif ($lib->load_strategy === 'local') {
-                        if ($lib->css_file) $cdnCssLinks .= '<link rel="stylesheet" href="' . e(asset('storage/' . ltrim($lib->css_file, '/'))) . '">' . "\n";
-                        if ($lib->js_file) $cdnJsLinks .= '<script src="' . e(asset('storage/' . ltrim($lib->js_file, '/'))) . '"></script>' . "\n";
-                    }
-                }
-            }
-        }
-
-        // Block libraries
-        foreach ($block->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-            if ($lib->load_strategy === 'cdn') {
-                if ($lib->css_cdn) $cdnCssLinks .= '<link rel="stylesheet" href="' . e($lib->css_cdn) . '">' . "\n";
-                if ($lib->js_cdn) $cdnJsLinks .= '<script src="' . e($lib->js_cdn) . '"></script>' . "\n";
-            } elseif ($lib->load_strategy === 'local') {
-                if ($lib->css_file) $cdnCssLinks .= '<link rel="stylesheet" href="' . e(asset('storage/' . ltrim($lib->css_file, '/'))) . '">' . "\n";
-                if ($lib->js_file) $cdnJsLinks .= '<script src="' . e(asset('storage/' . ltrim($lib->js_file, '/'))) . '"></script>' . "\n";
-            }
-        }
-
-        // Component styles/scripts from block template content
-        $rawTpl = '';
-        $bPath = $this->blockRenderer->resolveBlockPath($block);
-        if ($bPath && file_exists($bPath . '/template.blade.php')) {
-            $rawTpl = file_get_contents($bPath . '/template.blade.php');
-        }
-        $componentAssets = $this->blockRenderer->collectComponentAssets($rawTpl);
-
-        $allCss = implode("\n", array_filter([$templateCss, $componentAssets['css'], $css]));
-        $allJs = implode("\n", array_filter([$templateJs, $componentAssets['js'], $js]));
+        // Тот же рантайм, что на сайте: скрипт блока получает el и ждёт готовности DOM
+        $allJs = $this->blockRenderer->previewScript(
+            [[$block, $js]],
+            implode("\n", array_filter([$templateJs, $componentAssets['js']]))
+        );
 
         $html = $this->blockRenderer->renderPreviewWrapper([
             'cdnCss' => $cdnCssLinks,
@@ -503,42 +379,7 @@ class BlockPresetController extends Controller
             'postScript' => "function sendHeight(){window.parent.postMessage({type:'presetHeight',height:document.body.scrollHeight,id:{$preset->id}},'*')}\nnew ResizeObserver(sendHeight).observe(document.body);\nsendHeight();",
         ]);
 
-        return response($html, 200, ['Content-Type' => 'text/html']);
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/block-presets/{id}/draft",
-     *     summary="Создать/обновить черновик данных пресета",
-     *     tags={"Block Presets"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\RequestBody(required=true, @OA\JsonContent(
-     *         @OA\Property(property="data", type="object")
-     *     )),
-     *     @OA\Response(response=200, description="draft_id черновика")
-     * )
-     */
-    public function draft(Request $request, int $id): JsonResponse
-    {
-        $preset = BlockPreset::findOrFail($id);
-        $validated = $request->validate([
-            'data' => 'nullable|array',
-        ]);
-
-        $draft = BlockPresetData::updateOrCreate(
-            [
-                'preset_id' => $preset->id,
-                'user_id' => auth()->id(),
-                'change_type' => 'updating',
-            ],
-            [
-                'block_id' => $preset->block_id,
-                'data' => $validated['data'] ?? $preset->data,
-            ]
-        );
-
-        return $this->success(['draft_id' => $draft->id]);
+        return $this->success(['html' => $html]);
     }
 
     /**

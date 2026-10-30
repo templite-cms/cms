@@ -132,29 +132,6 @@ class ModuleRegistry
     }
 
     /**
-     * Получить виджеты дашборда из всех модулей.
-     */
-    public function getDashboardWidgets(): array
-    {
-        $widgets = [];
-
-        foreach ($this->getModules() as $module) {
-            foreach ($module->getDashboardWidgets() as $widget) {
-                // Резолвим data_route в data_url
-                if (isset($widget['data_route']) && Route::has($widget['data_route'])) {
-                    $widget['data_url'] = route($widget['data_route']);
-                    unset($widget['data_route']);
-                }
-                $widgets[] = $widget;
-            }
-        }
-
-        usort($widgets, fn ($a, $b) => ($a['position'] ?? 0) <=> ($b['position'] ?? 0));
-
-        return $widgets;
-    }
-
-    /**
      * Получить настройки из всех модулей.
      */
     public function getSettings(): array

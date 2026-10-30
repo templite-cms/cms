@@ -1,0 +1,101 @@
+// =============================================================================
+// Block Code History — история версий кода блока
+// =============================================================================
+
+@use '../variables' as *;
+
+.block-code-history {
+  padding: 1rem;
+}
+
+.block-code-history__muted {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+.block-code-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.block-code-history__item {
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  padding: 0.625rem 0.75rem;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.block-code-history__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.block-code-history__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.block-code-history__source {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.block-code-history__date,
+.block-code-history__author {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+}
+
+.block-code-history__actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.block-code-history__preview {
+  margin-top: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.block-code-history__file-name {
+  font-size: $font-size-xs;
+  color: $neutral-500;
+}
+
+.block-code-history__code {
+  margin: 0.25rem 0 0;
+  padding: 0.5rem;
+  max-height: 14rem;
+  overflow: auto;
+  border-radius: $radius;
+  background-color: $neutral-100;
+  font-family: $font-mono;
+  font-size: $font-size-xs;
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  .dark & {
+    background-color: $neutral-900;
+    color: $neutral-200;
+  }
+}

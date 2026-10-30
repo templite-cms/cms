@@ -11,7 +11,7 @@
 
 .editor-workspace {
   position: fixed;
-  top: 104px; // header + subheader
+  top: calc(#{$spacing-header} + #{$spacing-subheader}); // header + submenu
   bottom: 0;
   background-color: $neutral-900;
   overflow: hidden;

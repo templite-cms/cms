@@ -5,6 +5,7 @@ namespace Templite\Cms\Http\Controllers\Api;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Templite\Cms\Services\Mcp\McpScope;
 
 class ApiTokenController extends Controller
 {
@@ -16,6 +17,8 @@ class ApiTokenController extends Controller
         'pages:read', 'pages:write',
         'templates:read', 'templates:write',
         'components:read', 'components:write',
+        'actions:read', 'actions:write',
+        'media:read', 'media:write',
         'settings:read', 'settings:write',
         'files:read', 'files:write',
         'managers:read', 'managers:write',
@@ -59,9 +62,12 @@ class ApiTokenController extends Controller
     {
         $manager = auth()->user();
 
+        // MCP-токены выпускаются и правятся отдельно (McpTokenController)
         $tokens = $manager->tokens()
             ->orderByDesc('created_at')
             ->get()
+            ->reject(fn ($token) => McpScope::isMcpToken($token))
+            ->values()
             ->map(fn ($token) => [
                 'id' => $token->id,
                 'name' => $token->name,
@@ -167,6 +173,45 @@ class ApiTokenController extends Controller
      *     @OA\Response(response=404, description="Токен не найден")
      * )
      */
+    /**
+     * Изменить название, права и срок токена. Сам токен (секрет) не меняется.
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'abilities' => 'required|array|min:1',
+            'abilities.*' => 'string|in:*,' . implode(',', self::ALLOWED_ABILITIES),
+            // Ключ не передан — срок прежний; null — бессрочный
+            'expires_at' => 'sometimes|nullable|date|after:now',
+        ]);
+
+        $token = $request->user()->tokens()->whereKey($id)->first();
+
+        if (! $token || McpScope::isMcpToken($token)) {
+            return $this->error('Токен не найден.', 404);
+        }
+
+        $abilities = in_array('*', $data['abilities'], true)
+            ? ['*']
+            : array_values(array_intersect($data['abilities'], self::ALLOWED_ABILITIES));
+
+        $token->forceFill(['name' => $data['name'], 'abilities' => $abilities]);
+
+        if (array_key_exists('expires_at', $data)) {
+            $token->expires_at = $data['expires_at'] ? Carbon::parse($data['expires_at']) : null;
+        }
+
+        $token->save();
+
+        $this->logAction('update', 'api_token', $token->id, [
+            'name' => $data['name'],
+            'abilities' => $abilities,
+        ]);
+
+        return $this->success(null, 'Токен обновлён.');
+    }
+
     public function destroy(int $id): JsonResponse
     {
         $manager = auth()->user();

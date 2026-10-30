@@ -4,18 +4,17 @@ namespace Templite\Cms\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Templite\Cms\Http\Resources\PageBlockDataResource;
+use Illuminate\Validation\Rule;
 use Templite\Cms\Http\Resources\PageBlockResource;
-use Illuminate\Http\Response;
 use Templite\Cms\Models\BlockPreset;
-use Templite\Cms\Models\Library;
+use Templite\Cms\Models\CmsConfig;
 use Templite\Cms\Models\Page;
 use Templite\Cms\Models\PageBlock;
-use Templite\Cms\Models\PageBlockData;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\ActionRunner;
 use Templite\Cms\Services\BlockDataResolver;
 use Templite\Cms\Services\BlockRenderer;
+use Templite\Cms\Services\LibraryAssetBuilder;
 use Templite\Cms\Services\CacheManager;
 
 class PageBlockController extends Controller
@@ -43,26 +42,46 @@ class PageBlockController extends Controller
             'block.blockType',
             'block.blockActions.action',
             'block.fields.children.children',
-            'block.tabs',
-            'block.sections',
         ])->findOrFail($id);
 
         return $this->success($pb);
     }
 
-    /** @OA\Post(path="/pages/{id}/blocks", summary="Добавить блок на страницу", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\RequestBody(required=true, @OA\JsonContent(required={"block_id"}, @OA\Property(property="block_id", type="integer"), @OA\Property(property="data", type="object"), @OA\Property(property="order", type="integer"))), @OA\Response(response=201, description="Блок добавлен")) */
+    /** @OA\Post(path="/pages/{id}/blocks", summary="Добавить блок на страницу", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\RequestBody(required=true, @OA\JsonContent(@OA\Property(property="block_id", type="integer", description="Обязателен без copy_from"), @OA\Property(property="copy_from", type="integer", description="ID экземпляра блока: вставка копии (буфер)"), @OA\Property(property="data", type="object"), @OA\Property(property="order", type="integer"), @OA\Property(property="preset_id", type="integer"))), @OA\Response(response=201, description="Блок добавлен")) */
     public function store(Request $request, int $id): JsonResponse
     {
         $page = Page::findOrFail($id);
         $data = $request->validate([
-            'block_id' => 'required|integer|exists:blocks,id',
+            'block_id' => 'required_without:copy_from|integer|exists:blocks,id',
+            'copy_from' => 'nullable|integer|exists:page_blocks,id',
             'data' => 'nullable|array',
             'order' => 'integer',
             'preset_id' => 'nullable|integer|exists:block_presets,id',
         ]);
 
-        $presetId = $data['preset_id'] ?? null;
-        unset($data['preset_id']);
+        // Вставка из буфера: копия актуального состояния исходного экземпляра
+        if ($copyFrom = $data['copy_from'] ?? null) {
+            $source = PageBlock::findOrFail($copyFrom);
+            $data = array_merge($data, [
+                'block_id' => $source->block_id,
+                'data' => $source->data ?? [],
+                'action_params' => $source->action_params,
+                'cache_enabled' => $source->cache_enabled,
+                'cache_key' => $source->cache_key,
+                'preset_id' => $source->preset_id,
+            ]);
+        }
+        unset($data['copy_from']);
+
+        $presetId = $copyFrom ? null : ($data['preset_id'] ?? null);
+        if (! $copyFrom) {
+            unset($data['preset_id']);
+        }
+
+        // Блок без пресета и без данных получает стартовый контент из пресета по умолчанию.
+        if (! $copyFrom && ! $presetId && empty($data['data'])) {
+            $presetId = BlockPreset::defaultForBlock($data['block_id'])?->id;
+        }
 
         $data['page_id'] = $page->id;
         if (!isset($data['order'])) {
@@ -75,20 +94,10 @@ class PageBlockController extends Controller
             $preset = BlockPreset::find($presetId);
             if ($preset) {
                 if ($preset->type === 'local') {
-                    // Copy preset data into page block
+                    // Локальный пресет — только стартовые данные; связи с ним нет
                     $pb->update([
                         'data' => $preset->data ?? [],
-                        'preset_id' => $preset->id,
                     ]);
-                    // Create version with preset data
-                    if (!empty($preset->data)) {
-                        $pb->createVersion(
-                            $preset->data,
-                            null,
-                            auth()->id(),
-                            'preset'
-                        );
-                    }
                 } elseif ($preset->type === 'global') {
                     // Link to global preset without copying data
                     $pb->update([
@@ -103,14 +112,18 @@ class PageBlockController extends Controller
             'page_id' => $page->id,
             'block_id' => $data['block_id'],
             'preset_id' => $presetId,
+            'copy_from' => $copyFrom,
         ]);
+
+        // Перечитываем модель: колонки с дефолтами БД (cache_enabled и т.п.) после
+        // create() в атрибутах отсутствуют и уходят в ответ как null — редактор
+        // затем шлёт этот null обратно и падает на NOT NULL.
+        $pb->refresh();
 
         return $this->success(new PageBlockResource($pb->load([
             'block.blockType',
             'block.blockActions.action',
             'block.fields.children',
-            'block.tabs',
-            'block.sections',
             'preset',
         ])), 'Блок добавлен.', 201);
     }
@@ -125,10 +138,17 @@ class PageBlockController extends Controller
             'status' => 'nullable|string|in:published,draft,hidden',
             'cache_enabled' => 'nullable|boolean',
             'cache_key' => 'nullable|string|max:255',
-            'preset_id' => 'nullable|integer|exists:block_presets,id',
-            'field_overrides' => 'nullable|array',
+            // Связь — только с глобальным пресетом этого же блока; null — отвязать
+            'preset_id' => [
+                'nullable', 'integer',
+                Rule::exists('block_presets', 'id')->where('type', 'global')->where('block_id', $pb->block_id),
+            ],
         ]);
-        $pb->update($data);
+
+        if ($data !== []) {
+            $pb->update($data);
+        }
+
         $this->cacheManager->invalidateBlock($pb);
 
         $this->logAction('update_data', 'page_block', $pb->id, ['page_id' => $pb->page_id]);
@@ -163,108 +183,6 @@ class PageBlockController extends Controller
         return $this->success(null, 'Порядок обновлён.');
     }
 
-    /** @OA\Post(path="/page-blocks/{id}/copy", summary="Копировать блок в буфер", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=201, description="Блок скопирован в буфер")) */
-    public function copy(int $id): JsonResponse
-    {
-        $pb = PageBlock::findOrFail($id);
-
-        $bufferItem = PageBlockData::create([
-            'page_block_id' => null,
-            'block_id' => $pb->block_id,
-            'data' => $pb->data ?? [],
-            'action_params' => $pb->action_params ?? [],
-            'user_id' => auth()->id(),
-            'change_type' => 'copy',
-        ]);
-
-        $this->logAction('copy_to_buffer', 'page_block', $pb->id, ['buffer_id' => $bufferItem->id]);
-
-        return $this->success(
-            new PageBlockDataResource($bufferItem->load(['block.blockType', 'block.screenshot', 'user'])),
-            'Блок скопирован в буфер.',
-            201
-        );
-    }
-
-    /** @OA\Get(path="/page-block-data/buffer", summary="Буфер скопированных блоков", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Response(response=200, description="Список блоков в буфере")) */
-    public function buffer(): JsonResponse
-    {
-        $items = PageBlockData::where('user_id', auth()->id())
-            ->where('change_type', 'copy')
-            ->whereNull('page_block_id')
-            ->with(['block.blockType', 'block.screenshot', 'user'])
-            ->orderByDesc('created_at')
-            ->get();
-
-        return $this->success(PageBlockDataResource::collection($items));
-    }
-
-    /** @OA\Post(path="/page-block-data/{id}/paste", summary="Вставить блок из буфера на страницу", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\RequestBody(required=true, @OA\JsonContent(required={"page_id"}, @OA\Property(property="page_id", type="integer"), @OA\Property(property="position", type="integer"))), @OA\Response(response=201, description="Блок вставлен")) */
-    public function paste(Request $request, int $id): JsonResponse
-    {
-        $bufferItem = PageBlockData::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->where('change_type', 'copy')
-            ->whereNull('page_block_id')
-            ->firstOrFail();
-
-        $data = $request->validate([
-            'page_id' => 'required|integer|exists:pages,id',
-            'position' => 'nullable|integer|min:0',
-        ]);
-
-        $pageId = $data['page_id'];
-        $position = $data['position'] ?? null;
-
-        if ($position !== null) {
-            PageBlock::where('page_id', $pageId)
-                ->where('order', '>=', $position)
-                ->increment('order');
-            $order = $position;
-        } else {
-            $order = PageBlock::where('page_id', $pageId)->max('order') + 1;
-        }
-
-        $pb = PageBlock::create([
-            'page_id' => $pageId,
-            'block_id' => $bufferItem->block_id,
-            'data' => $bufferItem->data ?? [],
-            'action_params' => $bufferItem->action_params ?? [],
-            'order' => $order,
-            'cache_enabled' => false,
-        ]);
-
-        $this->logAction('paste_from_buffer', 'page_block', $pb->id, [
-            'page_id' => $pageId,
-            'buffer_id' => $bufferItem->id,
-        ]);
-
-        return $this->success(new PageBlockResource($pb->load([
-            'block.blockType',
-            'block.blockActions.action',
-            'block.fields.children',
-            'block.tabs',
-            'block.sections',
-            'preset',
-        ])), 'Блок вставлен из буфера.', 201);
-    }
-
-    /** @OA\Delete(path="/page-block-data/{id}", summary="Удалить элемент буфера", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Удалено")) */
-    public function destroyBufferItem(int $id): JsonResponse
-    {
-        $item = PageBlockData::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->where('change_type', 'copy')
-            ->whereNull('page_block_id')
-            ->firstOrFail();
-
-        $item->delete();
-
-        $this->logAction('delete_buffer_item', 'page_block_data', $id);
-
-        return $this->success(null, 'Элемент буфера удалён.');
-    }
-
     /** @OA\Put(path="/page-blocks/{id}/cache", summary="Переключить кэш блока", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Обновлено")) */
     public function toggleCache(Request $request, int $id): JsonResponse
     {
@@ -275,7 +193,7 @@ class PageBlockController extends Controller
             $this->cacheManager->invalidateBlock($pb);
         }
 
-        $this->logAction('update', 'page_block', $pb->id, ['cache_enabled' => $data['cache_enabled']]);
+        $this->logAction('update', 'page_block', $pb->id, ['cache_enabled' => $data['cache_enabled'], 'page_id' => $pb->page_id]);
 
         return $this->success(new PageBlockResource($pb->fresh(['preset'])));
     }
@@ -291,22 +209,35 @@ class PageBlockController extends Controller
         return $this->success(null, 'Кэш блока сброшен.');
     }
 
-    /** @OA\Get(path="/page-blocks/{id}/render", summary="Рендер блока (HTML-страница)", tags={"Page Blocks"}, security={{"sanctumAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="draft", in="query", required=false, @OA\Schema(type="integer"), description="ID черновика PageBlockData"), @OA\Response(response=200, description="HTML-страница с отрендеренным блоком", @OA\MediaType(mediaType="text/html"))) */
-    public function render(Request $request, int $id): Response
+    /**
+     * Превью экземпляра блока в редакторе страницы.
+     *
+     * Несохранённые данные приходят в теле запроса и в БД не пишутся:
+     * черновиков нет, сохраняет только «Сохранить страницу».
+     *
+     * @OA\Post(path="/page-blocks/{id}/render", summary="Превью блока на странице", tags={"Page Blocks"}, security={{"sanctumAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\RequestBody(@OA\JsonContent(@OA\Property(property="data", type="object"), @OA\Property(property="action_params", type="object"), @OA\Property(property="template_id", type="integer"))), @OA\Response(response=200, description="{html}"))
+     */
+    public function render(Request $request, int $id): JsonResponse
     {
-        $pb = PageBlock::with(['block.fields.children', 'block.blockActions.action', 'block.libraries', 'preset'])
+        $input = $request->validate([
+            'data' => 'nullable|array',
+            'action_params' => 'nullable|array',
+            'template_id' => 'nullable|integer',
+        ]);
+
+        $pb = PageBlock::with(['block.fields', 'block.blockActions.action', 'block.libraries.files', 'preset'])
             ->findOrFail($id);
 
-        $page = Page::with('templatePage.libraries')->findOrFail($pb->page_id);
+        $page = Page::with('templatePage.libraries.files')->findOrFail($pb->page_id);
 
         // Override template for preview when switching template without saving
-        $overrideTemplateId = $request->query('template_id');
+        $overrideTemplateId = $input['template_id'] ?? null;
         if ($overrideTemplateId !== null) {
             $overrideTemplateId = (int) $overrideTemplateId;
             if ($overrideTemplateId && $overrideTemplateId !== $page->template_page_id) {
                 $page->setRelation(
                     'templatePage',
-                    TemplatePage::with('libraries')->find($overrideTemplateId)
+                    TemplatePage::with('libraries.files')->find($overrideTemplateId)
                 );
             } elseif (!$overrideTemplateId) {
                 $page->setRelation('templatePage', null);
@@ -317,44 +248,16 @@ class PageBlockController extends Controller
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
 
-        // На реальных страницах $city приходит из CityResolver middleware, в превью — нет.
-        // Шарим дефолтный город, чтобы блоки с $city не падали.
-        $city = \Templite\Cms\Models\City::getDefault();
-        if ($city) {
-            view()->share('city', $city);
-        }
-
-        // If draft query param — load data from PageBlockData; otherwise use PageBlock.data
-        $draftId = $request->query('draft');
-        if ($draftId) {
-            $draft = PageBlockData::findOrFail((int) $draftId);
-            abort_if($draft->page_block_id !== $pb->id, 403, 'Draft does not belong to this page block.');
-
-            $data = $draft->data ?? [];
-
-            // Merge with global preset data when applicable
-            if ($pb->preset_id && $pb->preset && $pb->preset->type === 'global') {
-                $presetData = $pb->preset->data ?? [];
-                $overrides = $pb->field_overrides ?? [];
-                $merged = $presetData;
-                foreach ($overrides as $key => $isOverridden) {
-                    if ($isOverridden && array_key_exists($key, $data)) {
-                        $merged[$key] = $data[$key];
-                    }
-                }
-                $data = $merged;
+        // Данные из редактора — только в памяти, модель не сохраняется
+        foreach (['data', 'action_params'] as $key) {
+            if (array_key_exists($key, $input)) {
+                $pb->{$key} = $input[$key];
             }
-
-            $resolvedData = $this->blockDataResolver->resolveBlockData(
-                $pb->block,
-                $data
-            );
-            $actionParams = $draft->action_params ?? $pb->action_params ?? [];
-        } else {
-            $this->blockDataResolver->resolvePageBlocks(collect([$pb]));
-            $resolvedData = $pb->resolved_data ?? $pb->data ?? [];
-            $actionParams = $pb->action_params ?? [];
         }
+
+        $this->blockDataResolver->resolvePageBlocks(collect([$pb]));
+        $resolvedData = $pb->resolved_data;
+        $actionParams = $pb->action_params ?? [];
 
         $actions = $this->actionRunner->run(
             $pb->block,
@@ -373,6 +276,17 @@ class PageBlockController extends Controller
             $global
         );
 
+        // У блока может не быть кода (например, тип создан, а шаблон ещё не написан):
+        // renderer отдаёт HTML-комментарий, и в редакторе блок выглядит пустым без
+        // объяснения. На сайте комментарий уместен, в админке — говорим прямо.
+        if (str_starts_with(trim($blockHtml), '<!-- Block ')) {
+            $editUrl = '/'.ltrim(CmsConfig::getAdminUrl(), '/')."/blocks/{$pb->block_id}/edit";
+            $blockHtml = '<div style="padding:24px;text-align:center;font-family:sans-serif;font-size:14px;color:#94a3b8;border:1px dashed #cbd5e1;border-radius:8px;margin:8px">'
+                .'У блока «'.e($pb->block->name).'» нет кода шаблона.<br>'
+                .'<a href="'.$editUrl.'" target="_blank" style="color:#4480f4">Открыть редактор блока</a> и написать вёрстку.'
+                .'</div>';
+        }
+
         // Block CSS/JS
         $css = $this->blockRenderer->compileStyles($pb->block) ?? '';
         $js = '';
@@ -389,39 +303,23 @@ class PageBlockController extends Controller
             $templateJs = $this->blockRenderer->getTemplateScript($page->templatePage) ?? '';
         }
 
-        // Libraries (CDN + local)
-        $cdnHead = '';
-        $cdnScripts = '';
-        $libraryIds = $pb->block->libraries ? $pb->block->libraries->pluck('id') : collect();
-        if ($page->templatePage && $page->templatePage->libraries) {
-            $libraryIds = $libraryIds->merge($page->templatePage->libraries->pluck('id'));
+        // Библиотеки блока и шаблона — одной коллекцией: билдер сам фильтрует
+        // по active, сортирует и дедуплицирует.
+        $previewLibraries = collect();
+        if ($pb->block->libraries) {
+            $previewLibraries = $previewLibraries->merge($pb->block->libraries);
         }
-        if ($libraryIds->isNotEmpty()) {
-            $libraries = Library::whereIn('id', $libraryIds->unique())
-                ->active()
-                ->orderBy('sort_order')
-                ->get();
-            foreach ($libraries as $lib) {
-                if ($lib->load_strategy === 'cdn') {
-                    if ($lib->css_cdn) {
-                        $cdnHead .= '<link rel="stylesheet" href="' . e($lib->css_cdn) . '">' . "\n";
-                    }
-                    if ($lib->js_cdn) {
-                        $cdnScripts .= '<script src="' . e($lib->js_cdn) . '"></script>' . "\n";
-                    }
-                } elseif ($lib->load_strategy === 'local') {
-                    if ($lib->css_file) {
-                        $cdnHead .= '<link rel="stylesheet" href="' . e(asset('storage/' . ltrim($lib->css_file, '/'))) . '">' . "\n";
-                    }
-                    if ($lib->js_file) {
-                        $cdnScripts .= '<script src="' . e(asset('storage/' . ltrim($lib->js_file, '/'))) . '"></script>' . "\n";
-                    }
-                }
-            }
+        if ($page->templatePage && $page->templatePage->libraries) {
+            $previewLibraries = $previewLibraries->merge($page->templatePage->libraries);
         }
 
+        $libraryHtml = app(LibraryAssetBuilder::class)->htmlFor($previewLibraries);
+        $cdnHead = $libraryHtml['head'];
+        $cdnScripts = $libraryHtml['body'];
+
         $allCss = implode("\n", array_filter([$templateCss, $css]));
-        $allJs = implode("\n", array_filter([$templateJs, $js]));
+        // Тот же рантайм, что на сайте: скрипт блока получает el и ждёт готовности DOM
+        $allJs = $this->blockRenderer->previewScript([[$pb->block, $js]], $templateJs);
 
         $html = $this->blockRenderer->renderPreviewWrapper([
             'cdnCss' => $cdnHead,
@@ -432,99 +330,6 @@ class PageBlockController extends Controller
             'postScript' => "function sendHeight(){window.parent.postMessage({type:'blockHeight',height:document.body.scrollHeight,id:{$pb->id}},'*')}\nnew ResizeObserver(sendHeight).observe(document.body);\nsendHeight();",
         ]);
 
-        return response($html, 200, ['Content-Type' => 'text/html']);
-    }
-
-    /** @OA\Put(path="/page-blocks/{id}/draft", summary="Создать/обновить черновик блока", tags={"Page Blocks"}, security={{"sanctumAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\RequestBody(required=true, @OA\JsonContent(@OA\Property(property="data", type="object"), @OA\Property(property="action_params", type="object"))), @OA\Response(response=200, description="draft_id черновика")) */
-    public function draft(Request $request, int $id): JsonResponse
-    {
-        $pb = PageBlock::findOrFail($id);
-        $data = $request->validate([
-            'data' => 'nullable|array',
-            'action_params' => 'nullable|array',
-        ]);
-
-        // Upsert: find existing updating draft for this page_block + current user
-        $draft = PageBlockData::updateOrCreate(
-            [
-                'page_block_id' => $pb->id,
-                'user_id' => auth()->id(),
-                'change_type' => 'updating',
-            ],
-            [
-                'block_id' => $pb->block_id,
-                'data' => $data['data'] ?? $pb->data,
-                'action_params' => $data['action_params'] ?? $pb->action_params,
-            ]
-        );
-
-        return $this->success(['draft_id' => $draft->id]);
-    }
-
-    /** @OA\Get(path="/page-blocks/{id}/versions", summary="Версии данных блока", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Список версий")) */
-    public function versions(int $id): JsonResponse
-    {
-        $pb = PageBlock::findOrFail($id);
-        $versions = $pb->versions()->with('user')->get();
-
-        return $this->success(PageBlockDataResource::collection($versions));
-    }
-
-    /** @OA\Get(path="/page-blocks/{id}/versions/{versionId}", summary="Одна версия данных блока", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Версия")) */
-    public function showVersion(int $id, int $versionId): JsonResponse
-    {
-        $pb = PageBlock::findOrFail($id);
-        $version = $pb->versions()->with('user')->findOrFail($versionId);
-
-        return $this->success(new PageBlockDataResource($version));
-    }
-
-    /** @OA\Put(path="/page-blocks/{id}/version/{versionId}", summary="Установить активную версию", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Версия установлена")) */
-    public function setActiveVersion(int $id, int $versionId): JsonResponse
-    {
-        $pb = PageBlock::findOrFail($id);
-        $version = $pb->versions()->findOrFail($versionId);
-
-        $pb->update([
-            'page_block_data_id' => $version->id,
-            'data' => $version->data,
-            'action_params' => $version->action_params,
-        ]);
-
-        $this->cacheManager->invalidateBlock($pb);
-
-        $this->logAction('set_version', 'page_block', $pb->id, ['version_id' => $versionId]);
-
-        return $this->success(new PageBlockResource($pb->fresh(['block', 'preset'])), 'Активная версия установлена.');
-    }
-
-    /** @OA\Delete(path="/page-blocks/{id}/versions/{versionId}", summary="Удалить версию данных блока", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Версия удалена")) */
-    public function destroyVersion(int $id, int $versionId): JsonResponse
-    {
-        $pb = PageBlock::findOrFail($id);
-        $version = $pb->versions()->findOrFail($versionId);
-
-        // Cannot delete active version
-        abort_if($pb->page_block_data_id === $version->id, 422, 'Нельзя удалить активную версию.');
-
-        $version->delete();
-
-        $this->logAction('delete_version', 'page_block', $pb->id, ['version_id' => $versionId]);
-
-        return $this->success(null, 'Версия удалена.');
-    }
-
-    /** @OA\Delete(path="/page-blocks/{id}/versions", summary="Удалить все неактивные версии", tags={"Page Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Неактивные версии удалены")) */
-    public function destroyInactiveVersions(int $id): JsonResponse
-    {
-        $pb = PageBlock::findOrFail($id);
-
-        $deleted = $pb->versions()
-            ->where('id', '!=', $pb->page_block_data_id ?? 0)
-            ->delete();
-
-        $this->logAction('delete_inactive_versions', 'page_block', $pb->id, ['deleted_count' => $deleted]);
-
-        return $this->success(['deleted' => $deleted], 'Неактивные версии удалены.');
+        return $this->success(['html' => $html]);
     }
 }

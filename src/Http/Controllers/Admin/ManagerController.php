@@ -3,6 +3,7 @@
 namespace Templite\Cms\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
+use Templite\Cms\Dashboard\DashboardWidgetRegistry;
 use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Manager;
 use Templite\Cms\Models\ManagerType;
@@ -23,6 +24,7 @@ class ManagerController extends Controller
                 ->orderBy('name')
                 ->get(),
             'allPermissions' => ManagerType::getAvailablePermissions(),
+            'dashboardWidgets' => app(DashboardWidgetRegistry::class)->catalog(),
         ], ['title' => 'Менеджеры']);
     }
 }

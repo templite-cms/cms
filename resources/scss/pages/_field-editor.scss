@@ -189,25 +189,8 @@
   }
 }
 
-// Orphan sections
-.fields-manager__orphan-group {
-  margin-top: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.fields-manager__orphan-label {
-  font-size: 11px;
-  color: $neutral-400;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0 0.25rem;
-}
-
-// Orphan fields
-.fields-manager__orphan-fields {
-  margin-top: 0.75rem;
+// Flat field list
+.fields-manager__list {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -281,114 +264,6 @@
 }
 
 // =============================================================================
-// FieldEditorInline
-// =============================================================================
-
-.field-editor-inline {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-
-.field-editor-inline__header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid $neutral-200;
-  flex-shrink: 0;
-
-  .dark & {
-    border-bottom-color: $neutral-700;
-  }
-}
-
-.field-editor-inline__back-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: $font-size-sm;
-  color: $neutral-500;
-  @include transition-fast(color);
-
-  &:hover {
-    color: $neutral-700;
-  }
-
-  .dark & {
-    color: $neutral-400;
-
-    &:hover {
-      color: $neutral-200;
-    }
-  }
-}
-
-.field-editor-inline__title-area {
-  padding: 0.75rem 1rem 0.25rem;
-  flex-shrink: 0;
-}
-
-.field-editor-inline__title {
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  color: $neutral-900;
-
-  .dark & {
-    color: $neutral-50;
-  }
-}
-
-.field-editor-inline__content {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  padding: 0 1rem 6rem;
-}
-
-.field-editor-inline__form {
-  display: flex;
-  flex-direction: column;
-
-  > * {
-    // space-y-0 equivalent -- no auto spacing between sections
-  }
-}
-
-.field-editor-inline__footer {
-  position: sticky;
-  bottom: 0;
-  background-color: #fff;
-  border-top: 1px solid $neutral-200;
-  padding: 0.75rem 1rem;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-
-  .dark & {
-    background-color: $neutral-800;
-    border-top-color: $neutral-700;
-  }
-}
-
-.field-editor-inline__spinner {
-  animation: spin 1s linear infinite;
-  width: 0.875rem;
-  height: 0.875rem;
-}
-
-.field-editor-inline__spinner-circle {
-  opacity: 0.25;
-}
-
-.field-editor-inline__spinner-path {
-  opacity: 0.75;
-}
-
-// =============================================================================
 // FieldEditor (Drawer-based)
 // =============================================================================
 
@@ -426,7 +301,7 @@
 }
 
 // =============================================================================
-// Collapsible Section (shared by FieldEditorInline & FieldEditor)
+// Collapsible Section (FieldEditor)
 // =============================================================================
 
 .field-section {

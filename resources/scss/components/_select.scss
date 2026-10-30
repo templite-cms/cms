@@ -53,6 +53,13 @@
   color: $neutral-400;
 }
 
+// Список открывается вверх — для селектов у нижнего края (пагинация и т.п.).
+// Класс вешается на SelectField, он попадает на корневой .form-group.
+.select--dropup .select__dropdown {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
 .select__dropdown {
   position: absolute;
   top: calc(100% + 4px);

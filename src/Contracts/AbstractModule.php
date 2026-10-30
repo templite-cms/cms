@@ -36,9 +36,4 @@ abstract class AbstractModule implements TempliteModuleInterface
     {
         return null;
     }
-
-    public function getGuards(): array
-    {
-        return [];
-    }
 }

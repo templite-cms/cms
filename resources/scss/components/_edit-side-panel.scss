@@ -7,7 +7,7 @@
 
 .edit-side-panel {
   position: fixed;
-  top: 104px;
+  top: calc(#{$spacing-header} + #{$spacing-subheader}); // header + submenu
   bottom: 0;
   z-index: $z-subheader;
   display: flex;

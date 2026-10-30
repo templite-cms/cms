@@ -37,7 +37,7 @@ class MyAction implements BlockActionInterface
      *   'label'    — название для отображения в админке
      *   'default'  — значение по умолчанию
      *   'required' — обязательность (true/false)
-     *   'options'  — варианты для select (массив или строка-источник: 'page_types', 'languages')
+     *   'options'  — варианты для select (массив или строка-источник: 'page_types')
      *
      * @return array<string, array>
      */
@@ -89,19 +89,6 @@ class MyAction implements BlockActionInterface
     }
 
     /**
-     * Основная логика действия.
-     *
-     * @param  array         $params   Параметры из params(), настроенные при привязке к блоку
-     * @param  ActionContext  $context  Контекст выполнения:
-     *                                   $context->page     — текущая страница (Page)
-     *                                   $context->request   — HTTP-запрос (для query-параметров, пагинации)
-     *                                   $context->global    — глобальные поля сайта (ассоц. массив key => value)
-     *                                   $context->blockData — данные текущего блока (значения полей)
-     *
-     * @return array Данные, доступные в Blade-шаблоне блока.
-     *               Например: return ['items' => $items] → в шаблоне: $actions['my-action']['items']
-     */
-    /**
      * CSRF-проверка при HTTP-вызове (/action/{slug}).
      *
      * true  — POST-запросы требуют _token (формы на своём сайте)
@@ -114,6 +101,19 @@ class MyAction implements BlockActionInterface
         return true;
     }
 
+    /**
+     * Основная логика действия.
+     *
+     * @param  array         $params   Параметры из params(), настроенные при привязке к блоку
+     * @param  ActionContext  $context  Контекст выполнения:
+     *                                   $context->page     — текущая страница (Page)
+     *                                   $context->request   — HTTP-запрос (для query-параметров, пагинации)
+     *                                   $context->global    — глобальные поля сайта (ассоц. массив key => value)
+     *                                   $context->blockData — данные текущего блока (значения полей)
+     *
+     * @return array Данные, доступные в Blade-шаблоне блока.
+     *               Например: return ['items' => $items] → в шаблоне: $actions['my-action']['items']
+     */
     public function handle(array $params, ActionContext $context): array
     {
         // Получение параметров с дефолтами

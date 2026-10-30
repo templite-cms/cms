@@ -25,24 +25,47 @@ class UrlGenerator
     }
 
     /**
-     * Обновить URL страницы и всех потомков.
+     * Пересчитать URL страницы и её потомков после смены alias или родителя.
+     *
+     * Страница с ручным URL (url_auto = false) не меняется — и её потомки тоже:
+     * они строятся от URL родителя, а он остался прежним.
      */
     public function updateUrlTree(Page $page): void
     {
-        $newUrl = $this->generateUrl($page->alias, $page->parent_id);
-        $oldUrl = $page->url;
-
-        if ($newUrl === $oldUrl) {
+        if (!$page->url_auto) {
             return;
         }
 
-        $page->update(['url' => $newUrl]);
+        $baseUrl = $this->generateUrl($page->alias, $page->parent_id);
 
-        // Обновляем URL всех дочерних страниц
-        $children = Page::where('parent_id', $page->id)->get();
-        foreach ($children as $child) {
+        // Уже соответствует дереву (с учётом суффикса уникальности) — не трогаем
+        if ($page->url === $baseUrl || preg_match('#^' . preg_quote($baseUrl, '#') . '-\d+$#', $page->url)) {
+            return;
+        }
+
+        $page->update(['url' => $this->generateUniqueUrl($page->alias, $page->parent_id, $page->id)]);
+
+        $this->updateChildrenUrls($page);
+    }
+
+    /**
+     * Пересчитать URL потомков страницы, у которой изменился URL.
+     */
+    public function updateChildrenUrls(Page $page): void
+    {
+        foreach (Page::where('parent_id', $page->id)->get() as $child) {
             $this->updateUrlTree($child);
         }
+    }
+
+    /**
+     * Привести введённый вручную URL к виду /a/b/c (без завершающего слэша).
+     */
+    public function normalizeUrl(string $url): string
+    {
+        $url = '/' . trim(mb_strtolower(trim($url)), '/');
+
+        return preg_replace('#/+#', '/', $url);
     }
 
     /**

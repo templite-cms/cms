@@ -50,7 +50,8 @@
   opacity: 0;
   @include transition-fast(opacity);
 
-  .list-item:hover & {
+  .list-item:hover &,
+  .list-item:focus-within & {
     opacity: 1;
   }
 }

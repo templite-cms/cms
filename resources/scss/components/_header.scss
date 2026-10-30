@@ -196,6 +196,44 @@
   gap: 0.5rem;
 }
 
+// Остаток кредитов AI: виден на любой странице, ведёт в настройки ассистента.
+.header__credits {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 2rem;
+  padding: 0 0.625rem;
+  border-radius: $radius-full;
+  background-color: rgb(var(--color-surface-hover));
+  color: rgb(var(--color-text-secondary));
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  white-space: nowrap;
+  @include transition-fast(background-color, color);
+
+  &:hover {
+    background-color: rgb(var(--color-surface-active));
+    color: rgb(var(--color-text-primary));
+  }
+
+  &--low {
+    background-color: rgba($error-500, 0.12);
+    color: $error-600;
+
+    &:hover {
+      background-color: rgba($error-500, 0.2);
+      color: $error-700;
+    }
+  }
+}
+
+.header__credits-icon {
+  color: $warning-500;
+  flex-shrink: 0;
+}
+
 .header__icon-btn {
   width: 2rem;
   height: 2rem;
@@ -213,25 +251,36 @@
     color: rgb(var(--color-text-secondary));
     background-color: rgb(var(--color-surface-hover));
   }
-}
 
-// Language selector
-.header__lang {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: rgb(var(--color-text-muted));
-}
+  // Точка на кнопке ассистента: пульсирует, пока он работает в фоне,
+  // горит ровно, если ответ пришёл при закрытой панели.
+  &--busy,
+  &--unread {
+    position: relative;
 
-.header__lang-select {
-  font-size: $font-size-xs;
-  background: transparent;
-  border: none;
-  color: rgb(var(--color-text-secondary));
-  cursor: pointer;
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      width: 0.4375rem;
+      height: 0.4375rem;
+      border-radius: 50%;
+      background-color: $primary-600;
+    }
+  }
 
-  &:focus {
-    outline: none;
+  &--busy::after {
+    animation: header-ai-pulse 1.2s ease-in-out infinite;
+  }
+
+  &--active {
+    color: $primary-600;
+    background-color: rgb(var(--color-surface-active));
+
+    &:hover {
+      color: $primary-600;
+    }
   }
 }
 
@@ -326,4 +375,15 @@
   color: rgb(var(--color-text-muted));
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+@keyframes header-ai-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }

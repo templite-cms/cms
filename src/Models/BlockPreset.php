@@ -18,6 +18,7 @@ class BlockPreset extends Model implements Exportable
         'description',
         'block_id',
         'type',
+        'is_default',
         'data',
         'screen',
         'order',
@@ -25,7 +26,33 @@ class BlockPreset extends Model implements Exportable
 
     protected $casts = [
         'data' => 'json',
+        'is_default' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        // У блока не больше одного пресета по умолчанию.
+        static::saved(function (self $preset) {
+            if ($preset->is_default) {
+                static::where('block_id', $preset->block_id)
+                    ->whereKeyNot($preset->getKey())
+                    ->where('is_default', true)
+                    ->update(['is_default' => false]);
+            }
+        });
+    }
+
+    /**
+     * Пресет, которым заполняется блок, добавленный на страницу без выбора пресета.
+     * Только локальный: он копирует данные в блок, а не связывает его с собой.
+     */
+    public static function defaultForBlock(int $blockId): ?self
+    {
+        return static::where('block_id', $blockId)
+            ->where('type', 'local')
+            ->where('is_default', true)
+            ->first();
+    }
 
     // --- Relationships ---
 
@@ -86,6 +113,7 @@ class BlockPreset extends Model implements Exportable
             'description' => $this->description,
             'block_slug' => $this->block?->slug,
             'type' => $this->type,
+            'is_default' => $this->is_default,
             'data' => $this->data,
             'order' => $this->order,
             'screen_path' => $this->screenFile?->path,
@@ -110,6 +138,7 @@ class BlockPreset extends Model implements Exportable
                 'description' => $data['description'] ?? null,
                 'block_id' => $blockId,
                 'type' => $data['type'] ?? 'local',
+                'is_default' => ($data['is_default'] ?? false) && ($data['type'] ?? 'local') === 'local',
                 'data' => $data['data'] ?? null,
                 'order' => $data['order'] ?? 0,
                 'screen' => $screenId,

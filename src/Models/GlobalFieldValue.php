@@ -39,9 +39,4 @@ class GlobalFieldValue extends Model
     {
         return $this->hasMany(self::class, 'parent_id')->orderBy('order')->with('allDescendants');
     }
-
-    public function translations(): HasMany
-    {
-        return $this->hasMany(GlobalFieldValueTranslation::class);
-    }
 }

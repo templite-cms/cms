@@ -46,8 +46,6 @@ class PresetController extends Controller
     {
         $preset = BlockPreset::with([
             'block.fields.children.children',
-            'block.tabs',
-            'block.sections',
             'block.blockType',
             'block.libraries',
             'screenFile',

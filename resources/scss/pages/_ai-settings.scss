@@ -1,0 +1,452 @@
+// =============================================================================
+// AI Settings — подключение к облачному AI, кредиты и пакеты
+// =============================================================================
+
+@use '../variables' as *;
+
+.ai-settings {
+  padding: 1.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+
+.ai-settings__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.ai-settings__title {
+  font-size: $font-size-2xl;
+  line-height: $line-height-2xl;
+  letter-spacing: $letter-spacing-2xl;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Cards
+// -----------------------------------------------------------------------------
+
+.ai-settings__card {
+  background-color: #fff;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-xl;
+  padding: 1.5rem;
+
+  // Карточки идут вертикальным стеком — разводим их, не оставляя хвоста снизу.
+  & + & {
+    margin-top: 1.5rem;
+  }
+
+  .dark & {
+    background-color: $neutral-800;
+    border-color: $neutral-700;
+  }
+}
+
+.ai-settings__card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  margin-bottom: 1.25rem;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.ai-settings__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  // Карточка теперь во всю ширину — кнопка не должна растягиваться вместе с ней.
+  > .btn {
+    align-self: flex-start;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Fields
+// -----------------------------------------------------------------------------
+
+.ai-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ai-settings__field-label {
+  display: block;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+.ai-settings__field-description {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $neutral-500;
+
+  code {
+    font-family: $font-mono;
+    font-size: 0.95em;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Switch
+// -----------------------------------------------------------------------------
+
+.ai-settings__switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ai-settings__switch {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  border-radius: $radius-full;
+  border: 2px solid transparent;
+  background-color: $neutral-300;
+  transition: background-color 200ms ease-in-out;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px $primary-500, 0 0 0 4px rgba($primary-500, 0.2);
+  }
+
+  .dark & {
+    background-color: $neutral-600;
+  }
+
+  &--active {
+    background-color: $primary-600;
+
+    .dark & {
+      background-color: $primary-600;
+    }
+  }
+}
+
+.ai-settings__switch-handle {
+  pointer-events: none;
+  display: inline-block;
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: $radius-full;
+  background-color: #fff;
+  box-shadow: $shadow-sm;
+  transition: transform 200ms ease-in-out;
+  transform: translateX(0);
+
+  &--active {
+    transform: translateX(1.25rem);
+  }
+}
+
+.ai-settings__switch-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-600;
+
+  .dark & {
+    color: $neutral-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Credits & packages
+// -----------------------------------------------------------------------------
+
+.ai-settings__balance {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-700;
+
+  strong {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $neutral-900;
+  }
+
+  // Ссылка «Пополнить» стоит в одну строку с остатком — отделяем её и
+  // выравниваем иконку по центру строки.
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.75rem;
+
+    &:hover {
+      color: $primary-600;
+    }
+  }
+
+  .dark & {
+    color: $neutral-300;
+
+    strong {
+      color: $neutral-50;
+    }
+
+    // На тёмном фоне приглушённый серый почти не читается.
+    a {
+      color: $neutral-400;
+
+      &:hover {
+        color: $primary-400;
+      }
+    }
+  }
+}
+
+.ai-settings__packages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ai-settings__package {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+
+  .dark & {
+    border-color: $neutral-700;
+  }
+}
+
+.ai-settings__package-name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+
+  .dark & {
+    color: $neutral-50;
+  }
+}
+
+.ai-settings__package-meta {
+  flex: 1;
+  font-size: $font-size-xs;
+  color: $neutral-500;
+}
+
+.ai-settings__muted {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $neutral-500;
+}
+
+// -----------------------------------------------------------------------------
+// Ключи провайдеров
+// -----------------------------------------------------------------------------
+
+.ai-key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgb(var(--color-border-default));
+  border-radius: $radius-lg;
+  background: rgb(var(--color-surface-card));
+
+  & + & {
+    margin-top: 0.75rem;
+  }
+}
+
+.ai-key__head {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.ai-key__icon {
+  flex-shrink: 0;
+  color: rgb(var(--color-text-secondary));
+}
+
+.ai-key__title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ai-key__name {
+  font-weight: $font-weight-semibold;
+  color: rgb(var(--color-text-primary));
+}
+
+.ai-key__provider,
+.ai-key__owner {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: rgb(var(--color-text-muted));
+}
+
+// Ключ не расшифровывается — пока его не введут заново, ассистент работать не будет.
+.ai-key__broken {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: $error-500;
+
+  .dark & {
+    color: $error-400;
+  }
+}
+
+.ai-key__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: rgb(var(--color-text-secondary));
+}
+
+.ai-key__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Форма ключа и доступы
+// -----------------------------------------------------------------------------
+
+.ai-key-form,
+.ai-key-access {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ai-key-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ai-key-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ai-key-form__label {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-weight-medium;
+  color: rgb(var(--color-text-primary));
+}
+
+.ai-key-form__hint {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: rgb(var(--color-text-muted));
+}
+
+.ai-key-access__grant {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  > *:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  // У поля сверху подпись — сдвигаем кнопку на её высоту, чтобы встала вровень
+  // с селектом, а не с подсказкой под ним.
+  .btn {
+    flex-shrink: 0;
+    margin-top: calc(#{$line-height-sm} + 0.375rem);
+  }
+}
+
+.ai-key-access__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-key-access__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: $radius;
+  background: rgb(var(--color-surface-muted));
+  color: rgb(var(--color-text-primary));
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+.ai-key-access__login {
+  color: rgb(var(--color-text-muted));
+}
+
+.ai-key-access__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: rgb(var(--color-text-muted));
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(var(--color-surface-hover));
+    color: rgb(var(--color-text-primary));
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.ai-key-access__muted {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: rgb(var(--color-text-muted));
+}

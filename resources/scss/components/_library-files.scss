@@ -1,0 +1,209 @@
+// =============================================================================
+// LibraryFilesEditor — список файлов библиотеки
+// =============================================================================
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.library-files {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.library-files__label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+
+  .dark & {
+    color: $neutral-200;
+  }
+}
+
+// Зона приёма файлов: рамка появляется только во время переноса,
+// чтобы в покое список не выглядел обведённым
+.library-files__zone {
+  border: 1px dashed transparent;
+  border-radius: $radius-lg;
+  padding: 0.25rem;
+  @include transition-fast(border-color, background-color);
+}
+
+.library-files__zone--ok {
+  border-color: $success-500;
+  background: rgba($success-500, 0.06);
+}
+
+.library-files__zone--bad {
+  border-color: $error-500;
+  background: rgba($error-500, 0.06);
+}
+
+.library-files__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// Ручка перетаскивания слева, всё остальное — колонкой справа от неё
+.library-files__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  background: #fff;
+
+  .dark & {
+    border-color: $neutral-700;
+    background: $neutral-900;
+  }
+}
+
+.library-files__drag {
+  flex-shrink: 0;
+  margin-top: 0.625rem;
+  color: $neutral-400;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.library-files__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.library-files__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.library-files__type { width: 84px; flex: 0 0 auto; }
+.library-files__source { width: 96px; flex: 0 0 auto; }
+.library-files__version { width: 100px; flex: 0 0 auto; }
+.library-files__flag { width: 120px; flex: 0 0 auto; }
+
+// Подпись флага не переносится: в 120px «Обычный» со стрелкой впритык
+.library-files__flag .select__trigger {
+  white-space: nowrap;
+}
+
+// Кнопка удаления прижата к правому краю строки
+.library-files__remove {
+  margin-left: auto;
+  flex-shrink: 0;
+
+  &:hover {
+    color: $error-500;
+  }
+}
+
+// Поле выбора файла — оно же зона приёма для этой строки
+.library-files__drop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed $neutral-300;
+  border-radius: $radius;
+  background: $neutral-50;
+  font-size: $font-size-xs;
+  cursor: pointer;
+  @include transition-fast(border-color, background-color, color);
+
+  &:hover {
+    border-color: $primary-400;
+    background: rgba($primary-500, 0.04);
+  }
+
+  .dark & {
+    border-color: $neutral-600;
+    background: $neutral-800;
+  }
+}
+
+.library-files__drop--ok {
+  border-color: $success-500;
+  border-style: solid;
+  background: rgba($success-500, 0.08);
+}
+
+.library-files__drop--bad {
+  border-color: $error-500;
+  border-style: solid;
+  background: rgba($error-500, 0.08);
+}
+
+.library-files__drop-icon {
+  flex-shrink: 0;
+  color: $neutral-400;
+}
+
+.library-files__file-input {
+  display: none;
+}
+
+.library-files__file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: $font-mono;
+  color: $primary-600;
+
+  .dark & {
+    color: $primary-400;
+  }
+}
+
+.library-files__drop-hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: $neutral-400;
+}
+
+.library-files__file-clear {
+  display: flex;
+  flex-shrink: 0;
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: $neutral-400;
+  cursor: pointer;
+  @include transition-fast(color);
+
+  &:hover {
+    color: $error-500;
+  }
+}
+
+.library-files__error {
+  margin: 0;
+  font-size: $font-size-xs;
+  color: $error-500;
+}
+
+.library-files__empty {
+  margin: 0;
+  padding: 1.25rem 0.75rem;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $neutral-400;
+}
+
+.library-files__actions {
+  display: flex;
+  gap: 0.5rem;
+}

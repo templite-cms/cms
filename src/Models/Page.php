@@ -22,6 +22,7 @@ class Page extends Model implements Exportable
 
     protected $fillable = [
         'url',
+        'url_auto',
         'alias',
         'parent_id',
         'type_id',
@@ -32,8 +33,6 @@ class Page extends Model implements Exportable
         'template_page_id',
         'template_data',
         'status',
-        'city_scope',
-        'city_id',
         'display_tree',
         'views',
         'img',
@@ -49,6 +48,7 @@ class Page extends Model implements Exportable
         'social_data' => 'json',
         'template_data' => 'json',
         'status' => 'integer',
+        'url_auto' => 'boolean',
         'display_tree' => 'boolean',
         'views' => 'integer',
         'order' => 'integer',
@@ -56,12 +56,19 @@ class Page extends Model implements Exportable
         'unpublish_at' => 'datetime',
     ];
 
-    // --- City Scope Constants ---
-    const CITY_SCOPE_GLOBAL = 'global';
-    const CITY_SCOPE_CITY_SOURCE = 'city_source';
-    const CITY_SCOPE_MATERIALIZED = 'materialized';
+    /** @var array{0: mixed, 1: ?string}|null [social_data.og_image, URL] — см. getOgImageUrlAttribute() */
+    protected ?array $ogImageUrlCache = null;
 
     // --- Relationships ---
+
+    /**
+     * Менеджер, создавший страницу. created_by не в $fillable —
+     * проставляется только сервером, клиент его не передаёт.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(Manager::class, 'created_by');
+    }
 
     public function parent(): BelongsTo
     {
@@ -111,24 +118,26 @@ class Page extends Model implements Exportable
         return $this->hasOne(PageAsset::class);
     }
 
-    public function city(): BelongsTo
+    /**
+     * ID всех вложенных страниц (любой глубины). Обход по уровням —
+     * без рекурсивных CTE, одинаково на MySQL и PostgreSQL.
+     *
+     * @return int[]
+     */
+    public function descendantIds(): array
     {
-        return $this->belongsTo(City::class);
-    }
+        $ids = [];
+        $level = [$this->id];
 
-    public function cityPages(): HasMany
-    {
-        return $this->hasMany(CityPage::class, 'source_page_id');
-    }
+        while ($level) {
+            $level = static::whereIn('parent_id', $level)
+                ->whereNotIn('id', $ids)
+                ->pluck('id')
+                ->all();
+            array_push($ids, ...$level);
+        }
 
-    public function translations(): HasMany
-    {
-        return $this->hasMany(PageTranslation::class);
-    }
-
-    public function translation(string $lang): ?PageTranslation
-    {
-        return $this->translations()->where('lang', $lang)->first();
+        return $ids;
     }
 
     // --- Scopes ---
@@ -166,21 +175,6 @@ class Page extends Model implements Exportable
         return $query->where('display_tree', true);
     }
 
-    public function scopeCitySource($query)
-    {
-        return $query->where('city_scope', self::CITY_SCOPE_CITY_SOURCE);
-    }
-
-    public function scopeGlobalScope($query)
-    {
-        return $query->where('city_scope', self::CITY_SCOPE_GLOBAL);
-    }
-
-    public function scopeMaterialized($query)
-    {
-        return $query->where('city_scope', self::CITY_SCOPE_MATERIALIZED);
-    }
-
     // --- Accessors ---
 
     public function getIsPublishedAttribute(): bool
@@ -203,6 +197,33 @@ class Page extends Model implements Exportable
     }
 
     /**
+     * Абсолютный URL картинки для соцсетей (social_data.og_image).
+     *
+     * Редактор хранит id файла медиатеки; поддерживается и строковый URL (старые данные).
+     */
+    public function getOgImageUrlAttribute(): ?string
+    {
+        $value = $this->social_data['og_image'] ?? null;
+
+        // Мемоизация по исходному значению: повторные обращения в шаблоне не ходят в БД,
+        // а смена social_data (перевод) пересчитает URL
+        if ($this->ogImageUrlCache !== null && $this->ogImageUrlCache[0] === $value) {
+            return $this->ogImageUrlCache[1];
+        }
+
+        if (is_int($value) || (is_string($value) && ctype_digit($value))) {
+            $file = File::find((int) $value);
+            $url = $file ? url($file->url) : null;
+        } else {
+            $url = is_string($value) && $value !== '' ? url($value) : null;
+        }
+
+        $this->ogImageUrlCache = [$value, $url];
+
+        return $url;
+    }
+
+    /**
      * Получить полный URL страницы.
      */
     public function getFullUrlAttribute(): string
@@ -221,8 +242,11 @@ class Page extends Model implements Exportable
      * Резолвится один уровень: вложенные page-поля становятся Page-моделями,
      * но их собственный template_data не резолвится (защита от рекурсии).
      *
+     * Незаполненные поля получают пустое значение своего типа — как у блоков,
+     * в том числе когда template_data ещё пустой.
+     *
      * Внимание: при итерации по множеству страниц возможен N+1 —
-     * заранее грузите связь templatePage.fields.children.
+     * заранее грузите связь templatePage.fields.
      */
     public function getResolvedTemplateDataAttribute(): array
     {
@@ -230,35 +254,15 @@ class Page extends Model implements Exportable
             return $this->cachedResolvedTemplateData;
         }
 
-        $data = $this->template_data;
-        if (!is_array($data) || empty($data)) {
-            return $this->cachedResolvedTemplateData = [];
-        }
+        $data = is_array($this->template_data) ? $this->template_data : [];
 
         $template = $this->templatePage;
         if (!$template) {
             return $this->cachedResolvedTemplateData = $data;
         }
 
-        $fields = $template->fields()->with('children')->get();
-
         return $this->cachedResolvedTemplateData = app(BlockDataResolver::class)
-            ->resolveFieldData($fields, $data);
-    }
-
-    public function isCitySource(): bool
-    {
-        return $this->city_scope === self::CITY_SCOPE_CITY_SOURCE;
-    }
-
-    public function isGlobalScope(): bool
-    {
-        return $this->city_scope === self::CITY_SCOPE_GLOBAL;
-    }
-
-    public function isMaterialized(): bool
-    {
-        return $this->city_scope === self::CITY_SCOPE_MATERIALIZED;
+            ->resolveFieldData($template->fields, $data);
     }
 
     // --- Exportable ---
@@ -301,7 +305,7 @@ class Page extends Model implements Exportable
 
     public function toExportArray(): array
     {
-        // Collect all file IDs from all page_blocks data + translations,
+        // Collect all file IDs from all page_blocks data,
         // then batch-load for path replacement
         $allFileIds = $this->collectMediaFileIds();
         $fileMap = !empty($allFileIds)
@@ -310,6 +314,7 @@ class Page extends Model implements Exportable
 
         return [
             'url' => $this->url,
+            'url_auto' => $this->url_auto,
             'alias' => $this->alias,
             'parent_url' => $this->parent?->url,
             'type_slug' => $this->pageType?->slug,
@@ -326,27 +331,10 @@ class Page extends Model implements Exportable
             'unpublish_at' => $this->unpublish_at?->toIso8601String(),
             'page_blocks' => $this->pageBlocks->sortBy('order')->map(function ($pb) use ($fileMap) {
                 $data = $pb->data ?? [];
-                $translations = $pb->translations;
 
                 if ($pb->block && !empty($data)) {
                     $fields = $this->getBlockFields($pb->block_id, $pb->block);
                     $data = MediaFieldScanner::replaceIdsWithPaths($fields, $data, $fileMap);
-
-                    $translations = $translations->map(function ($t) use ($fields, $fileMap) {
-                        $tData = $t->data ?? [];
-                        if (!empty($tData)) {
-                            $tData = MediaFieldScanner::replaceIdsWithPaths($fields, $tData, $fileMap);
-                        }
-                        return [
-                            'lang' => $t->lang,
-                            'data' => $tData,
-                        ];
-                    });
-                } else {
-                    $translations = $translations->map(fn ($t) => [
-                        'lang' => $t->lang,
-                        'data' => $t->data,
-                    ]);
                 }
 
                 return [
@@ -358,21 +346,12 @@ class Page extends Model implements Exportable
                         ? $pb->status->value
                         : $pb->status,
                     'order' => $pb->order,
-                    'field_overrides' => $pb->field_overrides,
-                    'translations' => $translations->toArray(),
                 ];
             })->values()->toArray(),
             'attribute_values' => $this->attributeValues->map(fn ($av) => [
                 'attribute_key' => $av->attribute?->key,
                 'value' => $av->value,
             ])->filter(fn ($av) => $av['attribute_key'] !== null)->values()->toArray(),
-            'translations' => $this->translations->map(fn ($t) => [
-                'lang' => $t->lang,
-                'title' => $t->title,
-                'bread_title' => $t->bread_title,
-                'seo_data' => $t->seo_data,
-                'social_data' => $t->social_data,
-            ])->toArray(),
         ];
     }
 
@@ -389,6 +368,7 @@ class Page extends Model implements Exportable
             ['url' => $data['url']],
             [
                 'alias' => $data['alias'] ?? null,
+                'url_auto' => $data['url_auto'] ?? true,
                 'parent_id' => $parentId,
                 'type_id' => $typeId,
                 'template_page_id' => $templateId,
@@ -415,32 +395,26 @@ class Page extends Model implements Exportable
 
             $presetId = isset($pbData['preset_slug'])
                 ? $ctx->resolveId('preset', $pbData['preset_slug']) : null;
+            // Связь бывает только с глобальным пресетом (старые архивы помечали и локальные)
+            if ($presetId && BlockPreset::whereKey($presetId)->value('type') !== 'global') {
+                $presetId = null;
+            }
 
             // Remap file paths back to IDs in block data
             $blockData = $pbData['data'] ?? null;
-            $fields = $block->fields()->with('children')->get();
+            $fields = $block->fields()->get();
             if (is_array($blockData) && $fields->isNotEmpty()) {
                 $blockData = MediaFieldScanner::replacePathsWithIds($fields, $blockData, $ctx);
             }
 
-            $pb = $page->pageBlocks()->create([
+            $page->pageBlocks()->create([
                 'block_id' => $block->id,
                 'preset_id' => $presetId,
                 'data' => $blockData,
                 'action_params' => $pbData['action_params'] ?? null,
                 'status' => $pbData['status'] ?? PageBlockStatus::Published->value,
                 'order' => $pbData['order'] ?? 0,
-                'field_overrides' => $pbData['field_overrides'] ?? null,
             ]);
-
-            // Create page block translations with remapped file paths
-            foreach ($pbData['translations'] ?? [] as $tData) {
-                $tDataToSave = $tData;
-                if (is_array($tData['data'] ?? null) && $fields->isNotEmpty()) {
-                    $tDataToSave['data'] = MediaFieldScanner::replacePathsWithIds($fields, $tData['data'], $ctx);
-                }
-                $pb->translations()->create($tDataToSave);
-            }
         }
 
         // Re-create attribute values
@@ -460,19 +434,13 @@ class Page extends Model implements Exportable
             }
         }
 
-        // Create page translations
-        $page->translations()->delete();
-        foreach ($data['translations'] ?? [] as $tData) {
-            $page->translations()->create($tData);
-        }
-
         return $page;
     }
 
     /**
      * Получить медиафайлы для включения в ZIP-архив экспорта.
      *
-     * Сканирует все page_blocks data и translations на наличие файлов,
+     * Сканирует все page_blocks data на наличие файлов,
      * загружает File-модели и собирает все физические пути
      * (оригинал + ресайзы + webp-варианты).
      *
@@ -516,13 +484,13 @@ class Page extends Model implements Exportable
             $this->cachedBlockFields = [];
         }
         if (!isset($this->cachedBlockFields[$blockId])) {
-            $this->cachedBlockFields[$blockId] = $block->fields()->with('children')->get();
+            $this->cachedBlockFields[$blockId] = $block->fields()->get();
         }
         return $this->cachedBlockFields[$blockId];
     }
 
     /**
-     * Собрать все file ID из данных page_blocks (data + translations).
+     * Собрать все file ID из данных page_blocks.
      *
      * Используется в getDependencies(), toExportArray() и getExportMediaFiles()
      * для единообразного сканирования медиафайлов.
@@ -549,14 +517,6 @@ class Page extends Model implements Exportable
             if (is_array($pb->data) && !empty($pb->data)) {
                 $ids = MediaFieldScanner::extractFileIds($fields, $pb->data);
                 $allIds = array_merge($allIds, $ids);
-            }
-
-            // Scan translations data
-            foreach ($pb->translations as $t) {
-                if (is_array($t->data) && !empty($t->data)) {
-                    $ids = MediaFieldScanner::extractFileIds($fields, $t->data);
-                    $allIds = array_merge($allIds, $ids);
-                }
             }
         }
 

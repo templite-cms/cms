@@ -6,9 +6,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Templite\Cms\Models\City;
-use Templite\Cms\Models\CityPage;
-use Templite\Cms\Models\CmsConfig;
 use Templite\Cms\Models\Page;
 use Templite\Cms\Helpers\UrlHelper;
 use Templite\Cms\Services\HandlerRegistry;
@@ -19,9 +16,6 @@ use Templite\Cms\Services\PageRenderer;
  *
  * Обрабатывает все запросы по URL, находит соответствующую страницу
  * и рендерит её через PageRenderer.
- *
- * При включённом мультигороде поддерживает виртуальные городские страницы:
- * /{city_slug}/contacts → рендерится из страницы-источника /contacts + оверрайды.
  */
 class RenderController extends Controller
 {
@@ -36,21 +30,8 @@ class RenderController extends Controller
      */
     public function page(Request $request, string $url = ''): Response|RedirectResponse
     {
-        // Если middleware вырезал языковой префикс — используем реальный путь
-        if (app()->bound('locale_resolved_path')) {
-            $url = app('locale_resolved_path');
-        } else {
-            $url = '/' . ltrim($url, '/');
-        }
+        $url = '/' . ltrim($url, '/');
 
-        $multicity = CmsConfig::getValue('multicity_enabled', false);
-
-        // --- Мультигород: расширенная резолюция ---
-        if ($multicity) {
-            return $this->resolveWithMulticity($request, $url);
-        }
-
-        // --- Стандартная резолюция (без мультигорода) ---
         return $this->resolveStandard($request, $url);
     }
 
@@ -63,7 +44,7 @@ class RenderController extends Controller
     }
 
     /**
-     * Стандартная резолюция страницы (без мультигорода).
+     * Резолюция страницы: точное совпадение URL, затем handler-страница по префиксу, затем 404.
      */
     protected function resolveStandard(Request $request, string $url): Response|RedirectResponse
     {
@@ -90,122 +71,6 @@ class RenderController extends Controller
         }
 
         return $this->render404($request, $url);
-    }
-
-    /**
-     * Резолюция с поддержкой мультигорода.
-     *
-     * Порядок:
-     * 1. Exact match: материализованная или обычная страница
-     * 2. Город из URL + stripped URL → city_source → виртуальная страница
-     * 3. Нет города в URL + city_source → 302 на /{default_city}/url
-     * 4. Нет города в URL + global → рендерим с текущим городом
-     * 5. 404
-     */
-    protected function resolveWithMulticity(Request $request, string $url): Response|RedirectResponse
-    {
-        $cityFromUrl = app()->bound('city_from_url') ? app('city_from_url') : false;
-        $city = app()->bound('current_city') ? app('current_city') : null;
-        $strippedUrl = app()->bound('city_stripped_url') ? app('city_stripped_url') : null;
-
-        // 1. Exact match по полному URL (материализованная или обычная страница)
-        $page = Page::where('url', $url)->where('status', 1)->first();
-
-        if ($page) {
-            // Если это city_source при прямом заходе → редирект на город по умолчанию
-            if ($page->isCitySource() && !$cityFromUrl) {
-                $defaultCity = $city ?? City::getDefault();
-                if ($defaultCity) {
-                    return redirect('/' . $defaultCity->slug . $page->url, 302);
-                }
-            }
-
-            return $this->renderPage($page, $request);
-        }
-
-        // 2. Город из URL + поиск страницы-источника по stripped URL
-        if ($cityFromUrl && $strippedUrl && $city) {
-            $sourcePage = Page::where('url', $strippedUrl)
-                ->where('city_scope', Page::CITY_SCOPE_CITY_SOURCE)
-                ->where('status', 1)
-                ->first();
-
-            if ($sourcePage) {
-                return $this->renderVirtualCityPage($sourcePage, $city, $request);
-            }
-        }
-
-        // 3. Нет города в URL, но есть city_source по этому URL → редирект
-        if (!$cityFromUrl) {
-            $sourcePage = Page::where('url', $url)
-                ->where('city_scope', Page::CITY_SCOPE_CITY_SOURCE)
-                ->where('status', 1)
-                ->first();
-
-            if ($sourcePage) {
-                $defaultCity = $city ?? City::getDefault();
-                if ($defaultCity) {
-                    return redirect('/' . $defaultCity->slug . $url, 302);
-                }
-            }
-        }
-
-        // 4. Handler fallback — ищем handler-страницу как prefix
-        $handlerUrl = $cityFromUrl && $strippedUrl ? $strippedUrl : $url;
-        $handlerPage = $this->findHandlerPage($handlerUrl);
-        if ($handlerPage) {
-            $path = substr($handlerUrl, strlen($handlerPage->url) + 1);
-            return $this->handlerRegistry->resolve($handlerPage->handler)
-                ->handle($handlerPage, $path, $request);
-        }
-
-        // 5. Ничего не найдено → 404
-        return $this->render404($request, $url);
-    }
-
-    /**
-     * Рендер виртуальной городской страницы (источник + оверрайды).
-     */
-    protected function renderVirtualCityPage(Page $sourcePage, City $city, Request $request): Response
-    {
-        // Загружаем оверрайд (если есть)
-        $cityPage = CityPage::where('city_id', $city->id)
-            ->where('source_page_id', $sourcePage->id)
-            ->with('blockOverrides')
-            ->first();
-
-        // Если материализована — редирект на реальную страницу
-        if ($cityPage && $cityPage->is_materialized && $cityPage->materialized_page_id) {
-            $materializedPage = Page::where('id', $cityPage->materialized_page_id)
-                ->where('status', 1)
-                ->first();
-
-            if ($materializedPage) {
-                return $this->renderPage($materializedPage, $request);
-            }
-        }
-
-        // Проверяем оверрайд статуса
-        if ($cityPage && $cityPage->status_override !== null && $cityPage->status_override !== 1) {
-            return $this->render404($request, '/' . $city->slug . $sourcePage->url);
-        }
-
-        // Ensure assets are compiled
-        if (!$sourcePage->asset) {
-            app(\Templite\Cms\Services\PageAssetCompiler::class)->compile($sourcePage);
-            $sourcePage->load('asset');
-        }
-
-        // Рендеринг виртуальной страницы
-        $html = $this->pageRenderer->renderVirtualCityPage(
-            $sourcePage,
-            $city,
-            $cityPage,
-            $request
-        );
-
-        return response($html)
-            ->header('Content-Type', 'text/html; charset=utf-8');
     }
 
     /**

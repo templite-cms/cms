@@ -82,18 +82,158 @@ class BlockRenderer implements BlockRendererInterface
             return "<!-- Block '{$block->slug}' render error -->";
         }
 
-        // Если no_wrapper — отдаём HTML как есть, без обёртки
-        if ($block->no_wrapper) {
+        return $this->applyMarker($html, $block);
+    }
+
+    /**
+     * Повесить метку data-block="{slug}" на корневой элемент блока.
+     *
+     * Обёртки нет: корень — первый элемент шаблона, какой написал разработчик.
+     * По метке рантайм находит экземпляры блока и передаёт их скрипту как el.
+     * Метка не ставится, если её отключили у блока или она уже есть на корне
+     * (вручную: <section {{ $block->marker }}> или data-block="slug").
+     */
+    public function applyMarker(string $html, Block $block): string
+    {
+        // Выключена или разработчик поставил метку сам (возможно, не на первый элемент)
+        if (!$block->auto_marker || str_contains($html, 'data-block="' . e($block->slug) . '"')) {
             return $html;
         }
 
-        // Оборачиваем в контейнер с data-block-id
-        $blockId = uniqid($block->slug . '-');
-        $output = "<div class=\"cms-block cms-block--{$block->slug}\" data-block=\"{$block->slug}\" data-block-id=\"{$blockId}\">\n";
-        $output .= $html;
-        $output .= "\n</div>";
+        // Первый открывающий тег, пропуская пробелы и HTML-комментарии
+        if (!preg_match('/\A(?:\s|<!--.*?-->)*<([a-zA-Z][\w:-]*)([^>]*)>/s', $html, $m, PREG_OFFSET_CAPTURE)) {
+            return $html;
+        }
 
-        return $output;
+        $attrs = $m[2][0];
+        if (preg_match('/\sdata-block\s*=/i', $attrs)) {
+            return $html;
+        }
+
+        // Вставляем сразу после имени тега: так не мешаем самозакрывающемуся «/>»
+        $insertAt = $m[1][1] + strlen($m[1][0]);
+
+        return substr($html, 0, $insertAt) . ' data-block="' . e($block->slug) . '"' . substr($html, $insertAt);
+    }
+
+    /**
+     * Рантайм блоков — один для сайта и всех превью админки.
+     *
+     * Скрипт блока вызывается для каждого элемента с data-block="{slug}" и
+     * получает его как el. Нет меток и автометка отключена — один раз с el = null.
+     * Ошибка одного блока не мешает остальным. Подписка на DOMContentLoaded
+     * внутри блока срабатывает: пока идёт инициализация, событие уже наступило,
+     * и такой обработчик вызывается сразу (иначе он не сработал бы никогда).
+     */
+    public function runtimeScript(): string
+    {
+        return <<<'JS'
+/* Templite Runtime */
+window.Templite = window.Templite || {
+  _blocks: {},
+  registerBlock: function (slug, fn, options) {
+    this._blocks[slug] = { fn: fn, autoMarker: !options || options.autoMarker !== false };
+  },
+  _run: function (slug, fn, el) {
+    try {
+      fn(el);
+    } catch (e) {
+      console.error('[Templite] Block "' + slug + '" init error:', e);
+    }
+  },
+  init: function (root) {
+    var self = this;
+    var scope = root || document;
+    var doc = document;
+    var origAdd = doc.addEventListener;
+    var winAdd = window.addEventListener;
+    // DOMContentLoaded уже прошёл — подписки на него из блоков вызываем сразу
+    var lateReady = function (add) {
+      return function (type, listener) {
+        if (type === 'DOMContentLoaded') {
+          setTimeout(function () {
+            typeof listener === 'function' ? listener.call(doc, new Event(type)) : listener.handleEvent(new Event(type));
+          });
+          return;
+        }
+        return add.apply(this, arguments);
+      };
+    };
+    doc.addEventListener = lateReady(origAdd);
+    window.addEventListener = lateReady(winAdd);
+    try {
+      Object.keys(self._blocks).forEach(function (slug) {
+        var block = self._blocks[slug];
+        var els = scope.querySelectorAll('[data-block="' + slug + '"]');
+        if (els.length) {
+          els.forEach(function (el) {
+            if (el.__templiteInit) return;
+            el.__templiteInit = true;
+            self._run(slug, block.fn, el);
+          });
+        } else if (!block.autoMarker && !root && !block._ranWithoutEl) {
+          block._ranWithoutEl = true;
+          self._run(slug, block.fn, null);
+        }
+      });
+    } finally {
+      doc.addEventListener = origAdd;
+      window.addEventListener = winAdd;
+    }
+  }
+};
+JS;
+    }
+
+    /**
+     * Обернуть скрипт блока для рантайма: функция с el, своя область видимости.
+     */
+    public function wrapBlockScript(Block $block, string $script): string
+    {
+        $options = $block->auto_marker ? '' : ', { autoMarker: false }';
+
+        return "/* Block: {$block->slug} */\n"
+            . "Templite.registerBlock(" . json_encode($block->slug) . ", function (el) {\n"
+            . $script
+            . "\n}{$options});";
+    }
+
+    /**
+     * Запуск рантайма: сразу, если DOM готов, иначе по DOMContentLoaded
+     * (к нему уже выполнятся и библиотеки, подключённые с defer).
+     */
+    public function runtimeBootScript(): string
+    {
+        return "if (document.readyState === 'loading') {\n"
+            . "  document.addEventListener('DOMContentLoaded', function () { Templite.init(); });\n"
+            . "} else {\n"
+            . "  Templite.init();\n"
+            . "}";
+    }
+
+    /**
+     * Готовый JS для превью: рантайм, скрипты блоков в обёртке и запуск —
+     * так же, как на сайте.
+     *
+     * @param array<int, array{0: Block, 1: string}> $blockScripts пары [блок, код]
+     */
+    public function previewScript(array $blockScripts, string $before = ''): string
+    {
+        $parts = [$this->runtimeScript()];
+        if (trim($before) !== '') {
+            $parts[] = $before;
+        }
+        $seen = [];
+        foreach ($blockScripts as [$block, $script]) {
+            if (isset($seen[$block->slug]) || trim((string) $script) === '') {
+                continue;
+            }
+            $seen[$block->slug] = true;
+            $parts[] = $this->wrapBlockScript($block, $script);
+        }
+        $parts[] = $this->runtimeBootScript();
+
+        return implode("\n", $parts);
     }
 
     /**
@@ -117,7 +257,7 @@ class BlockRenderer implements BlockRendererInterface
 
         // Если есть SCSS -- компилируем
         if (file_exists($scssFile)) {
-            return $this->compileScssToCss($scssFile, $block->slug, (bool) $block->no_wrapper);
+            return $this->compileScssToCss($scssFile, $block->slug);
         }
 
         return null;
@@ -264,7 +404,9 @@ class BlockRenderer implements BlockRendererInterface
     }
 
     /**
-     * Компилировать SCSS/CSS компонента с namespace .cms-component--{slug}.
+     * Компилировать SCSS/CSS компонента — как есть, без скоупа: компонент
+     * вставляется тегом <x-cms::slug /> в произвольное место (в <nav>, в <head>),
+     * изоляция — по БЭМ с префиксом slug, как и у блоков.
      */
     protected function compileComponentScssToCss(string $scssFile, string $slug): ?string
     {
@@ -272,9 +414,7 @@ class BlockRenderer implements BlockRendererInterface
             $compiler = $this->getScssCompiler();
             $scss = file_get_contents($scssFile);
 
-            $wrappedScss = ".cms-component--{$slug} {\n{$scss}\n}";
-
-            $result = $compiler->compileString($wrappedScss);
+            $result = $compiler->compileString($scss);
 
             return $result->getCss();
         } catch (\Throwable $e) {
@@ -287,22 +427,19 @@ class BlockRenderer implements BlockRendererInterface
     }
 
     /**
-     * Компилировать SCSS из строки в CSS.
+     * Компилировать SCSS блока из строки в CSS.
+     *
+     * Стили блока не скоупятся обёрткой: изоляция — по БЭМ с префиксом slug
+     * (проверяет BlockCodeLinter). :scope — синоним метки корня [data-block="{slug}"].
      */
-    public function compileStylesFromString(string $scss, string $blockSlug, bool $noWrapper = false): ?string
+    public function compileStylesFromString(string $scss, string $blockSlug): ?string
     {
         if (empty(trim($scss))) {
             return null;
         }
 
         try {
-            $compiler = $this->getScssCompiler();
-
-            if (!$noWrapper) {
-                $scss = ".cms-block--{$blockSlug} {\n{$scss}\n}";
-            }
-
-            $result = $compiler->compileString($scss);
+            $result = $this->getScssCompiler()->compileString($this->expandScope($scss, $blockSlug));
 
             return $result->getCss();
         } catch (\Throwable $e) {
@@ -315,30 +452,19 @@ class BlockRenderer implements BlockRendererInterface
     }
 
     /**
-     * Компилировать SCSS в CSS.
+     * Компилировать SCSS-файл блока в CSS.
      */
-    protected function compileScssToCss(string $scssFile, string $blockSlug, bool $noWrapper = false): ?string
+    protected function compileScssToCss(string $scssFile, string $blockSlug): ?string
     {
-        try {
-            $compiler = $this->getScssCompiler();
-            $scss = file_get_contents($scssFile);
+        return $this->compileStylesFromString(file_get_contents($scssFile), $blockSlug);
+    }
 
-            // Если no_wrapper — компилируем SCSS без namespace-обёртки
-            if (!$noWrapper) {
-                $scss = ".cms-block--{$blockSlug} {\n{$scss}\n}";
-            }
-
-            $result = $compiler->compileString($scss);
-
-            return $result->getCss();
-        } catch (\Throwable $e) {
-            // В dev-режиме показываем ошибку
-            if (config('cms.dev_mode', false)) {
-                return "/* SCSS Error: {$e->getMessage()} */";
-            }
-
-            return null;
-        }
+    /**
+     * :scope в стилях блока → [data-block="{slug}"] (корень с меткой).
+     */
+    public function expandScope(string $scss, string $blockSlug): string
+    {
+        return preg_replace('/:scope\b/', '[data-block="' . $blockSlug . '"]', $scss);
     }
 
     /**

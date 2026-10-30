@@ -9,6 +9,7 @@ use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BladeSecurityValidator;
 use Templite\Cms\Services\BlockRenderer;
 use Templite\Cms\Services\CacheManager;
+use Templite\Cms\Services\LibraryAssetBuilder;
 use Templite\Cms\Services\PageAssetCompiler;
 
 class TemplateCodeController extends Controller
@@ -111,19 +112,12 @@ class TemplateCodeController extends Controller
     /** @OA\Get(path="/templates/{id}/preview", summary="Превью шаблона", tags={"Template Code"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="HTML превью")) */
     public function preview(Request $request, int $id): JsonResponse
     {
-        $template = TemplatePage::with(['fields.children', 'libraries'])->findOrFail($id);
+        $template = TemplatePage::with(['fields.children', 'libraries.files'])->findOrFail($id);
         $path = storage_path('cms/templates/' . basename($template->slug));
 
         // Load global fields for components/templates that rely on $global
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
-
-        // На реальных страницах $city приходит из CityResolver middleware, в превью — нет.
-        // Шарим дефолтный город, чтобы шаблоны/компоненты с $city не падали.
-        $city = \Templite\Cms\Models\City::getDefault();
-        if ($city) {
-            view()->share('city', $city);
-        }
 
         // Inline-код из запроса (для live preview без сохранения)
         $inlineTemplate = $request->input('template_code');
@@ -132,7 +126,7 @@ class TemplateCodeController extends Controller
 
         $templateHtml = '';
 
-        // Собираем default-данные из определений полей
+        // Превью шаблона — на заглушках по типам полей
         $fields = [];
         foreach ($template->fields as $field) {
             if ($field->parent_id) continue;
@@ -141,11 +135,11 @@ class TemplateCodeController extends Controller
                 $children = $template->fields->where('parent_id', $field->id);
                 $row = [];
                 foreach ($children as $child) {
-                    $row[$child->key] = $child->default_value ?? $this->mockValue($child);
+                    $row[$child->key] = $this->mockValue($child);
                 }
                 $fields[$field->key] = [$row];
             } else {
-                $fields[$field->key] = $field->default_value ?? $this->mockValue($field);
+                $fields[$field->key] = $this->mockValue($field);
             }
         }
 
@@ -201,35 +195,12 @@ class TemplateCodeController extends Controller
             $js = $this->blockRenderer->getTemplateScript($template) ?? '';
         }
 
-        // Load template libraries (CDN and local)
-        $cdnCssLinks = '';
-        $cdnJsLinks = '';
-        $localLibCss = '';
-        $localLibJs = '';
-
-        foreach ($template->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-            if ($lib->load_strategy === 'cdn') {
-                if ($lib->css_cdn) {
-                    $cdnCssLinks .= '<link rel="stylesheet" href="' . htmlspecialchars($lib->css_cdn) . '">' . "\n";
-                }
-                if ($lib->js_cdn) {
-                    $cdnJsLinks .= '<script src="' . htmlspecialchars($lib->js_cdn) . '"></script>' . "\n";
-                }
-            } elseif ($lib->load_strategy === 'local') {
-                if ($lib->css_file) {
-                    $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->css_file);
-                    if (file_exists($libPath)) {
-                        $localLibCss .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                    }
-                }
-                if ($lib->js_file) {
-                    $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->js_file);
-                    if (file_exists($libPath)) {
-                        $localLibJs .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                    }
-                }
-            }
-        }
+        // Библиотеки шаблона. loadMissing здесь подстраховочный:
+        // связь обязана быть поднята в with(['fields.children', 'libraries.files']) выше.
+        $template->loadMissing('libraries.files');
+        $libraryHtml = app(LibraryAssetBuilder::class)->htmlFor($template->libraries);
+        $cdnCssLinks = $libraryHtml['head'];
+        $cdnJsLinks = $libraryHtml['body'];
 
         // Component styles/scripts from template content
         $rawTemplate = $inlineTemplate ?? '';
@@ -241,8 +212,8 @@ class TemplateCodeController extends Controller
         }
         $componentAssets = $this->blockRenderer->collectComponentAssets($rawTemplate);
 
-        $allCss = $localLibCss . ($css ? "{$css}\n" : '') . $componentAssets['css'];
-        $allJs = $localLibJs . ($js ? "{$js}\n" : '') . $componentAssets['js'];
+        $allCss = ($css ? "{$css}\n" : '') . $componentAssets['css'];
+        $allJs = ($js ? "{$js}\n" : '') . $componentAssets['js'];
 
         $html = $this->blockRenderer->renderPreviewWrapper([
             'cdnCss' => $cdnCssLinks,

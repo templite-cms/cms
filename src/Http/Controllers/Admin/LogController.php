@@ -75,6 +75,7 @@ class LogController extends Controller
             'actionTypes' => [
                 'create', 'update', 'delete', 'copy', 'reorder',
                 'upload', 'move', 'login', 'logout',
+                'login_with_two_factor', 'two_factor_recovery_used', 'permissions_escalation_blocked',
                 'update_code', 'update_data', 'update_status',
                 'compile', 'rebuild', 'clear_cache', 'invalidate_cache',
                 'save_values',

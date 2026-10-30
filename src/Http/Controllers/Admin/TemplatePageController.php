@@ -35,8 +35,6 @@ class TemplatePageController extends Controller
     {
         $template = TemplatePage::with([
             'libraries',
-            'tabs',
-            'sections',
             'fields' => fn ($q) => $q->whereNull('parent_id')->orderBy('order'),
             'fields.children' => fn ($q) => $q->orderBy('order'),
             'fields.children.children' => fn ($q) => $q->orderBy('order'),
@@ -63,9 +61,15 @@ class TemplatePageController extends Controller
 
         return CmsResponse::page('packages/templite/cms/resources/js/entries/templates-edit.js', [
             'template' => $templateData,
+            // version — аксессор поверх версий файлов, колонки с таким именем
+            // у библиотеки нет; files грузим здесь, иначе он сходит в базу
+            // за каждой библиотекой списка
             'allLibraries' => Library::where('active', true)
+                ->with('files:id,library_id,version,sort_order')
                 ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'version']),
+                ->get(['id', 'name', 'slug'])
+                ->append('version')
+                ->makeHidden('files'),
             'globalFieldDefinitions' => GlobalField::orderBy('order')
                 ->get(['id', 'key', 'name', 'type', 'parent_id']),
             'pageAttributeDefinitions' => PageTypeAttribute::with('pageType:id,name')

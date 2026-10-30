@@ -38,13 +38,54 @@ class PageAsset extends Model
         return $this->js_path ? asset('storage/' . ltrim($this->js_path, '/')) : null;
     }
 
+    /**
+     * @return array<int, array{type: string, url: string, loading: ?string, media: ?string}>
+     */
     public function cdnCssLinks(): array
     {
-        return collect($this->cdn_links ?? [])->where('type', 'css')->pluck('url')->all();
+        return $this->normalizedLinks('css');
     }
 
+    /**
+     * @return array<int, array{type: string, url: string, loading: ?string, media: ?string}>
+     */
     public function cdnJsLinks(): array
     {
-        return collect($this->cdn_links ?? [])->where('type', 'js')->pluck('url')->all();
+        return $this->normalizedLinks('js');
+    }
+
+    /**
+     * Отбирает из cdn_links подключения нужного типа.
+     *
+     * Содержимое колонки — непроверенный JSON: он мог быть записан более
+     * старой версией компилятора или повреждён вручную. Элементы неизвестной
+     * или неполной формы пропускаются, чтобы страница не падала и не получала
+     * тег с пустым href. Правило то же, что в LibraryAssetBuilder::collect():
+     * подключение без пригодного URL не выводится.
+     */
+    protected function normalizedLinks(string $type): array
+    {
+        $links = [];
+
+        foreach ($this->cdn_links ?? [] as $link) {
+            if (!is_array($link) || ($link['type'] ?? null) !== $type) {
+                continue;
+            }
+
+            $url = $link['url'] ?? null;
+
+            if (!is_string($url) || $url === '') {
+                continue;
+            }
+
+            $links[] = [
+                'type' => $type,
+                'url' => $url,
+                'loading' => $link['loading'] ?? null,
+                'media' => $link['media'] ?? null,
+            ];
+        }
+
+        return $links;
     }
 }

@@ -6,7 +6,6 @@ use Templite\Cms\Http\Controllers\Admin\PageController;
 use Templite\Cms\Http\Controllers\Admin\PageTypeController;
 use Templite\Cms\Http\Controllers\Admin\BlockController;
 use Templite\Cms\Http\Controllers\Admin\BlockTypeController;
-use Templite\Cms\Http\Controllers\Admin\BlockFieldController;
 use Templite\Cms\Http\Controllers\Admin\ActionController;
 use Templite\Cms\Http\Controllers\Admin\ComponentController;
 use Templite\Cms\Http\Controllers\Admin\TemplatePageController;
@@ -18,12 +17,10 @@ use Templite\Cms\Http\Controllers\Admin\ManagerTypeController;
 use Templite\Cms\Http\Controllers\Admin\ProfileController;
 use Templite\Cms\Http\Controllers\Admin\LogController;
 use Templite\Cms\Http\Controllers\Admin\LibraryController;
-use Templite\Cms\Http\Controllers\Admin\CityController as AdminCityController;
-use Templite\Cms\Http\Controllers\Admin\LanguageController as AdminLanguageController;
+use Templite\Cms\Http\Controllers\Admin\AiSettingsController;
 use Templite\Cms\Http\Controllers\Admin\CoreSettingsController;
 use Templite\Cms\Http\Controllers\Admin\PresetController;
 use Templite\Cms\Http\Controllers\Admin\ExportImportController as AdminExportImportController;
-use Templite\Cms\Http\Controllers\Admin\UserController as AdminUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -95,11 +92,6 @@ Route::prefix(config('cms.admin_url', 'admin'))
         Route::get('/block-types/{id}/edit', [BlockTypeController::class, 'edit'])->name('cms.block-types.edit');
 
         // -------------------------------------------------------------------
-        // Block Fields (Поля блоков — доп. экран)
-        // -------------------------------------------------------------------
-        Route::get('/blocks/{blockId}/fields', [BlockFieldController::class, 'index'])->name('cms.block-fields.index');
-
-        // -------------------------------------------------------------------
         // Actions
         // -------------------------------------------------------------------
         Route::get('/actions', [ActionController::class, 'index'])->name('cms.actions.index');
@@ -124,8 +116,6 @@ Route::prefix(config('cms.admin_url', 'admin'))
         // Libraries (Библиотеки)
         // -------------------------------------------------------------------
         Route::get('/libraries', [LibraryController::class, 'index'])->name('cms.libraries.index');
-        Route::get('/libraries/create', [LibraryController::class, 'create'])->name('cms.libraries.create');
-        Route::get('/libraries/{id}/edit', [LibraryController::class, 'edit'])->name('cms.libraries.edit');
 
         // -------------------------------------------------------------------
         // Media (Медиафайлы)
@@ -138,6 +128,11 @@ Route::prefix(config('cms.admin_url', 'admin'))
         Route::get('/core-settings', [CoreSettingsController::class, 'index'])->name('cms.core-settings.index');
 
         // -------------------------------------------------------------------
+        // AI Settings (Подключение AI-ассистента)
+        // -------------------------------------------------------------------
+        Route::get('/settings/ai', [AiSettingsController::class, 'index'])->name('cms.ai-settings.index');
+
+        // -------------------------------------------------------------------
         // Global Settings (Глобальные настройки)
         // -------------------------------------------------------------------
         Route::get('/settings', [GlobalSettingsController::class, 'index'])->name('cms.settings.index');
@@ -147,21 +142,6 @@ Route::prefix(config('cms.admin_url', 'admin'))
         // File Manager (Менеджер публичных файлов)
         // -------------------------------------------------------------------
         Route::get('/file-manager', [FileManagerController::class, 'index'])->name('cms.file-manager.index');
-
-        // -------------------------------------------------------------------
-        // Cities (Города)
-        // -------------------------------------------------------------------
-        Route::get('/cities', [AdminCityController::class, 'index'])->name('cms.cities.index');
-
-        // -------------------------------------------------------------------
-        // Languages (Языки)
-        // -------------------------------------------------------------------
-        Route::get('/languages', [AdminLanguageController::class, 'index'])->name('cms.languages.index');
-
-        // -------------------------------------------------------------------
-        // Users (Пользователи сайта)
-        // -------------------------------------------------------------------
-        Route::get('/users', [AdminUserController::class, 'index'])->name('cms.users.index');
 
         // -------------------------------------------------------------------
         // Managers (Менеджеры + Типы менеджеров — единая страница)

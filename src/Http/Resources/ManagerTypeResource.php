@@ -14,6 +14,7 @@ class ManagerTypeResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'permissions' => $this->permissions,
+            'dashboard' => $this->dashboard,
             'managers_count' => $this->when(isset($this->managers_count), $this->managers_count),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

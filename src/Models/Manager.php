@@ -4,6 +4,7 @@ namespace Templite\Cms\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -21,6 +22,7 @@ class Manager extends Authenticatable
         'use_personal_permissions',
         'avatar_id',
         'is_active',
+        'active_ai_key_id',
     ];
 
     protected $hidden = [
@@ -96,6 +98,24 @@ class Manager extends Authenticatable
         return $this->hasMany(ManagerTrustedDevice::class);
     }
 
+    /** Ключи, которыми менеджер владеет. */
+    public function aiKeys(): HasMany
+    {
+        return $this->hasMany(AiKey::class, 'owner_manager_id');
+    }
+
+    /** Чужие ключи, к которым менеджеру выдали доступ. */
+    public function sharedAiKeys(): BelongsToMany
+    {
+        return $this->belongsToMany(AiKey::class, 'cms_ai_key_access', 'manager_id', 'key_id')
+            ->withTimestamps();
+    }
+
+    public function activeAiKey(): BelongsTo
+    {
+        return $this->belongsTo(AiKey::class, 'active_ai_key_id');
+    }
+
     // --- Methods ---
 
     /**
@@ -112,12 +132,15 @@ class Manager extends Authenticatable
      */
     public function hasPermission(string $permission): bool
     {
-        if ($this->use_personal_permissions) {
-            $permissions = $this->personal_permissions ?? [];
-            return in_array($permission, $permissions) || in_array('*', $permissions);
-        }
+        $permissions = $this->getPermissions();
 
-        return $this->type?->hasPermission($permission) ?? false;
+        // Как Gate::before в AuthManager: '*' — всё, 'pages.*' — вся группа pages.
+        // Без этого инструменты ассистента и MCP отказывали тому, кого пускают маршруты.
+        $group = explode('.', $permission)[0];
+
+        return in_array('*', $permissions, true)
+            || in_array($group.'.*', $permissions, true)
+            || in_array($permission, $permissions, true);
     }
 
     /**

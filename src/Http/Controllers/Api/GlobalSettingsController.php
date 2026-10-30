@@ -10,6 +10,7 @@ use Templite\Cms\Models\GlobalFieldPage;
 use Templite\Cms\Models\GlobalFieldSection;
 use Templite\Cms\Models\GlobalFieldValue;
 use Templite\Cms\Services\CacheManager;
+use Templite\Cms\Services\GlobalSettingsFormData;
 
 class GlobalSettingsController extends Controller
 {
@@ -28,6 +29,29 @@ class GlobalSettingsController extends Controller
     public function pages(): JsonResponse
     {
         return $this->success(GlobalFieldPage::orderBy('order')->get());
+    }
+
+    /** @OA\Get(path="/settings/form", summary="Данные экрана значений настроек", tags={"Global Settings"}, security={{"bearerAuth":{}}}, @OA\Response(response=200, description="Вкладки, плоская карта значений и карта id значений")) */
+    public function form(GlobalSettingsFormData $formData): JsonResponse
+    {
+        // Ровно то же, что уходит пропсами при рендере /cms/settings (сборка
+        // общая — GlobalSettingsFormData): экран значений перечитывает себя
+        // этим запросом после структурных правок ассистента.
+        return $this->success($formData->build());
+    }
+
+    /** @OA\Get(path="/settings/structure", summary="Структура настроек для экрана", tags={"Global Settings"}, security={{"bearerAuth":{}}}, @OA\Response(response=200, description="Структура")) */
+    public function structure(): JsonResponse
+    {
+        // Тот же состав связей, что отдаёт Admin\GlobalSettingsController::structure():
+        // экран перечитывает себя этим запросом после правок ассистента.
+        $pages = GlobalFieldPage::with([
+            'sections' => fn ($q) => $q->orderBy('order'),
+            'sections.fields' => fn ($q) => $q->whereNull('parent_id')->orderBy('order'),
+            'sections.fields.allChildren',
+        ])->orderBy('order')->get();
+
+        return $this->success($pages);
     }
 
     /** @OA\Post(path="/settings/pages", summary="Создать вкладку", tags={"Global Settings"}, security={{"bearerAuth":{}}}, @OA\Response(response=201, description="Создано")) */

@@ -7,7 +7,7 @@
 
 .checkbox {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.625rem;
   cursor: pointer;
   user-select: none;
@@ -59,6 +59,13 @@
 .checkbox__icon {
   width: 14px;
   height: 14px;
+}
+
+// Строка CheckboxField: галочка с подписью и слот suffix справа
+.checkbox-field__row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .checkbox__label {

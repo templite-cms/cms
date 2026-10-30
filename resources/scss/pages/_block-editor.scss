@@ -14,7 +14,7 @@
   inset: 0;
   z-index: $z-megamenu-overlay;
   background-color: rgba($neutral-900, 0.2);
-  top: 104px;
+  top: calc(#{$spacing-header} + #{$spacing-subheader}); // header + submenu
 
   .dark & {
     background-color: rgba($neutral-900, 0.4);
@@ -30,8 +30,8 @@
   border-bottom: 1px solid $neutral-200;
   box-shadow: $shadow-xl;
   overflow-y: auto;
-  max-height: calc(100vh - 104px - 4rem);
-  top: 104px;
+  max-height: calc(100vh - #{$spacing-header} - #{$spacing-subheader} - 4rem);
+  top: calc(#{$spacing-header} + #{$spacing-subheader}); // header + submenu
 
   .dark & {
     background-color: $neutral-800;
@@ -60,6 +60,25 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.375rem;
+}
+
+// Знак справки рядом с подписью галочки — открывает нужный раздел документации
+.block-main-fields__help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem;
+  border: none;
+  border-radius: $radius-sm;
+  background: none;
+  color: rgb(var(--color-text-muted));
+  cursor: pointer;
+  @include transition-fast(color, background-color);
+
+  &:hover {
+    color: $primary-500;
+    background: rgb(var(--color-surface-hover));
+  }
 }
 
 .block-main-fields__screenshot-label {
@@ -954,127 +973,6 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-}
-
-// =============================================================================
-// Field Editor Modal
-// =============================================================================
-
-.field-editor-modal__nav {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid $neutral-200;
-  margin-left: -1.5rem;
-  margin-right: -1.5rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-
-  .dark & {
-    border-bottom-color: $neutral-700;
-  }
-}
-
-.field-editor-modal__nav-btn {
-  position: relative;
-  padding: 0.625rem 0.75rem;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  @include transition-fast(color);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.field-editor-modal__nav-btn--active {
-  color: $primary-600;
-
-  .dark & {
-    color: $primary-400;
-  }
-}
-
-.field-editor-modal__nav-btn--inactive {
-  color: $neutral-500;
-
-  &:hover {
-    color: $neutral-700;
-  }
-
-  .dark & {
-    color: $neutral-400;
-
-    &:hover {
-      color: $neutral-200;
-    }
-  }
-}
-
-.field-editor-modal__nav-error {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.25rem;
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: $radius-full;
-  background-color: $error-500;
-}
-
-.field-editor-modal__nav-indicator {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: $primary-500;
-  border-radius: $radius 0 0 0;
-}
-
-.field-editor-modal__form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.field-editor-modal__section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.field-editor-modal__grid-2col {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.field-editor-modal__type-label {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $neutral-700;
-  margin-bottom: 0.5rem;
-  display: block;
-
-  .dark & {
-    color: $neutral-200;
-  }
-}
-
-.field-editor-modal__type-required {
-  color: $error-500;
-}
-
-.field-editor-modal__options-error {
-  font-size: $font-size-sm;
-  color: $error-500;
-}
-
-.field-editor-modal__footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
 }
 
 // =============================================================================

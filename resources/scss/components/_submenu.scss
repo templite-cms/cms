@@ -16,8 +16,20 @@
   right: 0;
   z-index: $z-subheader;
   height: $spacing-subheader;
+  padding: 0 1rem;
+  // Строка: заголовок | вкладки | кнопки. Вкладки не влезли — .submenu--stacked
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: $spacing-submenu-bar;
+  grid-template-areas: 'left tabs right';
+  align-items: center;
+  column-gap: 0.5rem;
   background-color: #fff;
   border-bottom: 1px solid $neutral-200;
+
+  @include lg {
+    padding: 0 1.5rem;
+  }
 
   .dark & {
     background-color: $neutral-800;
@@ -25,19 +37,16 @@
   }
 }
 
-.submenu__inner {
-  height: 100%;
-  padding: 0 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  @include lg {
-    padding: 0 1.5rem;
-  }
+.submenu--stacked {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: $spacing-submenu-bar $spacing-submenu-tabs;
+  grid-template-areas:
+    'left right'
+    'tabs tabs';
 }
 
 .submenu__left {
+  grid-area: left;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -70,11 +79,8 @@
   font-weight: $font-weight-semibold;
   color: $neutral-900;
   @include truncate;
-  max-width: 200px;
-
-  @include lg {
-    max-width: 250px;
-  }
+  // Это же значение — TITLE_MAX_WIDTH в SubMenu.vue (расчёт, влезают ли вкладки)
+  max-width: 250px;
 
   .dark & {
     color: $neutral-50;
@@ -97,12 +103,56 @@
 // =============================================================================
 
 .submenu__tabs {
+  grid-area: tabs;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  // Разделитель между заголовком и вкладками
+  padding-left: 0.5rem;
+  border-left: 1px solid $neutral-200;
+  // Вкладок бывает больше, чем влезает (особенно с открытым ассистентом
+  // на узком экране) — прокручиваем их, а не прячем.
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dark & {
+    border-left-color: $neutral-700;
+  }
+
+  // Вторая строка на всю ширину полоски
+  .submenu--stacked & {
+    align-self: stretch;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+    border-left: none;
+    border-top: 1px solid $neutral-100;
+
+    @include lg {
+      margin: 0 -1.5rem;
+      padding: 0 1.5rem;
+    }
+
+    .dark & {
+      border-top-color: $neutral-700;
+    }
+  }
+}
+
+// Ширина по содержимому — по ней SubMenu.vue решает, влезают ли вкладки
+.submenu__tabs-track {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  width: max-content;
 }
 
 .submenu__tab {
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 0.375rem 0.75rem;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
@@ -178,6 +228,7 @@
 // =============================================================================
 
 .submenu__right {
+  grid-area: right;
   display: flex;
   align-items: center;
   gap: 0.5rem;

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pages', function (Blueprint $table) {
-            $table->string('handler', 50)->nullable()->after('city_scope');
+            $table->string('handler', 50)->nullable();
             $table->index('handler');
         });
     }

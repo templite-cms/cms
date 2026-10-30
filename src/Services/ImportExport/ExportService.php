@@ -59,8 +59,6 @@ class ExportService
         $collectiveTypes = [
             'cms_config' => 'settings/cms_config.json',
             'global_field_page' => 'global_fields/global_fields.json',
-            'city' => 'cities/cities.json',
-            'language' => 'languages/languages.json',
             'file' => 'media/files.json',
             'file_folder' => 'media/folders.json',
         ];

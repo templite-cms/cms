@@ -5,9 +5,7 @@ namespace Templite\Cms\Http\Controllers\Admin;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Templite\Cms\Http\CmsResponse;
-use Templite\Cms\Models\City;
 use Templite\Cms\Models\CmsConfig;
-use Templite\Cms\Models\Language;
 
 class CoreSettingsController extends Controller
 {
@@ -75,14 +73,9 @@ class CoreSettingsController extends Controller
             return $items->values();
         });
 
-        $cities = City::orderBy('sort_order')->orderBy('name')->get();
-        $languages = Language::orderBy('order')->get();
-
         return CmsResponse::page('packages/templite/cms/resources/js/entries/core-settings.js', [
             'settings' => $settings,
             'grouped' => $grouped,
-            'cities' => $cities,
-            'languages' => $languages,
         ], ['title' => 'Настройки ядра']);
     }
 }

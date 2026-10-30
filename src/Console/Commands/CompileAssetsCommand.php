@@ -33,9 +33,16 @@ class CompileAssetsCommand extends Command
         }
 
         $this->info('Compiling assets for all published pages...');
-        $count = $compiler->compileAll();
-        $this->info("Done. Compiled assets for {$count} pages.");
+        // compileAll() отдаёт ['compiled' => n, 'errors' => n] — в строку его
+        // подставлять нельзя, команда падала на «Array to string conversion».
+        ['compiled' => $compiled, 'errors' => $errors] = $compiler->compileAll();
 
-        return 0;
+        $this->info("Done. Compiled assets for {$compiled} pages.");
+
+        if ($errors > 0) {
+            $this->warn("Failed for {$errors} pages — details in the log.");
+        }
+
+        return $errors > 0 ? 1 : 0;
     }
 }

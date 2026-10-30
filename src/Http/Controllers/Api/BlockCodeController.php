@@ -5,12 +5,21 @@ namespace Templite\Cms\Http\Controllers\Api;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Templite\Cms\Models\Block;
+use Templite\Cms\Models\BlockCodeVersion;
 use Templite\Cms\Services\BladeSecurityValidator;
+use Templite\Cms\Services\BlockCodeLinter;
+use Templite\Cms\Services\BlockCodeVersionService;
 use Templite\Cms\Services\BlockRenderer;
+use Templite\Cms\Services\ScssTokenFallback;
 
 class BlockCodeController extends Controller
 {
-    public function __construct(protected BlockRenderer $blockRenderer) {}
+    public function __construct(
+        protected BlockRenderer $blockRenderer,
+        protected BlockCodeVersionService $versions,
+        protected ScssTokenFallback $scssFallback,
+        protected BlockCodeLinter $linter,
+    ) {}
 
     /** @OA\Get(path="/blocks/{id}/code", summary="Получить код блока", tags={"Block Code"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Код блока")) */
     public function show(int $id): JsonResponse
@@ -45,7 +54,11 @@ class BlockCodeController extends Controller
             'template' => 'nullable|string',
             'style' => 'nullable|string',
             'script' => 'nullable|string',
+            'version_source' => 'nullable|string|in:manual,ai,restore',
         ]);
+
+        // Снимок текущего состояния, если история пуста, — иначе исходный код потеряется.
+        $this->versions->ensureInitialVersion($block);
 
         // Валидация Blade-шаблона на запрещённые конструкции
         if (isset($data['template']) && $data['template'] !== '') {
@@ -69,7 +82,9 @@ class BlockCodeController extends Controller
             file_put_contents($path . '/template.blade.php', $data['template'] ?? '');
         }
         if (array_key_exists('style', $data)) {
-            $styleContent = $data['style'] ?? '';
+            // Токены дизайн-системы получают значения по умолчанию: на публичном
+            // сайте они не определены, и блок вышел бы без цветов и фонов.
+            $styleContent = $this->scssFallback->apply($data['style'] ?? '');
             if ($styleContent === '') {
                 // Удаляем файлы стилей если содержимое пустое
                 @unlink($path . '/style.scss');
@@ -100,6 +115,71 @@ class BlockCodeController extends Controller
 
         $this->logAction('update_code', 'block', $block->id, ['name' => $block->name]);
 
-        return $this->success(null, 'Код блока сохранён.');
+        // Версия — полный снимок того, что теперь на диске: при частичной правке
+        // (например, AI поменял только стиль) непереданные части не теряются.
+        $saved = $this->versions->readFrom($path);
+        $this->versions->store($block, $saved, $data['version_source'] ?? 'manual');
+
+        // Предупреждения не мешают сохранению — подсказывают, где блок поведёт себя неожиданно
+        $warnings = $this->linter->lint(
+            $block,
+            $saved['template'] ?? '',
+            $saved['style'] ?? '',
+            $saved['script'] ?? '',
+        );
+
+        return $this->success(['warnings' => $warnings], 'Код блока сохранён.');
+    }
+
+    /** @OA\Get(path="/blocks/{id}/code/versions", summary="История кода блока", tags={"Block Code"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Список версий")) */
+    public function versions(int $id): JsonResponse
+    {
+        $block = Block::findOrFail($id);
+
+        $versions = BlockCodeVersion::where('block_id', $block->id)
+            ->with('user:id,name')
+            ->orderByDesc('id')
+            ->get(['id', 'block_id', 'user_id', 'source', 'created_at'])
+            ->map(fn (BlockCodeVersion $v) => [
+                'id' => $v->id,
+                'source' => $v->source,
+                'author' => $v->user?->name,
+                'created_at' => $v->created_at?->toIso8601String(),
+            ]);
+
+        return $this->success($versions);
+    }
+
+    /** @OA\Get(path="/blocks/{id}/code/versions/{versionId}", summary="Версия кода блока", tags={"Block Code"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Код версии")) */
+    public function version(int $id, int $versionId): JsonResponse
+    {
+        $version = BlockCodeVersion::where('block_id', $id)->findOrFail($versionId);
+
+        return $this->success([
+            'id' => $version->id,
+            'source' => $version->source,
+            'created_at' => $version->created_at?->toIso8601String(),
+            'template' => $version->template,
+            'style' => $version->style,
+            'script' => $version->script,
+        ]);
+    }
+
+    /** @OA\Post(path="/blocks/{id}/code/versions/{versionId}/restore", summary="Восстановить версию кода", tags={"Block Code"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Восстановлено")) */
+    public function restore(Request $request, int $id, int $versionId): JsonResponse
+    {
+        $version = BlockCodeVersion::where('block_id', $id)->findOrFail($versionId);
+
+        // Пишем через тот же update(): он валидирует Blade, чистит кэш и пересобирает ассеты.
+        // NULL — часть, не попавшая в старую частичную версию: её не трогаем, иначе
+        // восстановление правки одного стиля стёрло бы шаблон.
+        $restoreRequest = Request::create("/api/cms/blocks/{$id}/code", 'PUT', array_filter([
+            'template' => $version->template,
+            'style' => $version->style,
+            'script' => $version->script,
+        ], fn ($v) => $v !== null) + ['version_source' => 'restore']);
+        $restoreRequest->setUserResolver(fn () => $request->user());
+
+        return $this->update($restoreRequest, $id);
     }
 }

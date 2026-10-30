@@ -26,13 +26,24 @@ class File extends Model implements Exportable
         'sizes',
         'meta',
         'folder_id',
+        'ai_pending',
     ];
 
     protected $casts = [
         'sizes' => 'json',
         'meta' => 'json',
         'size' => 'integer',
+        'ai_pending' => 'boolean',
     ];
+
+    /**
+     * Файлы, доступные для использования: сгенерированные ассистентом
+     * попадают сюда только после подтверждения пользователем.
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('ai_pending', false);
+    }
 
     // --- Relationships ---
 

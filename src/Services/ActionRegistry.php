@@ -107,6 +107,73 @@ class ActionRegistry implements RegistryInterface
     }
 
     /**
+     * Полное имя класса, объявленного в коде action, либо null.
+     *
+     * Разбор тот же, что в Api\ActionController::extractClassName(): файл
+     * проходит валидатор, а тот допускает ровно один именованный класс и
+     * запрещает анонимные. Промах регулярки не опаснее прежнего поведения —
+     * управление просто уходит в require.
+     */
+    public static function declaredClass(string $code): ?string
+    {
+        if (!preg_match('/class\s+(\w+)/', $code, $m)) {
+            return null;
+        }
+
+        return preg_match('/namespace\s+([\w\\\\]+)\s*;/', $code, $ns)
+            ? $ns[1] . '\\' . $m[1]
+            : $m[1];
+    }
+
+    /**
+     * Какой код уже выполнился в этом процессе: путь файла => хэш содержимого.
+     *
+     * Нужен, чтобы отличить «класс загружен из того же кода, что лежит на
+     * диске» от «файл переписали после загрузки». Второе означает, что
+     * выполнится прежняя версия класса — переобъявить его PHP не умеет.
+     *
+     * @var array<string,string>
+     */
+    protected static array $loadedCode = [];
+
+    /**
+     * Запомнить код, который сейчас будет выполнен.
+     *
+     * Запись только первая: класс объявляет именно она, а последующие правки
+     * файла на уже объявленный класс не влияют.
+     */
+    public static function rememberLoadedCode(string $path, string $code): void
+    {
+        $key = realpath($path) ?: $path;
+
+        static::$loadedCode[$key] ??= hash('sha256', $code);
+    }
+
+    /** Хэш кода, из которого класс этого файла был объявлен, либо null. */
+    public static function loadedCodeHash(string $path): ?string
+    {
+        return static::$loadedCode[realpath($path) ?: $path] ?? null;
+    }
+
+    /**
+     * Путь к файлу, в котором объявлен класс, либо null.
+     *
+     * ReflectionClass::getFileName() возвращает false для классов без файла
+     * (внутренние расширения, eval) — такой случай тоже сводим к null,
+     * чтобы вызывающий код не спутал «файл неизвестен» с «файл совпадает».
+     */
+    protected function fileOfClass(string $class): ?string
+    {
+        try {
+            $file = (new \ReflectionClass($class))->getFileName();
+        } catch (\ReflectionException $e) {
+            return null;
+        }
+
+        return $file !== false ? $file : null;
+    }
+
+    /**
      * Загрузить action из файла с проверкой целостности и валидацией кода.
      *
      * 1. Проверяет SHA-256 хэш файла против сохранённого в БД
@@ -169,6 +236,55 @@ class ActionRegistry implements RegistryInterface
             }
             return null;
         }
+
+        // PHP не выгружает объявленные классы, а require выполняет файл заново.
+        // Код этого action мог уже загрузиться в текущем процессе: парсер
+        // сигнатуры при сохранении делает require_once, а ассистент правит и
+        // тестирует action в одном запросе. Второе объявление того же класса —
+        // фатальная ошибка, которую не поймать try/catch: она убила бы SSE-поток
+        // вместе с чатом. В админке этого не видно — там шаги идут разными
+        // HTTP-запросами.
+        //
+        // Имя класса само по себе ничего не говорит о том, из какого файла
+        // оно объявлено: stubs/action.stub у всех actions по умолчанию даёт
+        // одинаковые namespace и класс, и уникальность имени нигде не
+        // проверяется. Поэтому объявленность класса — не повод сразу его
+        // инстанцировать: нужно убедиться, что объявил его именно этот файл.
+        $declaredClass = static::declaredClass($code);
+
+        if ($declaredClass !== null && class_exists($declaredClass, false)) {
+            $declaredIn = $this->fileOfClass($declaredClass);
+
+            // Класс уже объявлен этим же файлом — повторное выполнение не
+            // нужно и невозможно: require объявил бы его второй раз и убил
+            // бы процесс фатальной ошибкой.
+            if ($declaredIn !== null && $declaredIn === realpath($path)) {
+                $instance = app($declaredClass);
+
+                return $instance instanceof BlockActionInterface ? $instance : null;
+            }
+
+            // Имя класса занято другим файлом — коллизия между двумя
+            // actions. Выполнить require нельзя (фатал «Cannot declare
+            // class»), инстанцировать чужой класс тоже нельзя — action
+            // молча заработал бы по чужой логике. Отказываемся и логируем.
+            $logData = [
+                'slug' => $slug,
+                'path' => $path,
+                'class' => $declaredClass,
+                'declared_in' => $declaredIn,
+            ];
+
+            try {
+                Log::channel('security')->warning('Action class name collision', $logData);
+            } catch (\Throwable $e) {
+                Log::warning('Action class name collision', $logData);
+            }
+
+            return null;
+        }
+
+        static::rememberLoadedCode($path, $code);
 
         $declaredBefore = get_declared_classes();
         $class = require $path;

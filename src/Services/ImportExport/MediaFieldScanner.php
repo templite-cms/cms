@@ -3,6 +3,7 @@
 namespace Templite\Cms\Services\ImportExport;
 
 use Illuminate\Support\Collection;
+use Templite\Cms\Models\BlockField;
 
 /**
  * Утилита для сканирования данных блока и извлечения file ID из полей типа img/file.
@@ -85,14 +86,14 @@ class MediaFieldScanner
     }
 
     // ---------------------------------------------------------------
-    // Global Fields — exported format: [{key, type, values: [{value, translations}], children}]
+    // Global Fields — exported format: [{key, type, values: [{value}], children}]
     // ---------------------------------------------------------------
 
     /**
      * Извлечь все file ID из экспортированной структуры глобальных полей.
      *
      * Формат входных данных: массив полей, каждое поле имеет key, type,
-     * values (с value и translations), и рекурсивные children.
+     * values (с value), и рекурсивные children.
      * Для полей типа img/file: если value числовое -- это file ID.
      *
      * @param array $fieldsData Экспортированная структура полей
@@ -166,13 +167,6 @@ class MediaFieldScanner
                     if ($v !== null && $v !== '') {
                         $callback($v);
                     }
-                    // Scan translations
-                    foreach ($val['translations'] ?? [] as $t) {
-                        $tv = $t['value'] ?? null;
-                        if ($tv !== null && $tv !== '') {
-                            $callback($tv);
-                        }
-                    }
                 }
             }
             // Recurse into children
@@ -198,16 +192,6 @@ class MediaFieldScanner
                     $v = $val['value'] ?? null;
                     if ($v !== null && $v !== '') {
                         $val['value'] = $transform($v);
-                    }
-                    // Transform translations
-                    if (!empty($val['translations'])) {
-                        $val['translations'] = array_map(function (array $t) use ($transform): array {
-                            $tv = $t['value'] ?? null;
-                            if ($tv !== null && $tv !== '') {
-                                $t['value'] = $transform($tv);
-                            }
-                            return $t;
-                        }, $val['translations']);
                     }
                     return $val;
                 }, $field['values'] ?? []);
@@ -236,6 +220,9 @@ class MediaFieldScanner
      */
     protected static function walkFields(Collection $fields, array $data, callable $callback): void
     {
+        // Плоский fields() владельца → корневые поля с children
+        $fields = BlockField::tree($fields);
+
         foreach ($fields as $field) {
             $key = $field->key;
             $value = $data[$key] ?? null;
@@ -273,6 +260,9 @@ class MediaFieldScanner
      */
     protected static function transformData(Collection $fields, array $data, callable $transform): array
     {
+        // Плоский fields() владельца → корневые поля с children
+        $fields = BlockField::tree($fields);
+
         $result = $data;
 
         foreach ($fields as $field) {

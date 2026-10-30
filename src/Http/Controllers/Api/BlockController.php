@@ -13,6 +13,7 @@ use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BlockDataResolver;
 use Templite\Cms\Services\BlockRenderer;
 use Templite\Cms\Services\FileService;
+use Templite\Cms\Services\LibraryAssetBuilder;
 use Templite\Cms\Helpers\StringHelper;
 use Templite\Cms\Services\ImageProcessor;
 
@@ -45,7 +46,7 @@ class BlockController extends Controller
             'path' => 'nullable|string',
             'tags' => 'nullable|string',
             'order' => 'integer',
-            'no_wrapper' => 'boolean',
+            'auto_marker' => 'boolean',
         ]);
         $block = Block::create($data);
         return $this->success(new BlockResource($block->load('blockType')), 'Блок создан.', 201);
@@ -60,8 +61,6 @@ class BlockController extends Controller
     {
         $block = Block::with([
             'blockType',
-            'tabs' => fn($q) => $q->orderBy('order'),
-            'sections' => fn($q) => $q->orderBy('order'),
             'rootFields' => fn($q) => $q->orderBy('order'),
             'rootFields.children' => fn($q) => $q->orderBy('order'),
             'rootFields.children.children' => fn($q) => $q->orderBy('order'),
@@ -86,7 +85,7 @@ class BlockController extends Controller
             'tags' => 'nullable|string',
             'screen' => 'nullable|integer|exists:files,id',
             'order' => 'integer',
-            'no_wrapper' => 'boolean',
+            'auto_marker' => 'boolean',
             'library_ids' => 'nullable|array',
             'library_ids.*' => 'integer|exists:libraries,id',
         ]);
@@ -98,8 +97,6 @@ class BlockController extends Controller
 
         return $this->success(new BlockResource($block->fresh([
             'blockType',
-            'tabs' => fn($q) => $q->orderBy('order'),
-            'sections' => fn($q) => $q->orderBy('order'),
             'rootFields' => fn($q) => $q->orderBy('order'),
             'rootFields.children' => fn($q) => $q->orderBy('order'),
             'rootFields.children.children' => fn($q) => $q->orderBy('order'),
@@ -117,51 +114,26 @@ class BlockController extends Controller
     /** @OA\Post(path="/blocks/{id}/copy", summary="Копировать блок", tags={"Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=201, description="Копия создана")) */
     public function copy(int $id): JsonResponse
     {
-        $block = Block::with(['tabs', 'sections', 'fields'])->findOrFail($id);
+        $block = Block::findOrFail($id);
         $newBlock = $block->replicate();
         $newBlock->name = $block->name . ' (копия)';
         $newBlock->slug = $block->slug . '-copy-' . time();
         $newBlock->save();
 
-        // Копируем tabs, sections, fields
-        $tabMap = [];
-        foreach ($block->tabs as $tab) {
-            $newTab = $tab->replicate();
-            $newTab->block_id = $newBlock->id;
-            $newTab->save();
-            $tabMap[$tab->id] = $newTab->id;
-        }
-        $sectionMap = [];
-        foreach ($block->sections as $section) {
-            $newSection = $section->replicate();
-            $newSection->block_id = $newBlock->id;
-            $newSection->block_tab_id = $tabMap[$section->block_tab_id] ?? null;
-            $newSection->save();
-            $sectionMap[$section->id] = $newSection->id;
-        }
-        foreach ($block->fields->whereNull('parent_id') as $field) {
-            $this->copyField($field, $newBlock->id, null, $tabMap, $sectionMap);
-        }
+        $newBlock->importFields($block->exportFields());
 
-        return $this->success(new BlockResource($newBlock->load(['blockType', 'tabs', 'sections', 'fields'])), 'Блок скопирован.', 201);
+        return $this->success(new BlockResource($newBlock->load(['blockType', 'fields'])), 'Блок скопирован.', 201);
     }
 
     /** @OA\Get(path="/blocks/{id}/preview", summary="Превью блока (HTML)", tags={"Blocks"}, security={{"bearerAuth":{}}}, @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="template_id", in="query", @OA\Schema(type="integer")), @OA\Response(response=200, description="HTML-превью блока")) */
     public function preview(Request $request, int $id): JsonResponse
     {
-        $block = Block::with(['fields.children', 'blockActions.action'])->findOrFail($id);
+        $block = Block::with(['fields', 'blockActions.action'])->findOrFail($id);
         $path = $this->blockRenderer->resolveBlockPath($block);
 
         // Load global fields for components that rely on $global (e.g. header)
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
-
-        // На реальных страницах $city приходит из CityResolver middleware, в превью — нет.
-        // Шарим дефолтный город, чтобы блоки/компоненты с $city не падали.
-        $city = \Templite\Cms\Models\City::getDefault();
-        if ($city) {
-            view()->share('city', $city);
-        }
 
         // Inline-код из запроса (для live preview без сохранения)
         $inlineTemplate = $request->input('template');
@@ -172,22 +144,12 @@ class BlockController extends Controller
         $css = '';
         $js = '';
 
-        // Собираем данные: из пресета (если указан) или из default-значений полей
-        $rawData = [];
+        // Данные превью — из выбранного пресета, иначе из пресета по умолчанию
         $presetId = $request->input('preset_id');
-        if ($presetId) {
-            $preset = BlockPreset::where('block_id', $block->id)->find($presetId);
-            if ($preset) {
-                $rawData = $preset->data ?? [];
-            }
-        }
-        if (empty($rawData)) {
-            foreach ($block->fields as $field) {
-                if ($field->default_value !== null && $field->default_value !== '') {
-                    $rawData[$field->key] = $field->default_value;
-                }
-            }
-        }
+        $preset = $presetId
+            ? BlockPreset::where('block_id', $block->id)->find($presetId)
+            : BlockPreset::defaultForBlock($block->id);
+        $rawData = $preset?->data ?? [];
         $fields = $this->blockDataResolver->resolveBlockData($block, $rawData);
 
         // Выполняем привязанные actions, чтобы $actions был доступен в превью
@@ -218,12 +180,7 @@ class BlockController extends Controller
                     'block'   => $block,
                 ]);
 
-                if ($block->no_wrapper) {
-                    $blockHtml = $html;
-                } else {
-                    $blockId = uniqid($block->slug . '-');
-                    $blockHtml = "<div class=\"cms-block cms-block--{$block->slug}\" data-block=\"{$block->slug}\" data-block-id=\"{$blockId}\">\n{$html}\n</div>";
-                }
+                $blockHtml = $this->blockRenderer->applyMarker($html, $block);
             } catch (\Throwable $e) {
                 $blockHtml = '<div style="color:#ef4444;padding:16px;font-family:monospace;font-size:13px">'
                     . '<strong>Template Error:</strong><br>'
@@ -250,7 +207,7 @@ class BlockController extends Controller
 
         // Style: inline или с диска
         if ($inlineStyle !== null) {
-            $compiledCss = $this->blockRenderer->compileStylesFromString($inlineStyle, $block->slug, (bool) $block->no_wrapper);
+            $compiledCss = $this->blockRenderer->compileStylesFromString($inlineStyle, $block->slug);
             if ($compiledCss) {
                 $css = $compiledCss;
             }
@@ -274,69 +231,27 @@ class BlockController extends Controller
         // Template CSS/JS (global styles from page template)
         $templateCss = '';
         $templateJs = '';
-        $cdnCssLinks = '';
-        $cdnJsLinks = '';
-        $localLibCss = '';
-        $localLibJs = '';
+        $previewLibraries = collect();
         $templateId = $request->query('template_id');
         if ($templateId) {
-            $template = TemplatePage::with('libraries')->find($templateId);
+            $template = TemplatePage::with('libraries.files')->find($templateId);
             if ($template) {
                 $templateCss = $this->blockRenderer->compileTemplateStyles($template) ?? '';
                 $templateJs = $this->blockRenderer->getTemplateScript($template) ?? '';
 
-                // Подключаем библиотеки шаблона
-                foreach ($template->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-                    if ($lib->load_strategy === 'cdn') {
-                        if ($lib->css_cdn) {
-                            $cdnCssLinks .= '<link rel="stylesheet" href="' . htmlspecialchars($lib->css_cdn) . '">' . "\n";
-                        }
-                        if ($lib->js_cdn) {
-                            $cdnJsLinks .= '<script src="' . htmlspecialchars($lib->js_cdn) . '"></script>' . "\n";
-                        }
-                    } elseif ($lib->load_strategy === 'local') {
-                        if ($lib->css_file) {
-                            $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->css_file);
-                            if (file_exists($libPath)) {
-                                $localLibCss .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                            }
-                        }
-                        if ($lib->js_file) {
-                            $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->js_file);
-                            if (file_exists($libPath)) {
-                                $localLibJs .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                            }
-                        }
-                    }
-                }
+                // Библиотеки шаблона
+                $previewLibraries = $previewLibraries->merge($template->libraries);
             }
         }
 
-        // Подключаем библиотеки самого блока
-        $block->loadMissing('libraries');
-        foreach ($block->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-            if ($lib->load_strategy === 'cdn') {
-                if ($lib->css_cdn) {
-                    $cdnCssLinks .= '<link rel="stylesheet" href="' . htmlspecialchars($lib->css_cdn) . '">' . "\n";
-                }
-                if ($lib->js_cdn) {
-                    $cdnJsLinks .= '<script src="' . htmlspecialchars($lib->js_cdn) . '"></script>' . "\n";
-                }
-            } elseif ($lib->load_strategy === 'local') {
-                if ($lib->css_file) {
-                    $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->css_file);
-                    if (file_exists($libPath)) {
-                        $localLibCss .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                    }
-                }
-                if ($lib->js_file) {
-                    $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->js_file);
-                    if (file_exists($libPath)) {
-                        $localLibJs .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                    }
-                }
-            }
-        }
+        // Библиотеки самого блока — в ту же коллекцию: билдер дедуплицирует,
+        // и общая с шаблоном библиотека подключится один раз.
+        $block->loadMissing('libraries.files');
+        $previewLibraries = $previewLibraries->merge($block->libraries);
+
+        $libraryHtml = app(LibraryAssetBuilder::class)->htmlFor($previewLibraries);
+        $cdnCssLinks = $libraryHtml['head'];
+        $cdnJsLinks = $libraryHtml['body'];
 
         // Component styles/scripts from block template content
         $rawTemplate = $inlineTemplate ?? '';
@@ -345,8 +260,12 @@ class BlockController extends Controller
         }
         $componentAssets = $this->blockRenderer->collectComponentAssets($rawTemplate);
 
-        $allCss = $localLibCss . ($templateCss ? "{$templateCss}\n" : '') . $componentAssets['css'] . $css;
-        $allJs = $localLibJs . ($templateJs ? "{$templateJs}\n" : '') . $componentAssets['js'] . $js;
+        $allCss = ($templateCss ? "{$templateCss}\n" : '') . $componentAssets['css'] . $css;
+        // Тот же рантайм, что на сайте: скрипт блока получает el и ждёт готовности DOM
+        $allJs = $this->blockRenderer->previewScript(
+            [[$block, $js]],
+            ($templateJs ? "{$templateJs}\n" : '') . $componentAssets['js']
+        );
 
         $html = $this->blockRenderer->renderPreviewWrapper([
             'cdnCss' => $cdnCssLinks,
@@ -401,19 +320,5 @@ class BlockController extends Controller
             new BlockResource($block->fresh(['blockType', 'screenshot'])),
             'Скриншот сохранён.'
         );
-    }
-
-    protected function copyField($field, int $blockId, ?int $parentId, array $tabMap, array $sectionMap): void
-    {
-        $newField = $field->replicate();
-        $newField->block_id = $blockId;
-        $newField->parent_id = $parentId;
-        $newField->block_tab_id = $tabMap[$field->block_tab_id] ?? null;
-        $newField->block_section_id = $sectionMap[$field->block_section_id] ?? null;
-        $newField->save();
-
-        foreach ($field->children as $child) {
-            $this->copyField($child, $blockId, $newField->id, $tabMap, $sectionMap);
-        }
     }
 }

@@ -25,6 +25,12 @@
         {!! json_encode(['navigation' => $navigation, 'user' => $user, 'currentUrl' => $currentUrl, 'cmsConfig' => $cmsConfig], JSON_UNESCAPED_UNICODE) !!}
     </script>
 
+    {{-- AI-ассистент — глобальный Vue island (кнопка + боковая панель) --}}
+    <div id="ai-chat-island"></div>
+    <script type="application/json" id="ai-chat-props">
+        {!! json_encode(['cmsConfig' => $cmsConfig], JSON_UNESCAPED_UNICODE) !!}
+    </script>
+
     {{-- Content — Vue page --}}
     <main class="admin-layout__content">
         <div id="page"></div>
@@ -34,9 +40,9 @@
     </script>
 
     @if($pageEntry)
-        @vite(['packages/templite/cms/resources/js/islands/header.js', $pageEntry])
+        @vite(['packages/templite/cms/resources/js/islands/header.js', 'packages/templite/cms/resources/js/islands/ai-chat.js', $pageEntry])
     @else
-        @vite('packages/templite/cms/resources/js/islands/header.js')
+        @vite(['packages/templite/cms/resources/js/islands/header.js', 'packages/templite/cms/resources/js/islands/ai-chat.js'])
     @endif
     @foreach(($pageAssets ?? []) as $asset)
         @if(str_ends_with($asset, '.js'))

@@ -126,7 +126,9 @@ class FileService
      */
     public function getFiles(array $filters = [], int $perPage = 20, int $maxPerPage = 100)
     {
-        $query = File::query();
+        // Сгенерированные ассистентом картинки ждут подтверждения и не должны
+        // попадаться ни в медиабиблиотеке, ни в выдаче инструментов агента.
+        $query = File::query()->approved();
 
         if (!empty($filters['folder_id'])) {
             $query->where('folder_id', $filters['folder_id']);

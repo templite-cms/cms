@@ -2,19 +2,25 @@
 
 namespace Templite\Cms\Services;
 
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Cache;
+
 /**
- * Валидатор безопасности Blade-шаблонов.
+ * Проверка Blade-кода блоков, шаблонов и компонентов.
  *
- * Использует whitelist-подход для Blade-директив и блокирует
- * опасные функции/конструкции в выражениях {{ }}.
- * Защищает от SSTI (Server-Side Template Injection).
+ * НЕ песочница. Право на код — это доверие: выражения Blade исполняются как PHP,
+ * и через app(), фасады и модели доступен весь сервер (см. DangerousCodeScanner).
+ * Проверка делает две вещи:
+ * 1. Директивы — по белому списку: держит вёрстку в предсказуемых рамках
+ *    (без @include произвольных файлов, @extends, @push и т.п.).
+ * 2. «Жёсткие» возможности — запуск процессов, исполнение строки как кода,
+ *    файлы, сеть, окружение — ищутся в скомпилированном PHP: так проверяются и
+ *    {{ }}, и аргументы @if/@foreach, и блоки @php.
  */
 class BladeSecurityValidator
 {
     /**
      * Разрешённые Blade-директивы (whitelist).
-     *
-     * Только эти директивы можно использовать в пользовательских шаблонах.
      */
     protected array $allowedDirectives = [
         'if',
@@ -42,17 +48,15 @@ class BladeSecurityValidator
         'section',
         'endsection',
         'show',
+        // Вычисления в шаблоне — тот же PHP, что и в {{ }}; проверяется сканером
+        'php',
+        'endphp',
     ];
 
     /**
-     * Явно запрещённые директивы (для понятных сообщений об ошибках).
-     *
-     * Эти директивы блокируются в любом случае (они не в whitelist),
-     * но выделены отдельно для более информативных сообщений.
+     * Директивы вне whitelist с пояснением, почему их нет.
      */
     protected array $explicitlyBlockedDirectives = [
-        'php'            => '@php directive (arbitrary PHP execution)',
-        'endphp'         => '@endphp directive',
         'includeIf'      => '@includeIf directive (dynamic file inclusion)',
         'includeWhen'    => '@includeWhen directive (dynamic file inclusion)',
         'includeUnless'  => '@includeUnless directive (dynamic file inclusion)',
@@ -68,88 +72,56 @@ class BladeSecurityValidator
     ];
 
     /**
-     * Запрещённые паттерны в Blade-шаблонах (не директивы).
-     *
-     * Ключ -- регулярное выражение, значение -- описание нарушения.
+     * Запрещённые паттерны в исходнике (не директивы).
      */
     protected array $forbiddenPatterns = [
-        '/<\?php/'              => '<?php tag',
+        '/<\?php/'              => '<?php tag (используйте @php … @endphp)',
         '/<\?=/'                => '<?= tag',
     ];
 
-    /**
-     * Запрещённые функции/конструкции внутри выражений {{ }}.
-     *
-     * Эти вызовы могут привести к утечке конфигурации,
-     * доступу к сервис-контейнеру или обходу безопасности.
-     */
-    protected array $forbiddenExpressionCalls = [
-        'eval'       => 'eval() function call',
-        'exec'       => 'exec() function call',
-        'system'     => 'system() function call',
-        'passthru'   => 'passthru() function call',
-        'shell_exec' => 'shell_exec() function call',
-        'proc_open'  => 'proc_open() function call',
-        'popen'      => 'popen() function call',
-        'config'     => 'config() function call (configuration access)',
-        'env'        => 'env() function call (environment variable access)',
-        'app'        => 'app() function call (service container access)',
-        'resolve'    => 'resolve() function call (service container access)',
-        'session'    => 'session() function call (session access)',
-        'request'    => 'request() function call (request object access)',
-    ];
+    public function __construct(private ?DangerousCodeScanner $scanner = null)
+    {
+        $this->scanner ??= new DangerousCodeScanner();
+    }
 
     /**
-     * Запрещённые статические вызовы внутри выражений {{ }}.
-     */
-    protected array $forbiddenStaticCalls = [
-        'Container' => 'Container:: static call (service container access)',
-        'Facade'    => 'Facade:: static call (facade access)',
-    ];
-
-    /**
-     * Проверить Blade-шаблон на запрещённые конструкции.
+     * Проверить Blade-шаблон.
      *
-     * @param string $content Содержимое Blade-шаблона
-     * @return array Список нарушений (пустой массив = всё ок)
+     * Результат кэшируется по содержимому: проверка вызывается и при рендере
+     * каждого блока, а компиляция Blade на каждый запрос дорога.
+     *
+     * @return array<int,string> Список нарушений (пустой массив = всё ок)
      */
     public function validate(string $content): array
     {
+        $key = 'cms:blade-guard:'.DangerousCodeScanner::RULES_VERSION.':'.sha1($content);
+
+        return Cache::rememberForever($key, fn () => $this->check($content));
+    }
+
+    /** @return array<int,string> */
+    protected function check(string $content): array
+    {
         $violations = [];
 
-        // 1. Проверка запрещённых паттернов (raw PHP, unescaped output)
         foreach ($this->forbiddenPatterns as $pattern => $description) {
             if (preg_match($pattern, $content)) {
                 $violations[] = $description;
             }
         }
 
-        // 2. Whitelist-проверка директив: найти все @directive и проверить по whitelist
         $violations = array_merge($violations, $this->validateDirectives($content));
+        $violations = array_merge($violations, $this->validateCompiled($content));
 
-        // 3. Проверка выражений внутри {{ }} и {!! !!} на запрещённые вызовы
-        $violations = array_merge($violations, $this->validateExpressions($content));
-
-        return array_unique($violations);
+        return array_values(array_unique($violations));
     }
 
-    /**
-     * Проверить, является ли Blade-шаблон безопасным.
-     *
-     * @param string $content Содержимое Blade-шаблона
-     * @return bool true если шаблон безопасен
-     */
     public function isValid(string $content): bool
     {
         return empty($this->validate($content));
     }
 
     /**
-     * Валидация при рендере -- выбрасывает исключение если шаблон небезопасен.
-     *
-     * Используется для защиты от подмены файлов шаблонов на диске.
-     *
-     * @param string $content Содержимое Blade-шаблона
      * @throws \Templite\Cms\Exceptions\UnsafeTemplateException
      */
     public function validateOrFail(string $content): void
@@ -165,9 +137,6 @@ class BladeSecurityValidator
     }
 
     /**
-     * Статический метод для быстрой валидации при рендере.
-     *
-     * @param string $content Содержимое Blade-шаблона
      * @throws \Templite\Cms\Exceptions\UnsafeTemplateException
      */
     public static function assertSafe(string $content): void
@@ -175,21 +144,13 @@ class BladeSecurityValidator
         (new static())->validateOrFail($content);
     }
 
-    /**
-     * Получить список запрещённых паттернов.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     public function getForbiddenPatterns(): array
     {
         return $this->forbiddenPatterns;
     }
 
-    /**
-     * Получить список разрешённых директив.
-     *
-     * @return array<int, string>
-     */
+    /** @return array<int, string> */
     public function getAllowedDirectives(): array
     {
         return $this->allowedDirectives;
@@ -198,19 +159,13 @@ class BladeSecurityValidator
     /**
      * Проверить Blade-директивы по whitelist.
      *
-     * Находит все @directive конструкции в шаблоне и проверяет,
-     * что каждая из них входит в список разрешённых.
-     *
-     * @param string $content
-     * @return array Список нарушений
+     * @return array<int,string>
      */
     protected function validateDirectives(string $content): array
     {
         $violations = [];
 
-        // Находим все Blade-директивы: @word (исключая email-подобные конструкции)
-        // Исключаем @-символ внутри email-адресов и CSS (@media, @keyframes, @import, @font-face, @charset)
-        // Blade-директивы всегда начинаются с начала строки или после пробела/скобки
+        // Директива — @word не внутри email и не CSS at-rule
         if (preg_match_all('/(?<![a-zA-Z0-9._-])@([a-zA-Z][a-zA-Z0-9_]*)/', $content, $matches)) {
             $cssAtRules = [
                 'media', 'keyframes', 'import', 'font-face', 'charset',
@@ -219,24 +174,13 @@ class BladeSecurityValidator
             ];
 
             foreach ($matches[1] as $directive) {
-                // Пропускаем CSS at-rules
                 if (in_array(strtolower($directive), $cssAtRules, true)) {
                     continue;
                 }
 
-                // Пропускаем CMS Blade-компоненты (x-cms::*)
-                if ($directive === 'x') {
-                    continue;
-                }
-
-                // Проверяем по whitelist
                 if (!in_array($directive, $this->allowedDirectives, true)) {
-                    // Выдаём информативное сообщение если директива явно заблокирована
-                    if (isset($this->explicitlyBlockedDirectives[$directive])) {
-                        $violations[] = $this->explicitlyBlockedDirectives[$directive];
-                    } else {
-                        $violations[] = "@{$directive} directive is not allowed";
-                    }
+                    $violations[] = $this->explicitlyBlockedDirectives[$directive]
+                        ?? "@{$directive} directive is not allowed";
                 }
             }
         }
@@ -245,49 +189,52 @@ class BladeSecurityValidator
     }
 
     /**
-     * Проверить выражения внутри {{ }} на запрещённые вызовы функций.
+     * Скомпилировать шаблон в PHP и поискать жёсткие возможности.
      *
-     * @param string $content
-     * @return array Список нарушений
+     * Теги <x-…> заменяются их выражениями: компилятор компонентов ищет класс
+     * компонента уже при компиляции, а шаблон законно ссылается на компонент,
+     * которого ещё нет (шапку создадут следующим шагом).
+     *
+     * @return array<int,string>
      */
-    protected function validateExpressions(string $content): array
+    protected function validateCompiled(string $content): array
     {
-        $violations = [];
+        $withoutComponents = preg_replace_callback(
+            '/<\/?x-[^>]*>/s',
+            fn (array $m) => $this->componentTagExpressions($m[0]),
+            $content
+        );
 
-        // Извлекаем все выражения внутри {{ ... }} и {!! ... !!}
-        if (preg_match_all('/\{\{(.*?)\}\}|\{!!(.*?)!!\}/s', $content, $matches)) {
-            $expressions = array_merge(
-                array_filter($matches[1], fn($v) => $v !== ''),
-                array_filter($matches[2], fn($v) => $v !== '')
-            );
+        try {
+            $php = Blade::compileString($withoutComponents);
+        } catch (\Throwable $e) {
+            return ['Шаблон не компилируется: '.$e->getMessage()];
+        }
 
-            foreach ($expressions as $expr) {
-                // Проверяем запрещённые вызовы функций
-                foreach ($this->forbiddenExpressionCalls as $func => $description) {
-                    if (preg_match('/\b' . preg_quote($func, '/') . '\s*\(/', $expr)) {
-                        $violations[] = $description;
-                    }
-                }
+        return $this->scanner->scan($php);
+    }
 
-                // Проверяем запрещённые статические вызовы
-                foreach ($this->forbiddenStaticCalls as $class => $description) {
-                    if (preg_match('/\b' . preg_quote($class, '/') . '\s*::/', $expr)) {
-                        $violations[] = $description;
-                    }
+    /**
+     * PHP-выражения из тега компонента: связанные атрибуты (:file="…") и {{ }}
+     * внутри значений — то, что компонент получит вычисленным.
+     */
+    protected function componentTagExpressions(string $tag): string
+    {
+        $out = '';
+
+        if (preg_match_all('/(?<![\w-]):[\w.-]+\s*=\s*"([^"]*)"|(?<![\w-]):[\w.-]+\s*=\s*\'([^\']*)\'/s', $tag, $m, PREG_SET_ORDER)) {
+            foreach ($m as $attr) {
+                $expr = $attr[1] !== '' ? $attr[1] : ($attr[2] ?? '');
+                if (trim($expr) !== '') {
+                    $out .= '@php(' . $expr . ')';
                 }
             }
         }
 
-        // Также проверяем запрещённые вызовы вне {{ }} (в сыром контексте)
-        foreach ($this->forbiddenExpressionCalls as $func => $description) {
-            // Только для опасных системных функций (eval, exec, system, etc.)
-            if (in_array($func, ['eval', 'exec', 'system', 'passthru', 'shell_exec', 'proc_open', 'popen'], true)) {
-                if (preg_match('/\b' . preg_quote($func, '/') . '\s*\(/', $content)) {
-                    $violations[] = $description;
-                }
-            }
+        if (preg_match_all('/\{\{.*?\}\}|\{!!.*?!!\}/s', $tag, $m)) {
+            $out .= implode('', $m[0]);
         }
 
-        return $violations;
+        return $out;
     }
 }

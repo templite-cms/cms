@@ -35,8 +35,8 @@ class BlockDataResolver
         $extraIds = []; // category_id, product_id и т.п.
 
         foreach ($pageBlocks as $pb) {
-            $fields = $pb->block->fields ?? collect();
-            $data = $this->mergePresetData($pb);
+            $fields = BlockField::tree($pb->block->fields ?? collect());
+            $data = $this->sourceData($pb);
             $this->collectIds($fields, $data, $fileIds, $pageIds, $extraIds);
         }
 
@@ -67,8 +67,8 @@ class BlockDataResolver
 
         // 3. Подставляем объекты вместо ID
         foreach ($pageBlocks as $pb) {
-            $fields = $pb->block->fields ?? collect();
-            $data = $this->mergePresetData($pb);
+            $fields = BlockField::tree($pb->block->fields ?? collect());
+            $data = $this->sourceData($pb);
 
             $pb->resolved_data = $this->resolveData(
                 $fields,
@@ -94,10 +94,12 @@ class BlockDataResolver
      * Используется для блоков, а также для template_data страницы
      * (поля шаблона — те же BlockField через morphMany).
      *
-     * @param Collection $fields Корневые определения полей с загруженными children.
+     * @param Collection $fields Поля владельца: плоский список fields() или корневые с children.
      */
     public function resolveFieldData(Collection $fields, array $data): array
     {
+        $fields = BlockField::tree($fields);
+
         // Собираем ID
         $fileIds = [];
         $pageIds = [];
@@ -156,10 +158,6 @@ class BlockDataResolver
                 if (is_numeric($value)) {
                     $pageIds[] = (int) $value;
                 }
-            } elseif ($field->type === 'user') {
-                if (is_numeric($value)) {
-                    $extraIds['user'][] = (int) $value;
-                }
             } elseif (in_array($field->type, ['category', 'product', 'product_option'])) {
                 if (is_numeric($value)) {
                     $extraIds[$field->type][] = (int) $value;
@@ -204,8 +202,6 @@ class BlockDataResolver
                 $resolved[$key] = is_numeric($value) ? ($files[$value] ?? null) : null;
             } elseif ($field->type === 'page') {
                 $resolved[$key] = is_numeric($value) ? ($pages[$value] ?? null) : null;
-            } elseif ($field->type === 'user') {
-                $resolved[$key] = is_numeric($value) ? ($extraEntities['user'][$value] ?? null) : null;
             } elseif (in_array($field->type, ['category', 'product', 'product_option'])) {
                 $type = $field->type;
                 $resolved[$key] = is_numeric($value) ? ($extraEntities[$type][$value] ?? null) : null;
@@ -237,49 +233,39 @@ class BlockDataResolver
     }
 
     /**
-     * Мержить данные блока с данными глобального пресета.
+     * Сырые данные экземпляра к резолву: собственные данные или данные глобального пресета.
      */
-    protected function mergePresetData(PageBlock $pb): array
+    protected function sourceData(PageBlock $pb): array
     {
-        $data = $pb->data ?? [];
-
-        if ($pb->preset_id && $pb->preset && $pb->preset->type === 'global') {
-            $presetData = $pb->preset->data ?? [];
-            $overrides = $pb->field_overrides ?? [];
-            $merged = $presetData;
-            foreach ($overrides as $key => $isOverridden) {
-                if ($isOverridden && array_key_exists($key, $data)) {
-                    $merged[$key] = $data[$key];
-                }
-            }
-            return $merged;
-        }
-
-        return $data;
+        return $this->mergePresetData($pb);
     }
 
     /**
-     * Получить значение по умолчанию для типа поля.
+     * Данные экземпляра: у связанного с глобальным пресетом — данные пресета целиком.
+     */
+    protected function mergePresetData(PageBlock $pb): array
+    {
+        if ($pb->preset_id && $pb->preset?->type === 'global') {
+            return $pb->preset->data ?? [];
+        }
+
+        return $pb->data ?? [];
+    }
+
+    /**
+     * Пустое значение нужного типа для незаполненного поля.
      *
-     * Гарантирует, что шаблон всегда получает корректный тип данных,
-     * даже если поле ещё не заполнено.
+     * Гарантирует, что шаблон всегда получает корректный тип данных.
+     * Контента здесь нет: стартовые значения блока задаёт пресет по умолчанию.
      */
     protected function getDefaultForType(BlockField $field): mixed
     {
-        // Если у поля задан default_value в БД — используем его (с приведением типа)
-        if ($field->default_value !== null && $field->default_value !== '') {
-            return \Templite\Cms\Support\FieldValueCaster::cast(
-                $field->default_value,
-                $field->type
-            );
-        }
-
         return match ($field->type) {
             'array'                               => [],
             'checkbox'                            => false,
             'number'                              => 0,
             'link'                                => ['url' => '', 'text' => '', 'target' => '_self'],
-            'img', 'file', 'page', 'user',
+            'img', 'file', 'page',
             'category', 'product', 'product_option' => null,
             // text, textfield, editor, html, color, date, datetime, select, radio
             default                               => '',

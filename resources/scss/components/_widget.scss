@@ -29,17 +29,6 @@
   }
 }
 
-.widget__header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.widget__drag-handle {
-  color: $neutral-400;
-  cursor: grab;
-}
-
 .widget__title {
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
@@ -49,13 +38,6 @@
     color: $neutral-200;
   }
 }
-
-.widget__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
 
 .widget__body {
   padding: 1rem;

@@ -7,7 +7,7 @@
 
 .preset-workspace {
   position: fixed;
-  top: 104px; // header (56px) + submenu (48px)
+  top: calc(#{$spacing-header} + #{$spacing-subheader}); // header + submenu
   bottom: 0;
   right: 0;
   overflow: hidden;

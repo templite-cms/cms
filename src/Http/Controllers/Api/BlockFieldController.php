@@ -50,11 +50,8 @@ class BlockFieldController extends Controller
      *         @OA\Property(property="key", type="string", example="title"),
      *         @OA\Property(property="type", type="string", example="text"),
      *         @OA\Property(property="parent_id", type="integer", nullable=true),
-     *         @OA\Property(property="default_value", type="string", nullable=true),
      *         @OA\Property(property="data", type="object", nullable=true),
      *         @OA\Property(property="hint", type="string", nullable=true),
-     *         @OA\Property(property="block_tab_id", type="integer", nullable=true),
-     *         @OA\Property(property="block_section_id", type="integer", nullable=true),
      *         @OA\Property(property="order", type="integer")
      *     )),
      *     @OA\Response(response=201, description="Поле создано"),
@@ -67,7 +64,7 @@ class BlockFieldController extends Controller
         $block = Block::findOrFail($blockId);
         $field = $this->fieldableService->createField($block, $request->validated());
 
-        $this->logAction('create', 'block_field', $field->id, ['name' => $field->name, 'key' => $field->key]);
+        $this->logAction('create', 'block_field', $field->id, ['name' => $field->name, 'key' => $field->key, 'block_id' => $block->id]);
 
         return $this->success(
             new BlockFieldResource($field->load('children')),
@@ -87,11 +84,8 @@ class BlockFieldController extends Controller
      *         @OA\Property(property="name", type="string"),
      *         @OA\Property(property="key", type="string"),
      *         @OA\Property(property="type", type="string"),
-     *         @OA\Property(property="default_value", type="string", nullable=true),
      *         @OA\Property(property="data", type="object", nullable=true),
      *         @OA\Property(property="hint", type="string", nullable=true),
-     *         @OA\Property(property="block_tab_id", type="integer", nullable=true),
-     *         @OA\Property(property="block_section_id", type="integer", nullable=true),
      *         @OA\Property(property="order", type="integer")
      *     )),
      *     @OA\Response(response=200, description="Поле обновлено"),
@@ -104,7 +98,7 @@ class BlockFieldController extends Controller
         $field = BlockField::findOrFail($id);
         $field->update($request->validated());
 
-        $this->logAction('update', 'block_field', $field->id, ['name' => $field->name, 'key' => $field->key]);
+        $this->logAction('update', 'block_field', $field->id, ['name' => $field->name, 'key' => $field->key] + $this->ownerLogData($field));
 
         return $this->success(
             new BlockFieldResource($field->fresh(['children', 'children.children']))
@@ -126,15 +120,31 @@ class BlockFieldController extends Controller
     {
         $field = BlockField::findOrFail($id);
         $name = $field->name;
+        $ownerData = $this->ownerLogData($field);
         $field->children()->each(function (BlockField $child) {
             $child->children()->delete();
             $child->delete();
         });
         $field->delete();
 
-        $this->logAction('delete', 'block_field', $id, ['name' => $name]);
+        $this->logAction('delete', 'block_field', $id, ['name' => $name] + $ownerData);
 
         return $this->success(null, 'Поле удалено.');
+    }
+
+    /**
+     * Эндпоинты update/destroy — общие для всех владельцев поля (fieldable):
+     * сейчас это Block и TemplatePage. В журнал пишем block_id только когда
+     * владелец — блок, чтобы запись показывалась на его странице; для других
+     * владельцев (например, шаблона) запись остаётся без привязки к родителю.
+     *
+     * @return array{block_id?: int}
+     */
+    private function ownerLogData(BlockField $field): array
+    {
+        return $field->fieldable_type === (new Block())->getMorphClass()
+            ? ['block_id' => $field->fieldable_id]
+            : [];
     }
 
     /**
@@ -148,9 +158,7 @@ class BlockFieldController extends Controller
      *         required={"items"},
      *         @OA\Property(property="items", type="array", @OA\Items(
      *             @OA\Property(property="id", type="integer"),
-     *             @OA\Property(property="order", type="integer"),
-     *             @OA\Property(property="block_section_id", type="integer", nullable=true),
-     *             @OA\Property(property="block_tab_id", type="integer", nullable=true)
+     *             @OA\Property(property="order", type="integer")
      *         ))
      *     )),
      *     @OA\Response(response=200, description="Порядок обновлен"),

@@ -40,17 +40,9 @@ interface TempliteModuleInterface
     public function getPermissions(): array;
 
     /**
-     * Виджеты дашборда. Формат:
-     * [
-     *   [
-     *     'slug' => 'unique-slug',
-     *     'label' => 'Название',
-     *     'component' => 'VueComponentName',
-     *     'size' => 'sm|md|lg',
-     *     'position' => 10,
-     *     'data_route' => 'api.route.name', // optional
-     *   ],
-     * ]
+     * Виджеты дашборда — классы, реализующие DashboardWidget.
+     *
+     * @return list<class-string<DashboardWidget>>
      */
     public function getDashboardWidgets(): array;
 
@@ -67,11 +59,4 @@ interface TempliteModuleInterface
      * Возвращает абсолютный путь или null если модуль не имеет pre-built assets.
      */
     public function getAssetManifest(): ?string;
-
-    /**
-     * Guard'ы пользователей сайта, предоставляемые модулем.
-     *
-     * @return UserGuardInterface[]
-     */
-    public function getGuards(): array;
 }

@@ -3,7 +3,7 @@
 namespace Templite\Cms\Services\ImportExport;
 
 use Templite\Cms\Models\{Block, BlockType, TemplatePage, Component, Action, Library,
-    BlockPreset, Page, PageType, CmsConfig, City, Language};
+    BlockPreset, Page, PageType, CmsConfig};
 
 /**
  * Обнаружение конфликтов при импорте.
@@ -29,8 +29,6 @@ class ConflictDetector
         'page' => [Page::class, 'url'],
         'page_type' => [PageType::class, 'slug'],
         'cms_config' => [CmsConfig::class, 'key'],
-        'city' => [City::class, 'slug'],
-        'language' => [Language::class, 'code'],
     ];
 
     /**

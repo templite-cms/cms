@@ -12,6 +12,7 @@ class PageResource extends JsonResource
         return [
             'id' => $this->id,
             'url' => $this->url,
+            'url_auto' => $this->url_auto,
             'alias' => $this->alias,
             'parent_id' => $this->parent_id,
             'type_id' => $this->type_id,
@@ -22,8 +23,6 @@ class PageResource extends JsonResource
             'template_page_id' => $this->template_page_id,
             'template_data' => $this->template_data,
             'status' => $this->status,
-            'city_scope' => $this->city_scope,
-            'city_id' => $this->city_id,
             'publish_at' => $this->publish_at?->toIso8601String(),
             'unpublish_at' => $this->unpublish_at?->toIso8601String(),
             'display_tree' => $this->display_tree,

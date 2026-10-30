@@ -33,6 +33,7 @@
 @use 'components/icon';
 @use 'components/slug-field';
 @use 'components/item-card';
+@use 'components/bulk-bar';
 @use 'components/confirm';
 @use 'components/widget';
 @use 'components/media';
@@ -41,6 +42,8 @@
 @use 'components/link-field';
 @use 'components/accordion';
 @use 'components/list-item';
+@use 'components/library-files';
+@use 'components/cdnjs-picker';
 @use 'components/edit-side-panel';
 @use 'components/submenu';
 @use 'components/template-switcher';
@@ -53,6 +56,9 @@
 @use 'components/cache-card';
 @use 'components/queue-card';
 @use 'components/tiptap-field';
+@use 'components/ai-chat';
+@use 'components/block-code-history';
+@use 'pages/ai-settings';
 
 // Layouts
 @use 'layouts/admin';
@@ -82,4 +88,3 @@
 @use 'pages/profile';
 @use 'pages/export-import';
 @use 'pages/logs-index';
-@use 'pages/users-index';

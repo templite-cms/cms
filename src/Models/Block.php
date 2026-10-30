@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\HtmlString;
 use Templite\Cms\Concerns\HasExportable;
 use Templite\Cms\Contracts\Exportable;
 use Templite\Cms\Services\ImportExport\ImportContext;
@@ -27,12 +28,21 @@ class Block extends Model implements Exportable
         'tags',
         'screen',
         'order',
-        'no_wrapper',
+        'auto_marker',
     ];
 
     protected $casts = [
-        'no_wrapper' => 'boolean',
+        'auto_marker' => 'boolean',
     ];
+
+    /**
+     * Метка корня для ручной расстановки в шаблоне: <section {{ $block->marker }}>.
+     * Нужна, когда автометка выключена или корень не первый элемент шаблона.
+     */
+    public function getMarkerAttribute(): HtmlString
+    {
+        return new HtmlString('data-block="' . e($this->slug) . '"');
+    }
 
     // --- Relationships ---
 
@@ -41,25 +51,7 @@ class Block extends Model implements Exportable
         return $this->belongsTo(BlockType::class);
     }
 
-    public function tabs(): HasMany
-    {
-        return $this->hasMany(BlockTab::class)->orderBy('order');
-    }
-
-    public function sections(): HasMany
-    {
-        return $this->hasMany(BlockSection::class)->orderBy('order');
-    }
-
-    public function fields(): HasMany
-    {
-        return $this->hasMany(BlockField::class)->orderBy('order');
-    }
-
-    public function rootFields(): HasMany
-    {
-        return $this->hasMany(BlockField::class)->whereNull('parent_id')->orderBy('order');
-    }
+    // fields(), rootFields(), экспорт/импорт полей — из HasFieldable
 
     public function blockActions(): HasMany
     {
@@ -136,7 +128,7 @@ class Block extends Model implements Exportable
             'block_type_slug' => $this->blockType?->slug,
             'source' => 'database',
             'tags' => $this->tags,
-            'no_wrapper' => $this->no_wrapper,
+            'auto_marker' => $this->auto_marker,
             'order' => $this->order,
             'screen_path' => $this->screenshot?->path,
             'library_slugs' => $this->libraries->pluck('slug')->toArray(),
@@ -145,83 +137,13 @@ class Block extends Model implements Exportable
                 'params' => $ba->params,
                 'order' => $ba->order,
             ])->toArray(),
-            'tabs' => $this->exportFieldableTabs(),
-            'fields' => $this->exportOrphanFields(),
+            'fields' => $this->exportFields(),
         ];
     }
 
     public function getExportMediaFiles(): array
     {
         return $this->screenshot ? $this->screenshot->getExportMediaFiles() : [];
-    }
-
-    /**
-     * Экспорт иерархии tabs -> sections -> fields для данного блока.
-     */
-    public function exportFieldableTabs(): array
-    {
-        $tabs = $this->tabs()
-            ->orderBy('order')
-            ->with(['sections.fields.children', 'fields.children'])
-            ->get();
-
-        return $tabs->map(function ($tab) {
-            return [
-                'name' => $tab->name,
-                'order' => $tab->order,
-                'columns' => $tab->columns,
-                'column_widths' => $tab->column_widths,
-                'sections' => $tab->sections->sortBy('order')->map(fn ($s) => [
-                    'name' => $s->name,
-                    'order' => $s->order,
-                    'column_index' => $s->column_index,
-                    'fields' => $this->exportFields($s->fields),
-                ])->values()->toArray(),
-                'fields' => $this->exportFields(
-                    $tab->fields->whereNull('block_section_id')
-                ),
-            ];
-        })->toArray();
-    }
-
-    /**
-     * Рекурсивный экспорт полей с дочерними.
-     *
-     * @param \Illuminate\Support\Collection $fields
-     * @return array
-     */
-    public function exportFields($fields): array
-    {
-        return $fields->sortBy('order')->map(function ($f) {
-            $arr = [
-                'name' => $f->name,
-                'key' => $f->key,
-                'type' => $f->type,
-                'default_value' => $f->default_value,
-                'data' => $f->data,
-                'hint' => $f->hint,
-                'order' => $f->order,
-            ];
-            if ($f->children->isNotEmpty()) {
-                $arr['children'] = $this->exportFields($f->children);
-            }
-            return $arr;
-        })->values()->toArray();
-    }
-
-    /**
-     * Экспорт полей, не привязанных к табам (orphan fields).
-     */
-    public function exportOrphanFields(): array
-    {
-        $fields = $this->fields()
-            ->whereNull('block_tab_id')
-            ->whereNull('parent_id')
-            ->with('children')
-            ->orderBy('order')
-            ->get();
-
-        return $this->exportFields($fields);
     }
 
     /**
@@ -260,7 +182,8 @@ class Block extends Model implements Exportable
                 'block_type_id' => $blockTypeId,
                 'source' => 'database',
                 'tags' => $data['tags'] ?? null,
-                'no_wrapper' => $data['no_wrapper'] ?? false,
+                // Экспорт до замены обёртки нёс no_wrapper
+                'auto_marker' => $data['auto_marker'] ?? !($data['no_wrapper'] ?? false),
                 'order' => $data['order'] ?? 0,
                 'screen' => $screenId,
             ]
@@ -285,13 +208,7 @@ class Block extends Model implements Exportable
             }
         }
 
-        // Импорт tabs/sections/fields
-        static::importFieldableTabs($block, $data['tabs'] ?? []);
-
-        // Импорт полей без табов (orphan fields)
-        if (!empty($data['fields'])) {
-            static::importOrphanFields($block, $data['fields']);
-        }
+        $block->importFields($data['fields'] ?? []);
 
         // Обратная совместимость с v1.0 (код как JSON-строки)
         if (isset($data['code']) && is_array($data['code'])) {
@@ -299,137 +216,6 @@ class Block extends Model implements Exportable
         }
 
         return $block;
-    }
-
-    /**
-     * Импорт иерархии tabs -> sections -> fields.
-     * Удаляет существующие tabs (каскадно удалятся sections/fields).
-     *
-     * @param \Illuminate\Database\Eloquent\Model $owner Block или TemplatePage
-     * @param array $tabs
-     */
-    public static function importFieldableTabs(Model $owner, array $tabs): void
-    {
-        // Удаление существующих tabs для данного owner
-        if ($owner instanceof Block) {
-            BlockTab::where('block_id', $owner->id)->delete();
-        } else {
-            $ownerClass = get_class($owner);
-            BlockTab::where('fieldable_type', $ownerClass)
-                ->where('fieldable_id', $owner->id)
-                ->delete();
-        }
-
-        $blockId = $owner instanceof Block ? $owner->id : null;
-        $ownerClass = get_class($owner);
-
-        foreach ($tabs as $tabData) {
-            $tab = BlockTab::create([
-                'name' => $tabData['name'],
-                'fieldable_type' => $ownerClass,
-                'fieldable_id' => $owner->id,
-                'block_id' => $blockId,
-                'order' => $tabData['order'] ?? 0,
-                'columns' => $tabData['columns'] ?? 1,
-                'column_widths' => $tabData['column_widths'] ?? null,
-            ]);
-
-            foreach ($tabData['sections'] ?? [] as $secData) {
-                $section = BlockSection::create([
-                    'name' => $secData['name'],
-                    'fieldable_type' => $ownerClass,
-                    'fieldable_id' => $owner->id,
-                    'block_id' => $blockId,
-                    'block_tab_id' => $tab->id,
-                    'order' => $secData['order'] ?? 0,
-                    'column_index' => $secData['column_index'] ?? 0,
-                ]);
-
-                static::importFields($secData['fields'] ?? [], $owner, $tab, $section);
-            }
-
-            // Поля без секции (напрямую в табе)
-            static::importFields($tabData['fields'] ?? [], $owner, $tab, null);
-        }
-    }
-
-    /**
-     * Рекурсивный импорт полей.
-     *
-     * @param array $fields
-     * @param \Illuminate\Database\Eloquent\Model $owner
-     * @param BlockTab $tab
-     * @param BlockSection|null $section
-     * @param int|null $parentId
-     */
-    public static function importFields(
-        array $fields,
-        Model $owner,
-        BlockTab $tab,
-        ?BlockSection $section,
-        ?int $parentId = null
-    ): void {
-        $ownerClass = get_class($owner);
-        $blockId = $owner instanceof Block ? $owner->id : null;
-
-        foreach ($fields as $fData) {
-            $field = BlockField::create([
-                'name' => $fData['name'],
-                'key' => $fData['key'],
-                'type' => $fData['type'],
-                'default_value' => $fData['default_value'] ?? null,
-                'data' => $fData['data'] ?? null,
-                'hint' => $fData['hint'] ?? null,
-                'order' => $fData['order'] ?? 0,
-                'parent_id' => $parentId,
-                'fieldable_type' => $ownerClass,
-                'fieldable_id' => $owner->id,
-                'block_id' => $blockId,
-                'block_tab_id' => $tab->id,
-                'block_section_id' => $section?->id,
-            ]);
-
-            if (!empty($fData['children'])) {
-                static::importFields($fData['children'], $owner, $tab, $section, $field->id);
-            }
-        }
-    }
-
-    /**
-     * Импорт полей без табов (orphan fields).
-     * Удаляет существующие orphan-поля перед импортом.
-     */
-    public static function importOrphanFields(self $block, array $fields, ?int $parentId = null): void
-    {
-        // Удаляем существующие orphan-поля только на верхнем уровне
-        if ($parentId === null) {
-            BlockField::where('block_id', $block->id)
-                ->whereNull('block_tab_id')
-                ->whereNull('parent_id')
-                ->delete();
-        }
-
-        foreach ($fields as $fData) {
-            $field = BlockField::create([
-                'name' => $fData['name'],
-                'key' => $fData['key'],
-                'type' => $fData['type'],
-                'default_value' => $fData['default_value'] ?? null,
-                'data' => $fData['data'] ?? null,
-                'hint' => $fData['hint'] ?? null,
-                'order' => $fData['order'] ?? 0,
-                'parent_id' => $parentId,
-                'fieldable_type' => Block::class,
-                'fieldable_id' => $block->id,
-                'block_id' => $block->id,
-                'block_tab_id' => null,
-                'block_section_id' => null,
-            ]);
-
-            if (!empty($fData['children'])) {
-                static::importOrphanFields($block, $fData['children'], $field->id);
-            }
-        }
     }
 
     /**

@@ -20,17 +20,9 @@ class TemplatePageResource extends JsonResource
                 $this->relationLoaded('libraries'),
                 fn() => LibraryResource::collection($this->libraries)
             ),
-            'tabs' => $this->when(
-                $this->relationLoaded('tabs') || $this->relationLoaded('fieldTabs'),
-                fn() => BlockTabResource::collection($this->relationLoaded('tabs') ? $this->tabs : $this->fieldTabs)
-            ),
-            'sections' => $this->when(
-                $this->relationLoaded('sections') || $this->relationLoaded('fieldSections'),
-                fn() => BlockSectionResource::collection($this->relationLoaded('sections') ? $this->sections : $this->fieldSections)
-            ),
             'fields' => $this->when(
-                $this->relationLoaded('rootFields') || $this->relationLoaded('rootFieldDefinitions'),
-                fn() => BlockFieldResource::collection($this->relationLoaded('rootFields') ? $this->rootFields : $this->rootFieldDefinitions)
+                $this->relationLoaded('rootFields'),
+                fn() => BlockFieldResource::collection($this->rootFields)
             ),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

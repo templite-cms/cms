@@ -1,5 +1,5 @@
 // =============================================================================
-// Dashboard — Page-specific styles
+// Dashboard — раскладка страницы и виды виджетов (counters, list, feed)
 // =============================================================================
 
 @use '../variables' as *;
@@ -8,10 +8,6 @@
 .dashboard {
   padding: 1.5rem;
 }
-
-// -----------------------------------------------------------------------------
-// Header
-// -----------------------------------------------------------------------------
 
 .dashboard__header {
   display: flex;
@@ -32,16 +28,6 @@
   }
 }
 
-.dashboard__header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-// -----------------------------------------------------------------------------
-// Widget Grid
-// -----------------------------------------------------------------------------
-
 .dashboard__grid {
   display: flex;
   flex-wrap: wrap;
@@ -50,164 +36,101 @@
 
 .dashboard__grid-item {
   width: 100%;
-  @include transition-fast;
 
   &--half {
     @include lg {
       width: calc(50% - 0.5rem);
     }
   }
-
-  &--full {
-    width: 100%;
-  }
-}
-
-.dashboard__grid-ghost {
-  opacity: 0.3;
 }
 
 // -----------------------------------------------------------------------------
-// Empty State
+// Общее для видов
 // -----------------------------------------------------------------------------
 
-.dashboard__empty {
-  padding: 4rem 0;
-  text-align: center;
-}
-
-.dashboard__empty-text {
-  color: $neutral-500;
-  margin-bottom: 1rem;
-}
-
-// -----------------------------------------------------------------------------
-// Recent Pages Widget
-// -----------------------------------------------------------------------------
-
-.recent-pages__empty {
-  padding: 2rem 0;
-  text-align: center;
-}
-
-.recent-pages__empty-icon {
-  color: $neutral-300;
-  margin: 0 auto 0.5rem;
-
-  .dark & {
-    color: $neutral-600;
-  }
-}
-
-.recent-pages__empty-text {
+.dashboard-widget__empty {
   font-size: $font-size-sm;
   color: $neutral-500;
+  text-align: center;
+  padding: 1rem 0;
 }
 
-.recent-pages__scroll {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-  margin: 0 -1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  @include custom-scrollbar(0.25rem);
-}
-
-.recent-pages__item {
-  width: 11rem;
-  flex-shrink: 0;
-}
-
-.recent-pages__edit-btn {
-  width: 2rem;
-  height: 2rem;
-  border-radius: $radius-lg;
-  background-color: rgba(#fff, 0.9);
+.dashboard-widget__ok {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $neutral-700;
-  box-shadow: $shadow-sm;
-  @include transition-fast(background-color);
-
-  &:hover {
-    background-color: #fff;
-  }
-
-  .dark & {
-    background-color: rgba($neutral-800, 0.9);
-    color: $neutral-200;
-  }
+  gap: 0.5rem;
+  font-size: $font-size-sm;
+  color: $success-600;
+  padding: 1rem 0;
 }
 
-.recent-pages__badge {
-  font-size: 10px;
-  padding: 0 0.375rem;
-  line-height: 1.4;
-}
-
-.recent-pages__date {
-  font-size: 10px;
-  color: $neutral-400;
-  margin-top: 0.25rem;
-}
-
-.recent-pages__footer {
+.dashboard-widget__more {
   display: block;
   text-align: center;
   font-size: $font-size-xs;
   color: $primary-500;
-  padding-top: 0.75rem;
-  margin-top: 0.75rem;
-  border-top: 1px solid $neutral-100;
-  @include transition-fast(color);
+  padding-top: 0.5rem;
 
   &:hover {
     color: $primary-600;
   }
-
-  .dark & {
-    border-color: $neutral-700;
-  }
 }
 
 // -----------------------------------------------------------------------------
-// Content Stats Widget
+// counters
 // -----------------------------------------------------------------------------
 
-.content-stats {
-  display: flex;
+.dashboard-counters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
   gap: 0.75rem;
 }
 
-.content-stats__item {
-  flex: 1;
-  text-align: center;
+.dashboard-counters__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
   padding: 0.75rem;
+  border: 1px solid $neutral-200;
   border-radius: $radius-lg;
-  @include transition-fast(background-color);
+  @include transition-fast(background-color, border-color);
 
-  &:hover {
+  .dark & {
+    border-color: $neutral-700;
+    background-color: transparent;
+  }
+
+  &[href]:hover {
     background-color: $neutral-50;
+
+    .dark & {
+      background-color: rgba($neutral-700, 0.3);
+    }
   }
 
-  .dark &:hover {
-    background-color: rgba($neutral-700, 0.3);
+  &--warning {
+    border-color: $warning-200;
+    background-color: $warning-50;
+
+    .dark & {
+      border-color: $warning-700;
+      background-color: rgba($warning-900, 0.3);
+    }
+  }
+
+  &--danger {
+    border-color: $error-200;
+    background-color: $error-50;
+
+    .dark & {
+      border-color: $error-700;
+      background-color: rgba($error-900, 0.3);
+    }
   }
 }
 
-.content-stats__icon {
-  margin: 0 auto 0.25rem;
-
-  &--primary { color: $primary-500; }
-  &--success { color: $success-500; }
-  &--violet { color: #8b5cf6; }
-  &--warning { color: $warning-500; }
-}
-
-.content-stats__value {
+.dashboard-counters__value {
   font-size: $font-size-2xl;
   line-height: $line-height-2xl;
   font-weight: $font-weight-bold;
@@ -216,197 +139,135 @@
   .dark & {
     color: $neutral-100;
   }
-}
 
-.content-stats__label {
-  font-size: $font-size-xs;
-  color: $neutral-500;
-  margin-top: 0.125rem;
-}
+  .dashboard-counters__item--warning & {
+    color: $warning-700;
 
-// -----------------------------------------------------------------------------
-// Quick Actions Widget
-// -----------------------------------------------------------------------------
-
-.quick-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.quick-actions__item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  border-radius: $radius-lg;
-  background: #fff;
-  border: 1px solid $neutral-100;
-  cursor: pointer;
-  @include transition-fast(border-color, box-shadow);
-
-  &:hover {
-    border-color: $neutral-300;
-    box-shadow: $shadow-sm;
+    .dark & {
+      color: $warning-300;
+    }
   }
 
-  .dark & {
-    background: $neutral-800;
-    border-color: $neutral-700;
+  .dashboard-counters__item--danger & {
+    color: $error-700;
 
-    &:hover {
-      border-color: $neutral-500;
+    .dark & {
+      color: $error-300;
     }
   }
 }
 
-.quick-actions__icon-wrap {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: $radius-lg;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &--primary {
-    color: $primary-500;
-    background-color: $primary-50;
-    .dark & { background-color: rgba($primary-900, 0.2); }
-  }
-
-  &--success {
-    color: $success-500;
-    background-color: $success-50;
-    .dark & { background-color: rgba($success-900, 0.2); }
-  }
-
-  &--violet {
-    color: #8b5cf6;
-    background-color: #f5f3ff;
-    .dark & { background-color: rgba(#4c1d95, 0.2); }
-  }
-
-  &--warning {
-    color: $warning-500;
-    background-color: $warning-50;
-    .dark & { background-color: rgba($warning-900, 0.2); }
-  }
-}
-
-.quick-actions__label {
+.dashboard-counters__label {
   font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  color: $neutral-600;
-  text-align: center;
-
-  .dark & {
-    color: $neutral-300;
-  }
+  color: $neutral-500;
 }
 
-.quick-actions__form {
+// -----------------------------------------------------------------------------
+// list
+// -----------------------------------------------------------------------------
+
+.dashboard-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-.quick-actions__modal-footer {
-  display: flex;
-  justify-content: flex-end;
   gap: 0.5rem;
 }
 
-// -----------------------------------------------------------------------------
-// Widget Catalog
-// -----------------------------------------------------------------------------
-
-.widget-catalog {
-  margin-top: 1rem;
+.dashboard-list__link {
+  display: block;
+  color: inherit;
 }
 
-.widget-catalog__title {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-semibold;
-  color: $neutral-700;
+// -----------------------------------------------------------------------------
+// feed
+// -----------------------------------------------------------------------------
+
+.activity-feed__filters {
   margin-bottom: 0.75rem;
-
-  .dark & {
-    color: $neutral-200;
-  }
 }
 
-.widget-catalog__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
-
-  @include sm {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.widget-catalog__btn {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: $radius-lg;
-  border: 1px dashed $neutral-300;
-  text-align: left;
-  @include transition-fast(border-color, background-color);
-
-  &:hover {
-    border-color: $primary-400;
-    background-color: rgba($primary-50, 0.5);
-  }
-
-  .dark & {
-    border-color: $neutral-600;
-
-    &:hover {
-      border-color: $primary-500;
-      background-color: rgba($primary-900, 0.1);
-    }
-  }
-}
-
-.widget-catalog__btn-icon {
-  width: 2rem;
-  height: 2rem;
-  border-radius: $radius-lg;
-  background-color: $neutral-100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.activity-feed__scope {
+  font-size: $font-size-xs;
   color: $neutral-500;
+  margin-bottom: 0.5rem;
+}
+
+.activity-feed__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid $neutral-100;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
 
   .dark & {
-    background-color: $neutral-700;
+    border-color: $neutral-700;
   }
 }
 
-.widget-catalog__btn-label {
+.activity-feed__avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius-full;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.activity-feed__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-feed__line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activity-feed__actor {
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
-  color: $neutral-700;
+  color: $neutral-800;
 
   .dark & {
-    color: $neutral-200;
+    color: $neutral-100;
   }
 }
 
-.widget-catalog__btn-desc {
-  font-size: $font-size-xs;
+.activity-feed__text {
+  font-size: $font-size-sm;
   color: $neutral-500;
   margin-top: 0.125rem;
 }
 
-.widget-catalog__empty {
-  margin-top: 1rem;
-  text-align: center;
-  font-size: $font-size-sm;
-  color: $neutral-500;
-  padding: 1rem 0;
+.activity-feed__entity {
+  color: $primary-500;
+
+  &:hover {
+    color: $primary-600;
+  }
+
+  &--gone {
+    color: $neutral-500;
+    text-decoration: line-through;
+  }
+}
+
+.activity-feed__count {
+  margin-left: 0.25rem;
+  color: $neutral-400;
+}
+
+.activity-feed__time {
+  font-size: $font-size-xs;
+  color: $neutral-400;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.activity-feed__more {
+  margin: 0.75rem auto 0;
+  display: flex;
 }

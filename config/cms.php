@@ -67,6 +67,19 @@ return [
     // Очередь для обработки изображений
     'image_queue' => env('CMS_IMAGE_QUEUE', 'images'),
 
+    // AI-ассистент: исполнение ходов агента
+    'ai' => [
+        // false — ход выполняется в PHP-процессе после отправки ответа, без воркера очереди
+        'queue' => env('CMS_AI_QUEUE', true),
+        'queue_name' => env('CMS_AI_QUEUE_NAME', 'default'),
+        'max_tokens' => (int) env('CMS_AI_MAX_TOKENS', 8000),
+        'tool_result_limit' => (int) env('CMS_AI_TOOL_RESULT_LIMIT', 8000),
+        // Доля окна модели, после которой история сжимается
+        'compact_threshold' => (float) env('CMS_AI_COMPACT_THRESHOLD', 0.7),
+        'default_context_length' => 32000,
+        'events_ttl_days' => 7,
+    ],
+
     // Dev-mode (показывает файловый менеджер проекта)
     'dev_mode' => env('CMS_DEV_MODE', false),
 
@@ -103,10 +116,17 @@ return [
         'components.create',
         'components.edit',
         'components.delete',
+        // Как и у шаблонов: маршрут правки кода требовал право, которого
+        // не было в списке — выдать его через админку было нельзя.
+        'components.code',
         'templates.view',
         'templates.create',
         'templates.edit',
         'templates.delete',
+        // Правку кода шаблона закрывает отдельное право — как blocks.code
+        // и actions.code. Маршрут его требовал, а выдать через админку
+        // было нельзя: в списке права не было.
+        'templates.code',
         // --- CMS: Медиа ---
         'media.view',
         'media.upload',

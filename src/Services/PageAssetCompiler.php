@@ -14,6 +14,7 @@ class PageAssetCompiler
 {
     public function __construct(
         protected BlockRenderer $blockRenderer,
+        protected LibraryAssetBuilder $libraryAssets,
     ) {}
 
     /**
@@ -24,9 +25,9 @@ class PageAssetCompiler
         $libraries = $this->collectLibraries($page);
         $blockSlugs = $this->collectBlockSlugs($page);
         $componentSlugs = $this->extractComponentSlugs($blockSlugs, $page);
-        $css = $this->buildCss($libraries, $blockSlugs, $page, $componentSlugs);
-        $js = $this->buildJs($libraries, $blockSlugs, $page, $componentSlugs);
-        $cdnLinks = $this->collectCdnLinks($libraries);
+        $css = $this->buildCss($blockSlugs, $page, $componentSlugs);
+        $js = $this->buildJs($blockSlugs, $page, $componentSlugs);
+        $cdnLinks = $this->libraryAssets->collect($libraries);
         $hash = substr(md5($css . $js . json_encode($cdnLinks)), 0, 8);
 
         $basePath = storage_path('app/public/cms/assets/pages/' . $page->id);
@@ -214,7 +215,7 @@ class PageAssetCompiler
             }
         }
 
-        return Library::whereIn('id', $libraryIds->unique())->active()->orderBy('sort_order')->get();
+        return Library::whereIn('id', $libraryIds->unique())->with('files')->active()->orderBy('sort_order')->get();
     }
 
     protected function collectBlockSlugs(Page $page): array
@@ -273,7 +274,11 @@ class PageAssetCompiler
         return $this->blockRenderer->parseComponentReferences($content);
     }
 
-    protected function buildCss(\Illuminate\Support\Collection $libraries, array $blockSlugs, Page $page, array $componentSlugs = []): string
+    /**
+     * Стили блоков, шаблона и компонентов. Содержимое библиотек сюда не
+     * инлайнится — они подключаются ссылками через LibraryAssetBuilder.
+     */
+    protected function buildCss(array $blockSlugs, Page $page, array $componentSlugs = []): string
     {
         $parts = [];
 
@@ -310,12 +315,16 @@ class PageAssetCompiler
         return implode("\n", $parts);
     }
 
-    protected function buildJs(\Illuminate\Support\Collection $libraries, array $blockSlugs, Page $page, array $componentSlugs = []): string
+    /**
+     * Скрипты блоков, шаблона и компонентов. Содержимое библиотек сюда не
+     * инлайнится — они подключаются ссылками через LibraryAssetBuilder.
+     */
+    protected function buildJs(array $blockSlugs, Page $page, array $componentSlugs = []): string
     {
         $parts = [];
 
         // 1. Templite Runtime
-        $parts[] = $this->getRuntime();
+        $parts[] = $this->blockRenderer->runtimeScript();
 
         // 2. Template script
         if ($page->template_page_id) {
@@ -340,84 +349,21 @@ class PageAssetCompiler
             }
         }
 
-        // 4. Block scripts (wrapped in registerBlock, deduplicated)
+        // 4. Block scripts — функция с el на каждый экземпляр (deduplicated)
         foreach ($blockSlugs as $slug => $block) {
             $blockPath = $this->blockRenderer->resolveBlockPath($block);
-            if ($blockPath) {
-                $scriptFile = $blockPath . '/script.js';
-                if (file_exists($scriptFile)) {
-                    $script = file_get_contents($scriptFile);
-                    if (trim($script) !== '') {
-                        $parts[] = "/* Block: {$slug} */";
-                        if ($block->no_wrapper) {
-                            // Без обёртки — IIFE без привязки к элементу
-                            $parts[] = "(function() {";
-                            $parts[] = $script;
-                            $parts[] = "})();";
-                        } else {
-                            $parts[] = "Templite.registerBlock('" . addslashes($slug) . "', function(el) {";
-                            $parts[] = $script;
-                            $parts[] = '});';
-                        }
-                    }
+            if ($blockPath && file_exists($blockPath . '/script.js')) {
+                $script = file_get_contents($blockPath . '/script.js');
+                if (trim($script) !== '') {
+                    $parts[] = $this->blockRenderer->wrapBlockScript($block, $script);
                 }
             }
         }
 
-        // 5. Auto-init
-        $parts[] = "document.addEventListener('DOMContentLoaded', function() { Templite.init(); });";
+        // 5. Запуск рантайма
+        $parts[] = $this->blockRenderer->runtimeBootScript();
 
         return implode("\n", $parts);
-    }
-
-    protected function collectCdnLinks(\Illuminate\Support\Collection $libraries): array
-    {
-        $links = [];
-        foreach ($libraries as $lib) {
-            if ($lib->load_strategy === 'cdn') {
-                if ($lib->css_cdn) {
-                    $links[] = ['type' => 'css', 'url' => $lib->css_cdn];
-                }
-                if ($lib->js_cdn) {
-                    $links[] = ['type' => 'js', 'url' => $lib->js_cdn];
-                }
-            } elseif ($lib->load_strategy === 'local') {
-                if ($lib->css_file) {
-                    $links[] = ['type' => 'css', 'url' => asset('storage/' . ltrim($lib->css_file, '/'))];
-                }
-                if ($lib->js_file) {
-                    $links[] = ['type' => 'js', 'url' => asset('storage/' . ltrim($lib->js_file, '/'))];
-                }
-            }
-        }
-        return $links;
-    }
-
-    protected function getRuntime(): string
-    {
-        return <<<'JS'
-/* Templite Runtime */
-window.Templite = window.Templite || {
-  _blocks: {},
-  registerBlock: function(slug, fn) {
-    this._blocks[slug] = fn;
-  },
-  initBlock: function(slug, el) {
-    if (this._blocks[slug]) {
-      try {
-        this._blocks[slug](el);
-      } catch (e) {
-        console.error('[Templite] Block "' + slug + '" init error:', e);
-      }
-    }
-  },
-  init: function() {
-    document.querySelectorAll('[data-block]').forEach(function(el) {
-      Templite.initBlock(el.dataset.block, el);
-    });
-  }
-};
-JS;
     }
 
     protected function ensureDirectory(string $path): void

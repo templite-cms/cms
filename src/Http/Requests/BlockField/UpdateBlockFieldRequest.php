@@ -40,7 +40,7 @@ class UpdateBlockFieldRequest extends FormRequest
             'type' => [
                 'sometimes',
                 'string',
-                'in:text,textfield,number,img,file,editor,tiptap,html,select,checkbox,radio,link,date,datetime,array,color,page,user,category,product,product_option',
+                'in:text,textfield,number,img,file,editor,tiptap,html,select,checkbox,radio,link,date,datetime,array,color,page,category,product,product_option',
             ],
             'parent_id' => [
                 'nullable',
@@ -50,11 +50,8 @@ class UpdateBlockFieldRequest extends FormRequest
                     ->where('fieldable_id', $field->fieldable_id)
                     ->where('type', 'array'),
             ],
-            'default_value' => ['nullable', 'string'],
             'data' => ['nullable', 'array'],
             'hint' => ['nullable', 'string', 'max:500'],
-            'block_tab_id' => ['nullable', 'integer', 'exists:block_tabs,id'],
-            'block_section_id' => ['nullable', 'integer', 'exists:block_sections,id'],
             'order' => ['integer'],
         ];
 

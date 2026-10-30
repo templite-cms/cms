@@ -11,10 +11,12 @@ class ManagerType extends Model
         'name',
         'slug',
         'permissions',
+        'dashboard',
     ];
 
     protected $casts = [
         'permissions' => 'json',
+        'dashboard' => 'json',
     ];
 
     // --- Relationships ---

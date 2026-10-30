@@ -50,15 +50,12 @@ class BlockController extends Controller
      * Редактирование блока.
      * Экран: Blocks/Edit
      *
-     * BF-017: Загрузка fields (плоский массив всех полей),
-     * tabs и sections отдельными коллекциями.
+     * BF-017: Загрузка fields (плоский массив всех полей).
      */
     public function edit(int $id)
     {
         $block = Block::with([
             'blockType',
-            'tabs' => fn ($q) => $q->orderBy('order'),
-            'sections' => fn ($q) => $q->orderBy('order'),
             'fields' => fn ($q) => $q->orderBy('order'),
             'blockActions' => fn ($q) => $q->orderBy('order'),
             'blockActions.action',
@@ -101,7 +98,15 @@ class BlockController extends Controller
                     'type' => $attr->type,
                     'page_type_name' => $attr->pageType->name ?? 'Без типа',
                 ]),
-            'allLibraries' => Library::where('active', true)->orderBy('name')->get(['id', 'name', 'slug', 'version']),
+            // version — аксессор поверх версий файлов, колонки с таким именем
+            // у библиотеки нет; files грузим здесь, иначе он сходит в базу
+            // за каждой библиотекой списка
+            'allLibraries' => Library::where('active', true)
+                ->with('files:id,library_id,version,sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug'])
+                ->append('version')
+                ->makeHidden('files'),
             'componentDefinitions' => Component::orderBy('name')
                 ->get(['id', 'name', 'slug', 'params', 'description', 'source']),
             'bladeComponentReference' => $this->componentRegistry->getBladeComponentReference(),

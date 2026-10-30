@@ -5,8 +5,6 @@ namespace Templite\Cms\Http\Controllers\Admin;
 use Illuminate\Routing\Controller;
 use Templite\Cms\Http\CmsResponse;
 use Templite\Cms\Models\Block;
-use Templite\Cms\Models\CmsConfig;
-use Templite\Cms\Models\Language;
 use Templite\Cms\Models\Page;
 use Templite\Cms\Models\PageType;
 use Templite\Cms\Helpers\StringHelper;
@@ -15,6 +13,12 @@ use Templite\Cms\Services\HandlerRegistry;
 
 class PageController extends Controller
 {
+    /** Колонки, по которым список страниц можно сортировать. */
+    protected const SORT_FIELDS = ['id', 'title', 'status', 'updated_at'];
+
+    /** Допустимые размеры страницы списка; второй — по умолчанию. */
+    protected const PER_PAGE_OPTIONS = [12, 24, 48, 96];
+
     /**
      * Список страниц (дерево).
      * Экран: Pages/Index
@@ -31,38 +35,73 @@ class PageController extends Controller
             ->each(fn ($page) => $this->loadChildrenRecursive($page))
             ->map(fn ($page) => $this->formatPageTree($page));
 
-        // Flat list — for cards (with filters)
-        $query = Page::with(['pageType', 'screenshot'])->orderBy('order');
+        // Flat list — for cards/table (with filters, server pagination)
+        $query = Page::with(['pageType', 'screenshot', 'creator']);
 
         if ($search = $request->input('search')) {
-            $query->where('title', 'like', '%' . StringHelper::escapeLike($search) . '%');
+            $escaped = StringHelper::escapeLike($search);
+            $query->where(fn ($q) => $q->where('title', 'like', "%{$escaped}%")
+                ->orWhere('url', 'like', "%{$escaped}%"));
         }
         if ($type = $request->input('type')) {
             $query->where('type_id', $type);
         }
-        if ($request->has('status') && $request->input('status') !== null && $request->input('status') !== '') {
+        if ($request->filled('status')) {
             $query->where('status', (int) $request->input('status'));
         }
 
-        $pages = $query->get()->map(fn ($page) => [
-            'id' => $page->id,
-            'title' => $page->title,
-            'alias' => $page->alias,
-            'status' => $page->status,
-            'order' => $page->order,
-            'parent_id' => $page->parent_id,
-            'page_type' => $page->pageType ? ['id' => $page->pageType->id, 'name' => $page->pageType->name] : null,
-            'screenshot_url' => $page->screenshot?->url(),
-        ]);
+        $sortField = in_array($request->input('sort_field'), self::SORT_FIELDS, true)
+            ? $request->input('sort_field')
+            : null;
+        $sortOrder = $request->input('sort_order') === 'desc' ? 'desc' : 'asc';
+
+        if ($sortField) {
+            $query->orderBy($sortField, $sortOrder);
+        } else {
+            $query->orderBy('order');
+        }
+        $query->orderBy('id');
+
+        $perPage = in_array((int) $request->input('per_page'), self::PER_PAGE_OPTIONS, true)
+            ? (int) $request->input('per_page')
+            : self::PER_PAGE_OPTIONS[1];
+        $pages = $query->paginate($perPage);
 
         return CmsResponse::page('packages/templite/cms/resources/js/entries/pages-index.js', [
-            'pages' => $pages,
+            'pages' => [
+                'data' => $pages->map(fn ($page) => [
+                    'id' => $page->id,
+                    'title' => $page->title,
+                    'alias' => $page->alias,
+                    'full_url' => $page->full_url,
+                    'url_auto' => $page->url_auto,
+                    'status' => $page->status,
+                    'order' => $page->order,
+                    'parent_id' => $page->parent_id,
+                    'page_type' => $page->pageType ? ['id' => $page->pageType->id, 'name' => $page->pageType->name] : null,
+                    'creator' => $page->creator ? ['id' => $page->creator->id, 'name' => $page->creator->name ?: $page->creator->login] : null,
+                    'screenshot_url' => $page->screenshot?->url(),
+                    'updated_at' => $page->updated_at?->toIso8601String(),
+                ]),
+                'meta' => [
+                    'current_page' => $pages->currentPage(),
+                    'last_page' => $pages->lastPage(),
+                    'per_page' => $pages->perPage(),
+                    'total' => $pages->total(),
+                    'from' => $pages->firstItem(),
+                    'to' => $pages->lastItem(),
+                ],
+            ],
             'tree' => $tree,
             'pageTypes' => PageType::orderBy('name')->get(['id', 'name', 'slug']),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
             'filters' => [
                 'search' => $request->input('search', ''),
                 'type' => $request->input('type', ''),
                 'status' => $request->input('status', ''),
+                'sort_field' => $sortField,
+                'sort_order' => $sortOrder,
+                'per_page' => $perPage,
             ],
         ], ['title' => 'Страницы']);
     }
@@ -80,12 +119,8 @@ class PageController extends Controller
             'pageBlocks.block.blockType',
             'pageBlocks.block.blockActions.action',
             'pageBlocks.block.fields.children.children',
-            'pageBlocks.block.tabs',
-            'pageBlocks.block.sections',
             'parent',
             'children',
-            'templatePage.tabs',
-            'templatePage.sections',
             'templatePage.rootFields.children.children',
         ])->findOrFail($id);
 
@@ -93,18 +128,15 @@ class PageController extends Controller
             'page' => $page,
             'pageTypes' => PageType::with('attributes')->orderBy('name')->get(),
             'templates' => TemplatePage::orderBy('name')->get(['id', 'name']),
-            'parentOptions' => Page::where('id', '!=', $id)
+            // Себя и свои вложенные страницы родителем сделать нельзя
+            'parentOptions' => Page::whereNotIn('id', [$id, ...$page->descendantIds()])
                 ->orderBy('title')
-                ->get(['id', 'title']),
+                ->get(['id', 'title', 'url']),
             'availableBlocks' => $this->getAvailableBlocks(),
-            'multicityEnabled' => (bool) CmsConfig::getValue('multicity_enabled', false),
-            'multilanguageEnabled' => (bool) CmsConfig::getValue('multilang_enabled', false),
-            'languages' => CmsConfig::getValue('multilang_enabled', false)
-                ? Language::active()->ordered()->get()
-                : [],
             'handlers' => app(HandlerRegistry::class)->all(),
         ], ['title' => 'Редактирование страницы']);
     }
+
 
     /**
      * Создание новой страницы.
@@ -116,13 +148,8 @@ class PageController extends Controller
             'page' => null,
             'pageTypes' => PageType::with('attributes')->orderBy('name')->get(),
             'templates' => TemplatePage::orderBy('name')->get(['id', 'name']),
-            'parentOptions' => Page::orderBy('title')->get(['id', 'title']),
+            'parentOptions' => Page::orderBy('title')->get(['id', 'title', 'url']),
             'availableBlocks' => $this->getAvailableBlocks(),
-            'multicityEnabled' => (bool) CmsConfig::getValue('multicity_enabled', false),
-            'multilanguageEnabled' => (bool) CmsConfig::getValue('multilang_enabled', false),
-            'languages' => CmsConfig::getValue('multilang_enabled', false)
-                ? Language::active()->ordered()->get()
-                : [],
             'handlers' => app(HandlerRegistry::class)->all(),
         ], ['title' => 'Новая страница']);
     }
@@ -150,6 +177,7 @@ class PageController extends Controller
                     'name' => $p->name,
                     'slug' => $p->slug,
                     'type' => $p->type,
+                    'is_default' => $p->is_default,
                     'data' => $p->data,
                     'screenshot_url' => $p->screenFile?->url(),
                 ]),

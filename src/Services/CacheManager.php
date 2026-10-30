@@ -3,6 +3,7 @@
 namespace Templite\Cms\Services;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Templite\Cms\Models\Page;
 use Templite\Cms\Models\PageBlock;
 
@@ -50,8 +51,8 @@ class CacheManager
      */
     public function invalidateBlock(PageBlock $pageBlock): void
     {
-        $key = $this->getBlockCacheKey($pageBlock);
-        $this->store()->forget($key);
+        // Новая версия экземпляра делает недоступными все его записи; старые истекут по TTL.
+        $this->store()->forget($this->blockVersionKey($pageBlock));
     }
 
     /**
@@ -110,19 +111,15 @@ class CacheManager
     }
 
     /**
-     * Удалить cache-записи всех блоков (только HTML-кэш, без views/opcache).
+     * Сбросить HTML-кэш всех блоков (без views/opcache).
+     *
+     * @return int Сколько экземпляров блоков было с включённым кэшем
      */
     protected function forgetAllBlockEntries(): int
     {
-        $pageBlocks = PageBlock::where('cache_enabled', true)->get();
-        $count = 0;
+        $this->store()->forget($this->blocksGenerationKey());
 
-        foreach ($pageBlocks as $pb) {
-            $this->invalidateBlock($pb);
-            $count++;
-        }
-
-        return $count;
+        return PageBlock::where('cache_enabled', true)->count();
     }
 
     /**
@@ -183,47 +180,16 @@ class CacheManager
     }
 
     /**
-     * Получить кэш глобальных полей по произвольному ключу (для мультиязычности).
-     */
-    public function getGlobalFieldsByKey(string $cacheKey): ?array
-    {
-        return $this->store()->get($this->prefix . ':' . $cacheKey);
-    }
-
-    /**
-     * Сохранить кэш глобальных полей по произвольному ключу (для мультиязычности).
-     */
-    public function putGlobalFieldsByKey(string $cacheKey, array $fields): void
-    {
-        $ttl = config('cms.cache.ttl', 3600);
-        $this->store()->put($this->prefix . ':' . $cacheKey, $fields, $ttl);
-    }
-
-    /**
-     * Инвалидировать кэш глобальных полей (все языковые варианты).
+     * Инвалидировать кэш глобальных полей.
      */
     public function invalidateGlobalFields(): array
     {
-        $count = 0;
+        // Блоки выводят $global — их HTML устарел вместе с настройками.
+        $this->forgetAllBlockEntries();
 
-        // Базовый ключ (дефолтный язык)
-        if ($this->store()->forget($this->prefix . ':global_fields')) {
-            $count++;
-        }
+        $cleared = $this->store()->forget($this->prefix . ':global_fields') ? 1 : 0;
 
-        // Все языковые варианты
-        try {
-            $languages = \Templite\Cms\Models\Language::getCachedActive();
-            foreach ($languages as $lang) {
-                if ($this->store()->forget($this->prefix . ':global_fields_' . $lang->code)) {
-                    $count++;
-                }
-            }
-        } catch (\Throwable) {
-            // Language может быть недоступен (миграции, свежая установка)
-        }
-
-        return ['cleared' => $count];
+        return ['cleared' => $cleared];
     }
 
     /**
@@ -265,11 +231,45 @@ class CacheManager
     }
 
     /**
-     * Генерация ключа кэша блока.
+     * Ключ HTML-кэша экземпляра блока.
+     *
+     * HTML зависит от экземпляра, а не от типа блока: два одинаковых блока на
+     * странице с разными данными кэшируются раздельно.
      */
     protected function getBlockCacheKey(PageBlock $pageBlock): string
     {
-        return $this->prefix . ':' . $pageBlock->getCacheKeyString();
+        $parts = [
+            $this->prefix, 'block', $pageBlock->id,
+            $this->token($this->blocksGenerationKey()),
+            $this->token($this->blockVersionKey($pageBlock)),
+        ];
+
+        if ($pageBlock->cache_key) {
+            $parts[] = $pageBlock->cache_key;
+        }
+
+        return implode(':', $parts);
+    }
+
+    protected function blockVersionKey(PageBlock $pageBlock): string
+    {
+        return "{$this->prefix}:block:{$pageBlock->id}:version";
+    }
+
+    /**
+     * Поколение HTML-кэша всех блоков: его смена делает недоступными все записи разом.
+     */
+    protected function blocksGenerationKey(): string
+    {
+        return "{$this->prefix}:blocks:generation";
+    }
+
+    /**
+     * Случайная метка, живущая до сброса ключа.
+     */
+    protected function token(string $key): string
+    {
+        return $this->store()->rememberForever($key, fn () => Str::random(8));
     }
 
     /**

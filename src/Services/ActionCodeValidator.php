@@ -171,7 +171,13 @@ class ActionCodeValidator
         $varFuncErrors = $this->validateVariableFunctions($tokens);
         $errors = array_merge($errors, $varFuncErrors);
 
-        return $errors;
+        // 8. Общий с Blade список жёстких возможностей. Поверх whitelist ловит,
+        // например, array_map('system', …): array_map разрешён, а callback — строка.
+        foreach ((new DangerousCodeScanner())->scan($code) as $violation) {
+            $errors[] = "Запрещено: {$violation}.";
+        }
+
+        return array_values(array_unique($errors));
     }
 
     /**

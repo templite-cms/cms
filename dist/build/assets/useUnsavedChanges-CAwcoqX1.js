@@ -1,0 +1,1 @@
+import{K as r,L as t}from"./x-CuOWXDIc.js";function a(e){function n(o){e.value&&(o.preventDefault(),o.returnValue="")}return r(()=>{window.addEventListener("beforeunload",n)}),t(()=>{window.removeEventListener("beforeunload",n)}),{isDirty:e}}export{a as u};

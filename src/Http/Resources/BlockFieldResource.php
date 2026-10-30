@@ -20,12 +20,8 @@ class BlockFieldResource extends JsonResource
             'name' => $this->name,
             'key' => $this->key,
             'type' => $this->type,
-            'default_value' => $this->default_value,
             'data' => $this->data,
             'hint' => $this->hint ?? ($this->data['hint'] ?? null),
-            'block_id' => $this->block_id,
-            'block_tab_id' => $this->block_tab_id,
-            'block_section_id' => $this->block_section_id,
             'parent_id' => $this->parent_id,
             'order' => $this->order,
             'children' => $this->relationLoaded('children')

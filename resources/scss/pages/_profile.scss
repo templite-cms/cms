@@ -480,6 +480,13 @@
   line-height: $line-height-sm;
   font-family: $font-mono;
   word-break: break-all;
+  min-width: 0;
+
+  // Многострочный фрагмент (конфиг клиента) переносится, а не растягивает карточку
+  &--block {
+    margin: 0;
+    white-space: pre-wrap;
+  }
 
   .dark & {
     background-color: $neutral-900;
@@ -693,6 +700,16 @@
   .dark & {
     color: $neutral-400;
   }
+
+  // Предупреждение у опасных прав (ability «Код»)
+  &--warning {
+    margin-top: 0.5rem;
+    color: $warning-700;
+
+    .dark & {
+      color: $warning-400;
+    }
+  }
 }
 
 // Token list / table
@@ -759,6 +776,56 @@
 
   .dark & {
     border-bottom-color: $neutral-800;
+  }
+
+  // Строка открывает модалку токена
+  &--clickable {
+    cursor: pointer;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: $neutral-50;
+
+      .dark & {
+        background-color: $neutral-700;
+      }
+    }
+  }
+}
+
+// Шапка карточки токенов: заголовок слева, «Добавить токен» справа
+.profile__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  .profile__card-title {
+    margin-bottom: 0;
+  }
+}
+
+// Описание под таблицей токенов
+.profile__tokens-desc--footer {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.profile__token-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile__token-modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+
+  &-spacer {
+    flex: 1;
   }
 }
 

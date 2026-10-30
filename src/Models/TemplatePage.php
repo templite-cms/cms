@@ -27,37 +27,7 @@ class TemplatePage extends Model implements Exportable
         'settings' => 'json',
     ];
 
-    protected static function booted(): void
-    {
-        static::deleting(function (TemplatePage $template) {
-            $template->fieldDefinitions()->each(function ($field) {
-                $field->children()->delete();
-                $field->delete();
-            });
-            $template->fieldSections()->delete();
-            $template->fieldTabs()->delete();
-        });
-    }
-
-    public function tabs(): \Illuminate\Database\Eloquent\Relations\MorphMany
-    {
-        return $this->fieldTabs();
-    }
-
-    public function sections(): \Illuminate\Database\Eloquent\Relations\MorphMany
-    {
-        return $this->fieldSections();
-    }
-
-    public function fields(): \Illuminate\Database\Eloquent\Relations\MorphMany
-    {
-        return $this->fieldDefinitions();
-    }
-
-    public function rootFields(): \Illuminate\Database\Eloquent\Relations\MorphMany
-    {
-        return $this->rootFieldDefinitions();
-    }
+    // fields(), rootFields(), экспорт/импорт полей и их удаление вместе с шаблоном — из HasFieldable
 
     public function pageTypes(): HasMany
     {
@@ -93,39 +63,13 @@ class TemplatePage extends Model implements Exportable
 
     public function toExportArray(): array
     {
-        // Используем Block для экспорта полей (exportFields -- public метод)
-        $block = new Block();
-
-        $tabs = $this->tabs()
-            ->orderBy('order')
-            ->with(['sections.fields.children', 'fields.children'])
-            ->get();
-
-        $exportedTabs = $tabs->map(function ($tab) use ($block) {
-            return [
-                'name' => $tab->name,
-                'order' => $tab->order,
-                'columns' => $tab->columns,
-                'column_widths' => $tab->column_widths,
-                'sections' => $tab->sections->sortBy('order')->map(fn ($s) => [
-                    'name' => $s->name,
-                    'order' => $s->order,
-                    'column_index' => $s->column_index,
-                    'fields' => $block->exportFields($s->fields),
-                ])->values()->toArray(),
-                'fields' => $block->exportFields(
-                    $tab->fields->whereNull('block_section_id')
-                ),
-            ];
-        })->toArray();
-
         return [
             'name' => $this->name,
             'slug' => $this->slug,
             'settings' => $this->settings,
             'screen_path' => $this->screenshot?->path,
             'library_slugs' => $this->libraries->pluck('slug')->toArray(),
-            'tabs' => $exportedTabs,
+            'fields' => $this->exportFields(),
         ];
     }
 
@@ -195,8 +139,7 @@ class TemplatePage extends Model implements Exportable
             ->filter()->toArray();
         $template->libraries()->sync($libIds);
 
-        // Импорт tabs/sections/fields -- переиспользуем статический метод Block
-        Block::importFieldableTabs($template, $data['tabs'] ?? []);
+        $template->importFields($data['fields'] ?? []);
 
         // Импорт файлов кода
         if ($data['code'] ?? null) {

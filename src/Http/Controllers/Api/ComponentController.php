@@ -9,6 +9,7 @@ use Templite\Cms\Http\Resources\ComponentResource;
 use Templite\Cms\Models\Component;
 use Templite\Cms\Models\TemplatePage;
 use Templite\Cms\Services\BlockRenderer;
+use Templite\Cms\Services\LibraryAssetBuilder;
 
 class ComponentController extends Controller
 {
@@ -23,7 +24,7 @@ class ComponentController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255', 'slug' => 'required|string|max:255|unique:components',
-            'source' => 'string|in:database,file,vendor', 'params' => 'nullable|array', 'description' => 'nullable|string',
+            'source' => 'string|in:database,file,vendor', 'params' => 'nullable|array|list', 'params.*' => 'array', 'description' => 'nullable|string',
         ]);
         $component = Component::create($data);
 
@@ -70,7 +71,7 @@ class ComponentController extends Controller
         $component = Component::findOrFail($id);
         $data = $request->validate([
             'name' => 'sometimes|string|max:255', 'slug' => 'sometimes|string|max:255|unique:components,slug,' . $id,
-            'params' => 'nullable|array', 'description' => 'nullable|string',
+            'params' => 'nullable|array|list', 'params.*' => 'array', 'description' => 'nullable|string',
         ]);
         $component->update($data);
 
@@ -100,13 +101,6 @@ class ComponentController extends Controller
         // Load global fields for components that rely on $global (e.g. header)
         $global = app()->bound('global_fields') ? app('global_fields') : [];
         view()->share('global', $global);
-
-        // На реальных страницах $city приходит из CityResolver middleware, в превью — нет.
-        // Шарим дефолтный город, чтобы компоненты с $city не падали.
-        $city = \Templite\Cms\Models\City::getDefault();
-        if ($city) {
-            view()->share('city', $city);
-        }
 
         // Inline-код из запроса (для live preview без сохранения)
         $inlineTemplate = $request->input('template_code');
@@ -199,40 +193,18 @@ class ComponentController extends Controller
         $templateJs = '';
         $cdnCssLinks = '';
         $cdnJsLinks = '';
-        $localLibCss = '';
-        $localLibJs = '';
         $templateId = $request->input('template_id');
         if ($templateId) {
-            $template = TemplatePage::with('libraries')->find($templateId);
+            $template = TemplatePage::with('libraries.files')->find($templateId);
             if ($template) {
                 $blockRenderer = app(BlockRenderer::class);
                 $templateCss = $blockRenderer->compileTemplateStyles($template) ?? '';
                 $templateJs = $blockRenderer->getTemplateScript($template) ?? '';
 
-                // Подключаем библиотеки шаблона
-                foreach ($template->libraries->where('active', true)->sortBy('sort_order') as $lib) {
-                    if ($lib->load_strategy === 'cdn') {
-                        if ($lib->css_cdn) {
-                            $cdnCssLinks .= '<link rel="stylesheet" href="' . htmlspecialchars($lib->css_cdn) . '">' . "\n";
-                        }
-                        if ($lib->js_cdn) {
-                            $cdnJsLinks .= '<script src="' . htmlspecialchars($lib->js_cdn) . '"></script>' . "\n";
-                        }
-                    } elseif ($lib->load_strategy === 'local') {
-                        if ($lib->css_file) {
-                            $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->css_file);
-                            if (file_exists($libPath)) {
-                                $localLibCss .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                            }
-                        }
-                        if ($lib->js_file) {
-                            $libPath = \Illuminate\Support\Facades\Storage::disk('public')->path($lib->js_file);
-                            if (file_exists($libPath)) {
-                                $localLibJs .= "/* Library: {$lib->name} */\n" . file_get_contents($libPath) . "\n";
-                            }
-                        }
-                    }
-                }
+                // Библиотеки шаблона
+                $libraryHtml = app(LibraryAssetBuilder::class)->htmlFor($template->libraries);
+                $cdnCssLinks = $libraryHtml['head'];
+                $cdnJsLinks = $libraryHtml['body'];
             }
         }
 
@@ -243,8 +215,8 @@ class ComponentController extends Controller
         }
         $componentAssets = app(BlockRenderer::class)->collectComponentAssets($rawTemplate);
 
-        $allCss = $localLibCss . ($templateCss ? "{$templateCss}\n" : '') . $componentAssets['css'] . $css;
-        $allJs = $localLibJs . ($templateJs ? "{$templateJs}\n" : '') . $componentAssets['js'] . $js;
+        $allCss = ($templateCss ? "{$templateCss}\n" : '') . $componentAssets['css'] . $css;
+        $allJs = ($templateJs ? "{$templateJs}\n" : '') . $componentAssets['js'] . $js;
 
         $componentSlug = e($component->slug);
         $wrappedContent = '<div class="cms-component cms-component--' . $componentSlug . '">' . $templateHtml . '</div>';

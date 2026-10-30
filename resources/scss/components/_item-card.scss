@@ -107,6 +107,52 @@
   }
 }
 
+// Selection (режим выделения)
+.item-card--selected {
+  border-color: $primary-500;
+  box-shadow: 0 0 0 1px $primary-500;
+
+  &:hover {
+    border-color: $primary-500;
+  }
+
+  .dark &,
+  .dark &:hover {
+    border-color: $primary-400;
+    box-shadow: 0 0 0 1px $primary-400;
+  }
+}
+
+.item-card__check {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid $neutral-300;
+  border-radius: $radius-sm;
+  background: rgb(var(--color-surface-card));
+  color: #fff;
+  box-shadow: $shadow-sm;
+  @include transition-fast(background-color, border-color);
+
+  .item-card:hover & {
+    border-color: $primary-400;
+  }
+}
+
+.item-card__check--checked {
+  background: $primary-500;
+
+  &,
+  .item-card:hover & {
+    border-color: $primary-500;
+  }
+}
+
 // Body (title + meta)
 .item-card__body {
   padding: 0.5rem 0.625rem;

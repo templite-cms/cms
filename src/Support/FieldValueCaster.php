@@ -5,14 +5,12 @@ namespace Templite\Cms\Support;
 /**
  * Приведение значений полей к правильным PHP-типам.
  *
- * Значения полей в БД хранятся как строки (GlobalFieldValue.value — text,
- * BlockField.default_value — string). Этот класс приводит их к типам,
- * которые ожидают Vue-компоненты и Blade-шаблоны.
+ * Значения полей в БД хранятся как строки (GlobalFieldValue.value — text).
+ * Этот класс приводит их к типам, которые ожидают Vue-компоненты и Blade-шаблоны.
  *
  * Используется в:
  *   - GlobalFieldsMiddleware (публичный сайт)
  *   - Admin\GlobalSettingsController (админка, Inertia props)
- *   - BlockDataResolver (default_value блочных полей)
  */
 final class FieldValueCaster
 {

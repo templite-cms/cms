@@ -2,18 +2,10 @@
 
 namespace Templite\Cms\Modules;
 
-use Templite\Cms\Auth\DefaultUserGuard;
 use Templite\Cms\Contracts\AbstractModule;
 
 class CmsModule extends AbstractModule
 {
-    public function getGuards(): array
-    {
-        return [
-            new DefaultUserGuard(),
-        ];
-    }
-
     public function getName(): string
     {
         return 'cms';
@@ -59,8 +51,8 @@ class CmsModule extends AbstractModule
                 'position' => 90,
                 'items' => [
                     ['label' => 'Ядро', 'route' => 'cms.core-settings.index', 'icon' => 'cpu', 'permission' => 'settings.view', 'position' => 10],
+                    ['label' => 'AI-ассистент', 'route' => 'cms.ai-settings.index', 'icon' => 'bot', 'permission' => 'ai.use', 'position' => 15],
                     ['label' => 'Менеджеры', 'route' => 'cms.managers.index', 'icon' => 'users', 'permission' => 'managers.view', 'position' => 20],
-                    ['label' => 'Пользователи', 'route' => 'cms.users.index', 'icon' => 'user', 'permission' => 'users.view', 'position' => 25],
                     ['label' => 'Импорт / Экспорт', 'route' => 'cms.export-import.index', 'icon' => 'arrow-left-right', 'permission' => 'settings.edit', 'position' => 30],
                     ['label' => 'Логи', 'route' => 'cms.logs.index', 'icon' => 'scroll-text', 'permission' => 'logs.view', 'position' => 40],
                 ],
@@ -85,6 +77,7 @@ class CmsModule extends AbstractModule
             'blocks.create' => 'Создание блоков',
             'blocks.edit' => 'Редактирование блоков',
             'blocks.delete' => 'Удаление блоков',
+            'blocks.code' => 'Код блоков (Blade, SCSS, JS) — исполнение кода на сервере',
             'block_types.view' => 'Просмотр типов блоков',
             'block_types.create' => 'Создание типов блоков',
             'block_types.edit' => 'Редактирование типов блоков',
@@ -93,15 +86,17 @@ class CmsModule extends AbstractModule
             'actions.create' => 'Создание действий',
             'actions.edit' => 'Редактирование действий',
             'actions.delete' => 'Удаление действий',
-            'actions.code' => 'Редактирование кода действий',
+            'actions.code' => 'Код действий (PHP) — исполнение кода на сервере',
             'components.view' => 'Просмотр компонентов',
             'components.create' => 'Создание компонентов',
             'components.edit' => 'Редактирование компонентов',
             'components.delete' => 'Удаление компонентов',
+            'components.code' => 'Код компонентов (Blade, SCSS, JS) — исполнение кода на сервере',
             'templates.view' => 'Просмотр шаблонов',
             'templates.create' => 'Создание шаблонов',
             'templates.edit' => 'Редактирование шаблонов',
             'templates.delete' => 'Удаление шаблонов',
+            'templates.code' => 'Код шаблонов (Blade, SCSS, JS) — исполнение кода на сервере',
             // Медиа
             'media.view' => 'Просмотр медиа',
             'media.upload' => 'Загрузка медиа',
@@ -112,6 +107,9 @@ class CmsModule extends AbstractModule
             // Настройки
             'settings.view' => 'Просмотр настроек',
             'settings.edit' => 'Редактирование настроек',
+            'ai.use' => 'Использование AI-ассистента',
+            'ai.keys.manage' => 'Управление своими AI-ключами',
+            'mcp.use' => 'Доступ через MCP (внешние AI-клиенты)',
             'managers.view' => 'Просмотр менеджеров',
             'managers.create' => 'Создание менеджеров',
             'managers.edit' => 'Редактирование менеджеров',
@@ -120,13 +118,6 @@ class CmsModule extends AbstractModule
             'manager_types.create' => 'Создание типов менеджеров',
             'manager_types.edit' => 'Редактирование типов менеджеров',
             'manager_types.delete' => 'Удаление типов менеджеров',
-            // Пользователи сайта
-            'users.view' => 'Просмотр пользователей сайта',
-            'users.create' => 'Создание пользователей сайта',
-            'users.edit' => 'Редактирование пользователей сайта',
-            'users.delete' => 'Удаление пользователей сайта',
-            'user_types.view' => 'Просмотр типов пользователей',
-            'user_types.edit' => 'Редактирование типов пользователей',
             'logs.view' => 'Просмотр логов',
         ];
     }
@@ -134,27 +125,14 @@ class CmsModule extends AbstractModule
     public function getDashboardWidgets(): array
     {
         return [
-            [
-                'slug' => 'cms-recent-pages',
-                'label' => 'Последние страницы',
-                'component' => 'RecentPagesWidget',
-                'size' => 'lg',
-                'position' => 10,
-            ],
-            [
-                'slug' => 'cms-quick-actions',
-                'label' => 'Быстрые действия',
-                'component' => 'QuickActionsWidget',
-                'size' => 'sm',
-                'position' => 20,
-            ],
-            [
-                'slug' => 'cms-content-stats',
-                'label' => 'Статистика контента',
-                'component' => 'ContentStatsWidget',
-                'size' => 'sm',
-                'position' => 30,
-            ],
+            \Templite\Cms\Dashboard\Widgets\ActivityWidget::class,
+            \Templite\Cms\Dashboard\Widgets\ContinueWidget::class,
+            \Templite\Cms\Dashboard\Widgets\AttentionWidget::class,
+            \Templite\Cms\Dashboard\Widgets\ScheduledWidget::class,
+            \Templite\Cms\Dashboard\Widgets\CodeChangesWidget::class,
+            \Templite\Cms\Dashboard\Widgets\HealthWidget::class,
+            \Templite\Cms\Dashboard\Widgets\SecurityWidget::class,
+            \Templite\Cms\Dashboard\Widgets\AiUsageWidget::class,
         ];
     }
 

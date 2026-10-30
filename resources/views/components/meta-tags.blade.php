@@ -15,7 +15,7 @@
     $robots = $seo['robots'] ?? 'index, follow';
     $ogTitle = $social['og_title'] ?? $title;
     $ogDescription = $social['og_description'] ?? $description;
-    $ogImage = $social['og_image'] ?? ($page->image ? $page->image->url : '');
+    $ogImage = $page->og_image_url ?: ($page->image ? url($page->image->url) : '');
     $siteName = $global['site_name'] ?? config('app.name', 'Templite');
 @endphp
 

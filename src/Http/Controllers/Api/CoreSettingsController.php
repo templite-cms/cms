@@ -5,7 +5,6 @@ namespace Templite\Cms\Http\Controllers\Api;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Templite\Cms\Models\CmsConfig;
-use Templite\Cms\Services\McpTokenService;
 
 class CoreSettingsController extends Controller
 {
@@ -74,6 +73,19 @@ class CoreSettingsController extends Controller
             ]
         );
 
+        // MCP-доступ. updateOrCreate без value: старая запись из group=mcp
+        // переезжает в «Систему» и сохраняет значение.
+        CmsConfig::updateOrCreate(
+            ['key' => 'mcp.enabled'],
+            [
+                'type' => 'boolean',
+                'group' => 'system',
+                'label' => 'MCP-доступ',
+                'description' => 'Разрешить внешним AI-клиентам (Claude Code, Cursor и др.) работать с сайтом через @templite/mcp-server. Токены менеджеры выпускают в своём профиле.',
+                'order' => 50,
+            ]
+        );
+
         $settings = CmsConfig::orderBy('order')->get();
 
         $grouped = $settings->groupBy('group')->map(function ($items) {
@@ -118,102 +130,5 @@ class CoreSettingsController extends Controller
         $this->logAction('update', 'core_settings', null, ['keys' => array_keys($data['values'])]);
 
         return $this->success(null, 'Настройки сохранены');
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/core-settings/mcp",
-     *     summary="Получить настройки MCP",
-     *     tags={"Core Settings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="Настройки MCP")
-     * )
-     */
-    public function mcpSettings(): JsonResponse
-    {
-        $tokenService = app(McpTokenService::class);
-
-        return $this->success([
-            'enabled' => $tokenService->isEnabled(),
-            'has_token' => $tokenService->getMaskedToken() !== null,
-            'masked_token' => $tokenService->getMaskedToken(),
-            'token_expires_at' => $tokenService->getTokenExpiresAt(),
-        ]);
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/core-settings/mcp",
-     *     summary="Обновить настройки MCP",
-     *     tags={"Core Settings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(required=true, @OA\JsonContent(
-     *         @OA\Property(property="enabled", type="boolean"),
-     *         @OA\Property(property="token_expires_at", type="string", format="date-time", nullable=true)
-     *     )),
-     *     @OA\Response(response=200, description="Настройки обновлены")
-     * )
-     */
-    public function updateMcpSettings(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'enabled' => 'sometimes|boolean',
-            'token_expires_at' => 'sometimes|nullable|date',
-        ]);
-
-        $tokenService = app(McpTokenService::class);
-
-        if (array_key_exists('enabled', $data)) {
-            $tokenService->setEnabled($data['enabled']);
-        }
-
-        if (array_key_exists('token_expires_at', $data)) {
-            $tokenService->setTokenExpiresAt($data['token_expires_at']);
-        }
-
-        $this->logAction('update', 'core_settings', null, ['entity' => 'mcp', 'enabled' => $data['enabled'] ?? null]);
-
-        return $this->success(null, 'MCP настройки обновлены');
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/core-settings/mcp/generate-token",
-     *     summary="Сгенерировать новый MCP-токен",
-     *     tags={"Core Settings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="Токен сгенерирован")
-     * )
-     */
-    public function generateMcpToken(): JsonResponse
-    {
-        $tokenService = app(McpTokenService::class);
-        $plainToken = $tokenService->generateToken();
-
-        $this->logAction('create', 'core_settings', null, ['entity' => 'mcp_token']);
-
-        return $this->success([
-            'token' => $plainToken,
-            'message' => 'Скопируйте токен. Он будет показан только один раз.',
-        ]);
-    }
-
-    /**
-     * @OA\Delete(
-     *     path="/core-settings/mcp/revoke-token",
-     *     summary="Отозвать MCP-токен",
-     *     tags={"Core Settings"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="Токен отозван")
-     * )
-     */
-    public function revokeMcpToken(): JsonResponse
-    {
-        $tokenService = app(McpTokenService::class);
-        $tokenService->revokeToken();
-
-        $this->logAction('delete', 'core_settings', null, ['entity' => 'mcp_token']);
-
-        return $this->success(null, 'Токен отозван');
     }
 }

@@ -59,6 +59,21 @@ class AuthManager
             return redirect()->route('cms.login');
         }
 
+        // MCP-токен ограничен профилем и abilities только внутри шлюза:
+        // в обычном REST abilities не проверяются, и токен с mcp:read дал бы там всё.
+        // Признак шлюза — middleware EnsureMcpToken на маршруте, а не имя:
+        // маршрут модуля с похожим именем не должен открываться MCP-токену.
+        $token = method_exists($manager, 'currentAccessToken') ? $manager->currentAccessToken() : null;
+        if ($token instanceof \Laravel\Sanctum\PersonalAccessToken
+            && \Templite\Cms\Services\Mcp\McpScope::isMcpToken($token)
+            && ! in_array(EnsureMcpToken::class, $request->route()?->gatherMiddleware() ?? [], true)) {
+            return response()->json([
+                'success' => false,
+                'code' => 'mcp_token_scope',
+                'message' => 'MCP-токен работает только через MCP-шлюз (/api/cms/mcp).',
+            ], 403);
+        }
+
         // Enforce 2FA в required-режиме (только для session-based запросов)
         if ($request->hasSession() && !$request->bearerToken()) {
             $twoFactorMode = \Templite\Cms\Models\CmsConfig::getValue(

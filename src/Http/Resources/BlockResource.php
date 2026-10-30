@@ -7,11 +7,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Templite\Cms\Http\Resources\LibraryResource;
 
 /**
- * BF-017: BlockResource -- включение fields/tabs/sections деревом.
+ * BF-017: BlockResource -- включение fields деревом.
  *
  * При загрузке блока для редактирования (GET /api/cms/blocks/{id})
- * ответ включает fields как дерево (top-level с вложенными children),
- * а также tabs и sections.
+ * ответ включает fields как дерево (top-level с вложенными children).
  */
 class BlockResource extends JsonResource
 {
@@ -29,7 +28,7 @@ class BlockResource extends JsonResource
             'tags' => $this->tags,
             'screen' => $this->when($this->relationLoaded('screenshot'), fn() => new FileResource($this->screenshot)),
             'order' => $this->order,
-            'no_wrapper' => (bool) $this->no_wrapper,
+            'auto_marker' => (bool) $this->auto_marker,
             'type' => $this->when($this->relationLoaded('blockType'), fn() => new BlockTypeResource($this->blockType)),
 
             // BF-017: Поля как дерево -- возвращаем rootFields с children,
@@ -46,14 +45,6 @@ class BlockResource extends JsonResource
                 }
             ),
 
-            'tabs' => $this->when(
-                $this->relationLoaded('tabs'),
-                fn() => BlockTabResource::collection($this->tabs)
-            ),
-            'sections' => $this->when(
-                $this->relationLoaded('sections'),
-                fn() => BlockSectionResource::collection($this->sections)
-            ),
             'actions' => $this->when(
                 $this->relationLoaded('blockActions'),
                 fn() => BlockActionResource::collection($this->blockActions)

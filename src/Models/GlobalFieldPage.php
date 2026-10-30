@@ -101,10 +101,6 @@ class GlobalFieldPage extends Model implements Exportable
                     $exported = [
                         'value' => $v->value,
                         'order' => $v->order,
-                        'translations' => $v->translations->map(fn ($t) => [
-                            'lang' => $t->lang,
-                            'value' => $t->value,
-                        ])->toArray(),
                     ];
                     // For child values in a repeater, save the row index
                     if ($parentIdToRowIndex !== null && $v->parent_id !== null) {
@@ -194,11 +190,6 @@ class GlobalFieldPage extends Model implements Exportable
                     'parent_id' => $valueParentId,
                 ]);
 
-                // Create translations
-                foreach ($vData['translations'] ?? [] as $tData) {
-                    $value->translations()->create($tData);
-                }
-
                 // Track row markers for repeater fields (values with null value)
                 $currentRowMarkerMap[$index] = $value->id;
             }
@@ -253,7 +244,7 @@ class GlobalFieldPage extends Model implements Exportable
 
         $ids = [];
 
-        $fields = $this->fields()->with(['values.translations', 'children.values.translations'])->get();
+        $fields = $this->fields()->with(['values', 'children.values'])->get();
 
         foreach ($fields as $field) {
             $this->collectFileIdsFromField($field, $ids);
@@ -274,11 +265,6 @@ class GlobalFieldPage extends Model implements Exportable
             foreach ($field->values as $val) {
                 if (is_numeric($val->value)) {
                     $ids[] = (int) $val->value;
-                }
-                foreach ($val->translations as $t) {
-                    if (is_numeric($t->value)) {
-                        $ids[] = (int) $t->value;
-                    }
                 }
             }
         }

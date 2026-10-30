@@ -5,6 +5,7 @@ namespace Templite\Cms\Http\Controllers\Api;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Templite\Cms\Dashboard\DashboardWidgetRegistry;
 use Templite\Cms\Http\Resources\ManagerTypeResource;
 use Templite\Cms\Models\ManagerType;
 use Templite\Cms\Services\ModuleRegistry;
@@ -26,7 +27,12 @@ class ManagerTypeController extends Controller
             'name' => 'required|string|max:255', 'slug' => 'required|string|max:255|unique:manager_types',
             'permissions' => 'nullable|array',
             'permissions.*' => ['string', Rule::in($allowedPermissions)],
-        ]);
+        ] + $this->dashboardRules());
+
+        if (array_key_exists('dashboard', $data)) {
+            $data['dashboard'] = $this->normalizeDashboard($data['dashboard']);
+        }
+
         $type = ManagerType::create($data);
 
         $this->logAction('create', 'manager_type', $type->id, ['name' => $type->name, 'slug' => $type->slug]);
@@ -50,12 +56,42 @@ class ManagerTypeController extends Controller
             'name' => 'sometimes|string|max:255', 'slug' => 'sometimes|string|max:255|unique:manager_types,slug,' . $id,
             'permissions' => 'nullable|array',
             'permissions.*' => ['string', Rule::in($allowedPermissions)],
-        ]);
+        ] + $this->dashboardRules());
+
+        if (array_key_exists('dashboard', $data)) {
+            $data['dashboard'] = $this->normalizeDashboard($data['dashboard']);
+        }
+
         $type->update($data);
 
         $this->logAction('update', 'manager_type', $type->id, ['name' => $type->name]);
 
         return $this->success(new ManagerTypeResource($type->fresh()));
+    }
+
+    /** Правила раскладки дашборда: только известные виджеты, без повторов */
+    private function dashboardRules(): array
+    {
+        $slugs = array_keys(app(DashboardWidgetRegistry::class)->all());
+
+        return [
+            'dashboard' => 'nullable|array',
+            'dashboard.*.slug' => ['required', 'string', 'distinct', Rule::in($slugs)],
+            'dashboard.*.width' => 'required|integer|in:50,100',
+        ];
+    }
+
+    /** Пустая раскладка — это «по умолчанию» (null), а не []; width — всегда int */
+    private function normalizeDashboard(?array $dashboard): ?array
+    {
+        if (empty($dashboard)) {
+            return null;
+        }
+
+        return array_map(fn (array $item) => [
+            'slug' => $item['slug'],
+            'width' => (int) $item['width'],
+        ], $dashboard);
     }
 
     /**

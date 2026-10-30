@@ -13,11 +13,11 @@ use Templite\Cms\Http\Controllers\Web\DirectActionController;
 |
 | Маршруты публичной части сайта.
 | Рендеринг страниц, sitemap, actions блоков.
-| Middleware: web, cms.locale, cms.city_resolver, cms.global_fields, cms.timezone
+| Middleware: web, cms.global_fields, cms.timezone
 |
 */
 
-Route::middleware(['web', 'cms.security_headers', 'cms.locale', 'cms.city_resolver', 'cms.global_fields', 'cms.timezone'])->group(function () {
+Route::middleware(['web', 'cms.security_headers', 'cms.global_fields', 'cms.timezone'])->group(function () {
 
     // Direct Action (CSRF проверяется per-action через csrfEnabled() в классе действия)
     // Защита: throttle + honeypot + allow_http флаг + опциональный CSRF
@@ -29,10 +29,6 @@ Route::middleware(['web', 'cms.security_headers', 'cms.locale', 'cms.city_resolv
 
     // XML Sitemap
     Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('cms.sitemap');
-    Route::get('/sitemap-global.xml', [SitemapController::class, 'global'])->name('cms.sitemap.global');
-    Route::get('/sitemap-{slug}.xml', [SitemapController::class, 'city'])
-        ->where('slug', '[a-z0-9-]+')
-        ->name('cms.sitemap.city');
 
     // Block Actions (обработка POST-запросов форм)
     // TASK-S01: Rate limiting (10 запросов/мин) + honeypot anti-bot защита.
